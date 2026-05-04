@@ -4,19 +4,22 @@ import React from 'react';
 import { useWallet } from '@/hooks/use-wallet';
 import { Button } from '@/components/ui/button';
 import { Wallet, LogOut, User } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
 
 const Navbar = () => {
-  const { isConnected, address, guyBalance, connect, disconnect, isMember } = useWallet();
+  const { isConnected, address, guyBalance, connect, disconnect } = useWallet();
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-white/5 bg-background/80 backdrop-blur-md">
       <div className="container mx-auto px-4 h-20 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <div className="relative">
-            <div className="w-10 h-10 bg-[#00E5FF] rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(0,229,255,0.3)]">
-              <span className="text-black font-black text-xl">A</span>
+            <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/50 shadow-[0_0_15px_rgba(0,229,255,0.3)]">
+              <img 
+                src="https://dyad-media.s3.amazonaws.com/media/ASKGUY/.dyad/media/e48bf5ea61700a2671a347dd3f69639c.PNG" 
+                alt="GUY Logo" 
+                className="w-full h-full object-cover"
+              />
             </div>
             <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#FF9100] rounded-full border-2 border-background" />
           </div>

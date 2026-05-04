@@ -53,8 +53,12 @@ const Index = () => {
         <Navbar />
         <div className="flex-1 flex flex-col items-center justify-center p-4 text-center animate-in fade-in duration-700">
           <div className="max-w-md space-y-6">
-            <div className="w-20 h-20 bg-primary/20 rounded-3xl flex items-center justify-center mx-auto mb-6 animate-bounce">
-              <ShieldAlert className="text-primary" size={40} />
+            <div className="w-32 h-32 rounded-3xl overflow-hidden border-4 border-primary/30 mx-auto mb-6 shadow-[0_0_30px_rgba(0,229,255,0.2)] animate-pulse">
+              <img 
+                src="https://dyad-media.s3.amazonaws.com/media/ASKGUY/.dyad/media/e48bf5ea61700a2671a347dd3f69639c.PNG" 
+                alt="GUY Logo" 
+                className="w-full h-full object-cover"
+              />
             </div>
             <h1 className="text-4xl font-bold tracking-tight">AskGuy XPR Mutual Aid</h1>
             <p className="text-muted-foreground text-lg">

@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { AlertCircle, CheckCircle2, ShieldAlert } from 'lucide-react';
 import { MadeWithDyad } from "@/components/made-with-dyad";
-import { motion } from 'framer-motion';
 
 const Dashboard = () => {
   const { isConnected, guyBalance, isMember, payMembership } = useWallet();
@@ -23,13 +22,9 @@ const Dashboard = () => {
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="max-w-md space-y-6"
-        >
-          <div className="w-20 h-20 bg-primary/20 rounded-3xl flex items-center justify-center mx-auto mb-6">
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center animate-in fade-in duration-700">
+        <div className="max-w-md space-y-6">
+          <div className="w-20 h-20 bg-primary/20 rounded-3xl flex items-center justify-center mx-auto mb-6 animate-bounce">
             <ShieldAlert className="text-primary" size={40} />
           </div>
           <h1 className="text-4xl font-bold tracking-tight">AskGuy XPR Mutual Aid</h1>
@@ -42,7 +37,7 @@ const Dashboard = () => {
             <p className="flex items-center gap-2"><CheckCircle2 size={14} className="text-primary" /> Transparent community funding</p>
           </div>
           <p className="text-sm text-muted-foreground italic">Connect your WebAuth wallet to get started.</p>
-        </motion.div>
+        </div>
       </div>
     );
   }
@@ -50,7 +45,7 @@ const Dashboard = () => {
   const hasGuyBalance = guyBalance >= 25000;
 
   return (
-    <div className="min-h-screen pb-20">
+    <div className="min-h-screen pb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           

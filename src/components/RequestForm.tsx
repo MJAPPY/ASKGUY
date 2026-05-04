@@ -9,17 +9,36 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Upload, Send } from 'lucide-react';
 import { showSuccess } from '@/utils/toast';
+import { useRequests } from '@/hooks/use-requests';
+import { useWallet } from '@/hooks/use-wallet';
 
 const RequestForm = () => {
   const [loading, setLoading] = useState(false);
+  const { addRequest } = useRequests();
+  const { address } = useWallet();
+  
+  const [formData, setFormData] = useState({
+    category: 'medical',
+    amount: '',
+    description: ''
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!address) return;
+    
     setLoading(true);
     setTimeout(() => {
+      addRequest({
+        user: address,
+        category: formData.category.charAt(0).toUpperCase() + formData.category.slice(1),
+        amount: parseFloat(formData.amount),
+        description: formData.description,
+      });
       setLoading(false);
+      setFormData({ category: 'medical', amount: '', description: '' });
       showSuccess("Request posted successfully!");
-    }, 1500);
+    }, 1000);
   };
 
   return (
@@ -33,7 +52,10 @@ const RequestForm = () => {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Category</Label>
-              <Select defaultValue="medical">
+              <Select 
+                value={formData.category} 
+                onValueChange={(v) => setFormData(prev => ({ ...prev, category: v }))}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
@@ -47,13 +69,25 @@ const RequestForm = () => {
             </div>
             <div className="space-y-2">
               <Label>Amount (XPR)</Label>
-              <Input type="number" placeholder="0.00" required />
+              <Input 
+                type="number" 
+                placeholder="0.00" 
+                required 
+                value={formData.amount}
+                onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+              />
             </div>
           </div>
           
           <div className="space-y-2">
             <Label>Description</Label>
-            <Textarea placeholder="Explain why you need help with this bill..." className="min-h-[100px]" required />
+            <Textarea 
+              placeholder="Explain why you need help with this bill..." 
+              className="min-h-[100px]" 
+              required 
+              value={formData.description}
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+            />
           </div>
 
           <div className="space-y-2">

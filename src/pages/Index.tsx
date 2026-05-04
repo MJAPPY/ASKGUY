@@ -2,23 +2,19 @@
 
 import React from 'react';
 import { WalletProvider, useWallet } from '@/hooks/use-wallet';
+import { RequestsProvider, useRequests } from '@/hooks/use-requests';
 import Navbar from '@/components/Navbar';
 import RequestForm from '@/components/RequestForm';
 import RequestCard from '@/components/RequestCard';
 import Leaderboard from '@/components/Leaderboard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertCircle, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { AlertCircle, CheckCircle2, ShieldAlert, Info } from 'lucide-react';
 import { MadeWithDyad } from "@/components/made-with-dyad";
 
 const Dashboard = () => {
   const { isConnected, guyBalance, isMember, payMembership } = useWallet();
-
-  const mockRequests = [
-    { id: '1', user: 'alice.xpr', category: 'Medical', amount: 1200, raised: 850, description: 'Need help with unexpected dental surgery costs. Any contribution helps!', status: 'Open' as const },
-    { id: '2', user: 'bob.xpr', category: 'Utilities', amount: 450, raised: 450, description: 'Electricity bill is overdue due to job loss. Thank you community!', status: 'Funded' as const },
-    { id: '3', user: 'charlie.xpr', category: 'Education', amount: 2500, raised: 2500, description: 'Textbooks for the upcoming semester. Truly grateful for the support.', status: 'Completed' as const },
-  ];
+  const { requests } = useRequests();
 
   if (!isConnected) {
     return (
@@ -81,6 +77,15 @@ const Dashboard = () => {
             )}
             
             <Leaderboard />
+
+            <Card className="glass-card border-white/5">
+              <CardContent className="p-4 flex gap-3 items-start">
+                <Info className="text-primary shrink-0 mt-0.5" size={16} />
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  All contributions are sent directly to the requester's XPR address. AskGuy does not hold any funds.
+                </p>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Right Column: Feed */}
@@ -94,10 +99,16 @@ const Dashboard = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {mockRequests.map((req) => (
+              {requests.map((req) => (
                 <RequestCard key={req.id} {...req} />
               ))}
             </div>
+
+            {requests.length === 0 && (
+              <div className="text-center py-20 glass-card rounded-2xl">
+                <p className="text-muted-foreground">No active requests found. Be the first to ask for help!</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -109,10 +120,12 @@ const Dashboard = () => {
 const Index = () => {
   return (
     <WalletProvider>
-      <div className="min-h-screen bg-background text-foreground">
-        <Navbar />
-        <Dashboard />
-      </div>
+      <RequestsProvider>
+        <div className="min-h-screen bg-background text-foreground">
+          <Navbar />
+          <Dashboard />
+        </div>
+      </RequestsProvider>
     </WalletProvider>
   );
 };

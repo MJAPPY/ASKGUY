@@ -6,7 +6,8 @@ import { useRequests } from '@/hooks/use-requests';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import RequestCard from '@/components/RequestCard';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import TransactionHistory from '@/components/TransactionHistory';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Heart, Send, Receipt, Award, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -83,78 +84,86 @@ const Profile = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <Card className="glass-card border-white/5">
-            <CardContent className="p-6 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <Heart className="text-primary" size={24} />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Total Aid Given</p>
-                <p className="text-2xl font-bold">{stats.given.toLocaleString()} XPR</p>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="glass-card border-white/5">
-            <CardContent className="p-6 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center">
-                <Receipt className="text-blue-400" size={24} />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Total Aid Received</p>
-                <p className="text-2xl font-bold">{stats.received.toLocaleString()} XPR</p>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card className="glass-card border-white/5">
+                <CardContent className="p-6 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Heart className="text-primary" size={24} />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Given</p>
+                    <p className="text-xl font-bold">{stats.given.toLocaleString()} XPR</p>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="glass-card border-white/5">
+                <CardContent className="p-6 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center">
+                    <Receipt className="text-blue-400" size={24} />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Received</p>
+                    <p className="text-xl font-bold">{stats.received.toLocaleString()} XPR</p>
+                  </div>
+                </CardContent>
+              </Card>
 
-          <Card className="glass-card border-white/5">
-            <CardContent className="p-6 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center">
-                <Send className="text-purple-400" size={24} />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Contributions Made</p>
-                <p className="text-2xl font-bold">{stats.count}</p>
-              </div>
-            </CardContent>
-          </Card>
+              <Card className="glass-card border-white/5">
+                <CardContent className="p-6 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center">
+                    <Send className="text-purple-400" size={24} />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Donations</p>
+                    <p className="text-xl font-bold">{stats.count}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Tabs defaultValue="my-requests" className="space-y-6">
+              <TabsList className="bg-white/5 border border-white/10">
+                <TabsTrigger value="my-requests">My Requests ({myRequests.length})</TabsTrigger>
+                <TabsTrigger value="my-contributions">My Contributions ({myContributions.length})</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="my-requests">
+                {myRequests.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {myRequests.map(req => (
+                      <RequestCard key={req.id} {...req} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-20 glass-card rounded-2xl border-dashed border-white/10">
+                    <p className="text-muted-foreground">You haven't posted any requests yet.</p>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="my-contributions">
+                {myContributions.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {myContributions.map(req => (
+                      <RequestCard key={req.id} {...req} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-20 glass-card rounded-2xl border-dashed border-white/10">
+                    <p className="text-muted-foreground">You haven't made any contributions yet.</p>
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          <div className="lg:col-span-1">
+            <TransactionHistory />
+          </div>
         </div>
-
-        <Tabs defaultValue="my-requests" className="space-y-6">
-          <TabsList className="bg-white/5 border border-white/10">
-            <TabsTrigger value="my-requests">My Requests ({myRequests.length})</TabsTrigger>
-            <TabsTrigger value="my-contributions">My Contributions ({myContributions.length})</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="my-requests">
-            {myRequests.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {myRequests.map(req => (
-                  <RequestCard key={req.id} {...req} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-20 glass-card rounded-2xl border-dashed border-white/10">
-                <p className="text-muted-foreground">You haven't posted any requests yet.</p>
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="my-contributions">
-            {myContributions.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {myContributions.map(req => (
-                  <RequestCard key={req.id} {...req} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-20 glass-card rounded-2xl border-dashed border-white/10">
-                <p className="text-muted-foreground">You haven't made any contributions yet.</p>
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
       </div>
       <Footer />
     </div>

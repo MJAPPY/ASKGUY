@@ -10,6 +10,7 @@ import Leaderboard from '@/components/Leaderboard';
 import HowItWorks from '@/components/HowItWorks';
 import CommunityStats from '@/components/CommunityStats';
 import ActivityFeed from '@/components/ActivityFeed';
+import SuccessStories from '@/components/SuccessStories';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -167,6 +168,7 @@ const Index = () => {
           </div>
         </div>
 
+        <SuccessStories />
         <HowItWorks />
       </main>
       <Footer />

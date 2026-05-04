@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Upload, Send, X, FileText } from 'lucide-react';
+import { Upload, Send, X, FileText, AlertCircle } from 'lucide-react';
 import { showSuccess } from '@/utils/toast';
 import { useRequests } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
@@ -107,7 +107,13 @@ const RequestForm = () => {
           </div>
 
           <div className="space-y-2">
-            <Label>Photo Proof</Label>
+            <div className="flex items-center justify-between">
+              <Label>Photo Proof</Label>
+              <div className="flex items-center gap-1 text-[10px] text-orange-400 font-medium">
+                <AlertCircle size={10} />
+                <span>Hide sensitive info (address, acc numbers)</span>
+              </div>
+            </div>
             <input 
               type="file" 
               className="hidden" 

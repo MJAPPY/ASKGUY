@@ -8,6 +8,8 @@ import RequestForm from '@/components/RequestForm';
 import RequestCard from '@/components/RequestCard';
 import Leaderboard from '@/components/Leaderboard';
 import HowItWorks from '@/components/HowItWorks';
+import CommunityStats from '@/components/CommunityStats';
+import ActivityFeed from '@/components/ActivityFeed';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -33,10 +35,8 @@ const Dashboard = () => {
     }
 
     if (filter === 'trending') {
-      // Mock trending: sort by progress percentage
       result.sort((a, b) => (b.raised / b.amount) - (a.raised / a.amount));
     } else {
-      // Recent: sort by timestamp
       result.sort((a, b) => b.timestamp - a.timestamp);
     }
 
@@ -70,9 +70,11 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="container mx-auto px-4 py-8">
+        <CommunityStats />
+        
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
-          {/* Left Column: Status & Form */}
+          {/* Left Column: Status, Form, Activity */}
           <div className="lg:col-span-4 space-y-6">
             {!hasGuyBalance ? (
               <Card className="border-destructive/50 bg-destructive/5">
@@ -103,6 +105,7 @@ const Dashboard = () => {
               <RequestForm />
             )}
             
+            <ActivityFeed />
             <Leaderboard />
 
             <Card className="glass-card border-white/5">

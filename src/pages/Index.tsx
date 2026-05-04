@@ -18,8 +18,8 @@ import { Input } from '@/components/ui/input';
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-const Dashboard = () => {
-  const { isConnected, guyBalance, isMember, payMembership, address } = useWallet();
+const Index = () => {
+  const { isConnected, guyBalance, isMember, payMembership, address, connect } = useWallet();
   const { requests } = useRequests();
   const [filter, setFilter] = useState<'recent' | 'trending' | 'my-requests'>('recent');
   const [searchQuery, setSearchQuery] = useState('');
@@ -35,7 +35,7 @@ const Dashboard = () => {
       );
     }
 
-    if (filter === 'my-requests') {
+    if (filter === 'my-requests' && address) {
       result = result.filter(req => req.user === address);
     } else if (filter === 'trending') {
       result.sort((a, b) => (b.raised / b.amount) - (a.raised / a.amount));
@@ -48,22 +48,28 @@ const Dashboard = () => {
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center animate-in fade-in duration-700">
-        <div className="max-w-md space-y-6">
-          <div className="w-20 h-20 bg-primary/20 rounded-3xl flex items-center justify-center mx-auto mb-6 animate-bounce">
-            <ShieldAlert className="text-primary" size={40} />
+      <div className="min-h-screen bg-background text-foreground flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex flex-col items-center justify-center p-4 text-center animate-in fade-in duration-700">
+          <div className="max-w-md space-y-6">
+            <div className="w-20 h-20 bg-primary/20 rounded-3xl flex items-center justify-center mx-auto mb-6 animate-bounce">
+              <ShieldAlert className="text-primary" size={40} />
+            </div>
+            <h1 className="text-4xl font-bold tracking-tight">AskGuy XPR Mutual Aid</h1>
+            <p className="text-muted-foreground text-lg">
+              A community-driven platform for XPR Network users to support each other through mutual aid.
+            </p>
+            <div className="p-4 glass-card rounded-xl text-sm text-left space-y-2">
+              <p className="flex items-center gap-2"><CheckCircle2 size={14} className="text-primary" /> Hold 25,000 GUY tokens</p>
+              <p className="flex items-center gap-2"><CheckCircle2 size={14} className="text-primary" /> Yearly membership: 250 XPR</p>
+              <p className="flex items-center gap-2"><CheckCircle2 size={14} className="text-primary" /> Transparent community funding</p>
+            </div>
+            <Button onClick={connect} size="lg" className="w-full cyan-glow gap-2">
+              Connect Wallet to Start
+            </Button>
           </div>
-          <h1 className="text-4xl font-bold tracking-tight">AskGuy XPR Mutual Aid</h1>
-          <p className="text-muted-foreground text-lg">
-            A community-driven platform for XPR Network users to support each other through mutual aid.
-          </p>
-          <div className="p-4 glass-card rounded-xl text-sm text-left space-y-2">
-            <p className="flex items-center gap-2"><CheckCircle2 size={14} className="text-primary" /> Hold 25,000 GUY tokens</p>
-            <p className="flex items-center gap-2"><CheckCircle2 size={14} className="text-primary" /> Yearly membership: 250 XPR</p>
-            <p className="flex items-center gap-2"><CheckCircle2 size={14} className="text-primary" /> Transparent community funding</p>
-          </div>
-          <p className="text-sm text-muted-foreground italic">Connect your WebAuth wallet to get started.</p>
         </div>
+        <Footer />
       </div>
     );
   }
@@ -71,13 +77,13 @@ const Dashboard = () => {
   const hasGuyBalance = guyBalance >= 25000;
 
   return (
-    <div className="min-h-screen animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-background text-foreground flex flex-col animate-in fade-in duration-500">
+      <Navbar />
+      <main className="flex-1 container mx-auto px-4 py-8">
         <CommunityStats />
         
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          
-          {/* Left Column: Status, Form, Activity */}
+          {/* Left Column */}
           <div className="lg:col-span-4 space-y-6">
             {!hasGuyBalance ? (
               <Card className="border-destructive/50 bg-destructive/5">
@@ -121,7 +127,7 @@ const Dashboard = () => {
             </Card>
           </div>
 
-          {/* Right Column: Feed */}
+          {/* Right Column */}
           <div className="lg:col-span-8 space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <h2 className="text-2xl font-bold">Active Requests</h2>
@@ -162,18 +168,9 @@ const Dashboard = () => {
         </div>
 
         <HowItWorks />
-      </div>
+      </main>
       <Footer />
       <MadeWithDyad />
-    </div>
-  );
-};
-
-const Index = () => {
-  return (
-    <div className="min-h-screen bg-background text-foreground">
-      <Navbar />
-      <Dashboard />
     </div>
   );
 };

@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { WalletProvider, useWallet } from '@/hooks/use-wallet';
-import { RequestsProvider, useRequests } from '@/hooks/use-requests';
+import { useWallet } from '@/hooks/use-wallet';
+import { useRequests } from '@/hooks/use-requests';
 import Navbar from '@/components/Navbar';
 import RequestForm from '@/components/RequestForm';
 import RequestCard from '@/components/RequestCard';
@@ -171,14 +171,10 @@ const Dashboard = () => {
 
 const Index = () => {
   return (
-    <WalletProvider>
-      <RequestsProvider>
-        <div className="min-h-screen bg-background text-foreground">
-          <Navbar />
-          <Dashboard />
-        </div>
-      </RequestsProvider>
-    </WalletProvider>
+    <div className="min-h-screen bg-background text-foreground">
+      <Navbar />
+      <Dashboard />
+    </div>
   );
 };
 

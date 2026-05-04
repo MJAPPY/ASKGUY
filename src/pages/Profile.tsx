@@ -1,0 +1,164 @@
+"use client";
+
+import React, { useMemo } from 'react';
+import { useWallet } from '@/hooks/use-wallet';
+import { useRequests } from '@/hooks/use-requests';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import RequestCard from '@/components/RequestCard';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Heart, Send, Receipt, Award, ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+const Profile = () => {
+  const { address, isConnected, guyBalance, isMember } = useWallet();
+  const { requests } = useRequests();
+
+  const stats = useMemo(() => {
+    if (!address) return { given: 0, received: 0, count: 0 };
+    
+    let given = 0;
+    let received = 0;
+    let count = 0;
+
+    requests.forEach(req => {
+      if (req.user === address) {
+        received += req.raised;
+      }
+      req.contributions.forEach(c => {
+        if (c.user === address) {
+          given += c.amount;
+          count++;
+        }
+      });
+    });
+
+    return { given, received, count };
+  }, [requests, address]);
+
+  const myRequests = requests.filter(req => req.user === address);
+  const myContributions = requests.filter(req => 
+    req.contributions.some(c => c.user === address)
+  );
+
+  if (!isConnected) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Please connect your wallet to view your profile.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      <Navbar />
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <Button variant="ghost" asChild className="mb-4 -ml-2 text-muted-foreground hover:text-primary">
+            <Link to="/" className="flex items-center gap-2">
+              <ArrowLeft size={16} /> Back to Dashboard
+            </Link>
+          </Button>
+          
+          <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center border border-primary/30">
+                <Award className="text-primary" size={32} />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold">{address}</h1>
+                <div className="flex gap-2 mt-1">
+                  <Badge variant="outline" className="border-primary text-primary">
+                    {guyBalance.toLocaleString()} GUY
+                  </Badge>
+                  {isMember && (
+                    <Badge className="bg-primary text-background">Verified Member</Badge>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+          <Card className="glass-card border-white/5">
+            <CardContent className="p-6 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <Heart className="text-primary" size={24} />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Total Aid Given</p>
+                <p className="text-2xl font-bold">{stats.given.toLocaleString()} XPR</p>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="glass-card border-white/5">
+            <CardContent className="p-6 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center">
+                <Receipt className="text-blue-400" size={24} />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Total Aid Received</p>
+                <p className="text-2xl font-bold">{stats.received.toLocaleString()} XPR</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="glass-card border-white/5">
+            <CardContent className="p-6 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center">
+                <Send className="text-purple-400" size={24} />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Contributions Made</p>
+                <p className="text-2xl font-bold">{stats.count}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Tabs defaultValue="my-requests" className="space-y-6">
+          <TabsList className="bg-white/5 border border-white/10">
+            <TabsTrigger value="my-requests">My Requests ({myRequests.length})</TabsTrigger>
+            <TabsTrigger value="my-contributions">My Contributions ({myContributions.length})</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="my-requests">
+            {myRequests.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {myRequests.map(req => (
+                  <RequestCard key={req.id} {...req} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-20 glass-card rounded-2xl border-dashed border-white/10">
+                <p className="text-muted-foreground">You haven't posted any requests yet.</p>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="my-contributions">
+            {myContributions.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {myContributions.map(req => (
+                  <RequestCard key={req.id} {...req} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-20 glass-card rounded-2xl border-dashed border-white/10">
+                <p className="text-muted-foreground">You haven't made any contributions yet.</p>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
+      <Footer />
+    </div>
+  );
+};
+
+export default Profile;

@@ -5,17 +5,19 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Heart, Share2, CheckCircle2, Coins, Eye, AlertTriangle, ExternalLink } from 'lucide-react';
+import { Heart, Share2, CheckCircle2, Coins, Eye, AlertTriangle, MessageSquare } from 'lucide-react';
 import { showSuccess } from '@/utils/toast';
 import { useRequests, AidRequest } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
-const RequestCard: React.FC<AidRequest> = ({ id, user, category, amount, raised, description, status, proofUrl, isUrgent }) => {
+const RequestCard: React.FC<AidRequest> = ({ id, user, category, amount, raised, description, status, proofUrl, isUrgent, contributions }) => {
   const { contribute, markCompleted } = useRequests();
   const { address } = useWallet();
   const [contributionAmount, setContributionAmount] = useState("10");
+  const [contributionMessage, setContributionMessage] = useState("");
   const [isContributing, setIsContributing] = useState(false);
 
   const progress = Math.min((raised / amount) * 100, 100);
@@ -23,11 +25,12 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, category, amount, raised,
 
   const handleContribute = () => {
     const val = parseFloat(contributionAmount);
-    if (isNaN(val) || val <= 0) return;
+    if (isNaN(val) || val <= 0 || !address) return;
     
-    contribute(id, val);
+    contribute(id, address, val, contributionMessage);
     showSuccess(`Contributed ${val} XPR to ${user}'s request!`);
     setIsContributing(false);
+    setContributionMessage("");
   };
 
   return (
@@ -77,7 +80,7 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, category, amount, raised,
                 <Eye size={14} /> Details
               </Button>
             </DialogTrigger>
-            <DialogContent className="glass-card border-white/10 max-w-2xl">
+            <DialogContent className="glass-card border-white/10 max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
               <DialogHeader>
                 <div className="flex justify-between items-center mb-2">
                   <Badge variant="outline" className="border-primary text-primary">{category}</Badge>
@@ -89,32 +92,58 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, category, amount, raised,
                 </DialogDescription>
               </DialogHeader>
               
-              <div className="space-y-6 py-4">
-                <div className="space-y-2">
-                  <h4 className="font-bold text-sm uppercase tracking-wider text-muted-foreground">Description</h4>
-                  <p className="text-foreground leading-relaxed">{description}</p>
-                </div>
-
-                {proofUrl && (
+              <ScrollArea className="flex-1 pr-4">
+                <div className="space-y-6 py-4">
                   <div className="space-y-2">
-                    <h4 className="font-bold text-sm uppercase tracking-wider text-muted-foreground">Proof of Need</h4>
-                    <div className="rounded-xl overflow-hidden border border-white/10 aspect-video bg-black/40">
-                      <img src={proofUrl} alt="Proof" className="w-full h-full object-cover" />
+                    <h4 className="font-bold text-sm uppercase tracking-wider text-muted-foreground">Description</h4>
+                    <p className="text-foreground leading-relaxed">{description}</p>
+                  </div>
+
+                  {proofUrl && (
+                    <div className="space-y-2">
+                      <h4 className="font-bold text-sm uppercase tracking-wider text-muted-foreground">Proof of Need</h4>
+                      <div className="rounded-xl overflow-hidden border border-white/10 aspect-video bg-black/40">
+                        <img src={proofUrl} alt="Proof" className="w-full h-full object-cover" />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-4 p-4 bg-white/5 rounded-xl border border-white/5">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Goal Amount</p>
+                      <p className="text-xl font-bold text-primary">{amount.toLocaleString()} XPR</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Raised So Far</p>
+                      <p className="text-xl font-bold text-foreground">{raised.toLocaleString()} XPR</p>
                     </div>
                   </div>
-                )}
 
-                <div className="grid grid-cols-2 gap-4 p-4 bg-white/5 rounded-xl border border-white/5">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Goal Amount</p>
-                    <p className="text-xl font-bold text-primary">{amount.toLocaleString()} XPR</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Raised So Far</p>
-                    <p className="text-xl font-bold text-foreground">{raised.toLocaleString()} XPR</p>
+                  <div className="space-y-4">
+                    <h4 className="font-bold text-sm uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                      <Heart size={14} className="text-primary" /> Supporters ({contributions.length})
+                    </h4>
+                    <div className="space-y-3">
+                      {contributions.length > 0 ? (
+                        contributions.map((c) => (
+                          <div key={c.id} className="p-3 rounded-lg bg-white/5 border border-white/5 space-y-1">
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs font-bold text-primary">{c.user}</span>
+                              <span className="text-xs font-bold">{c.amount} XPR</span>
+                            </div>
+                            {c.message && (
+                              <p className="text-xs text-muted-foreground italic">"{c.message}"</p>
+                            )}
+                            <p className="text-[10px] text-muted-foreground/50">{new Date(c.timestamp).toLocaleDateString()}</p>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-xs text-muted-foreground italic">No contributions yet. Be the first!</p>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
+              </ScrollArea>
             </DialogContent>
           </Dialog>
 
@@ -134,18 +163,29 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, category, amount, raised,
             Mark as Completed
           </Button>
         ) : isContributing ? (
-          <div className="flex gap-2 w-full animate-in slide-in-from-top-2">
-            <div className="relative flex-1">
-              <Coins className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
+          <div className="space-y-2 animate-in slide-in-from-top-2 w-full">
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Coins className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
+                <Input 
+                  type="number" 
+                  className="pl-9 h-9 bg-white/5" 
+                  value={contributionAmount}
+                  onChange={(e) => setContributionAmount(e.target.value)}
+                />
+              </div>
+              <Button size="sm" onClick={handleContribute} className="cyan-glow">Send</Button>
+              <Button size="sm" variant="ghost" onClick={() => setIsContributing(false)}>X</Button>
+            </div>
+            <div className="relative">
+              <MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
               <Input 
-                type="number" 
-                className="pl-9 h-9 bg-white/5" 
-                value={contributionAmount}
-                onChange={(e) => setContributionAmount(e.target.value)}
+                placeholder="Add a message (optional)" 
+                className="pl-9 h-8 text-xs bg-white/5" 
+                value={contributionMessage}
+                onChange={(e) => setContributionMessage(e.target.value)}
               />
             </div>
-            <Button size="sm" onClick={handleContribute} className="cyan-glow">Send</Button>
-            <Button size="sm" variant="ghost" onClick={() => setIsContributing(false)}>X</Button>
           </div>
         ) : (
           <Button 

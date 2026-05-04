@@ -14,6 +14,8 @@ export interface AidRequest {
   description: string;
   status: RequestStatus;
   timestamp: number;
+  proofUrl?: string;
+  isUrgent?: boolean;
 }
 
 interface RequestsContextType {
@@ -33,9 +35,11 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       category: 'Medical', 
       amount: 1200, 
       raised: 850, 
-      description: 'Need help with unexpected dental surgery costs. Any contribution helps!', 
+      description: 'Need help with unexpected dental surgery costs. The pain is becoming unbearable and I need to get this sorted before it gets worse. Any contribution helps!', 
       status: 'Open',
-      timestamp: Date.now() - 86400000 
+      timestamp: Date.now() - 86400000,
+      isUrgent: true,
+      proofUrl: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=800'
     },
     { 
       id: '2', 
@@ -43,9 +47,10 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       category: 'Utilities', 
       amount: 450, 
       raised: 450, 
-      description: 'Electricity bill is overdue due to job loss. Thank you community!', 
+      description: 'Electricity bill is overdue due to job loss. Thank you community for the incredible support!', 
       status: 'Funded',
-      timestamp: Date.now() - 172800000 
+      timestamp: Date.now() - 172800000,
+      proofUrl: 'https://images.unsplash.com/photo-1558489580-faa74691fdc5?auto=format&fit=crop&q=80&w=800'
     },
     { 
       id: '3', 
@@ -53,7 +58,7 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       category: 'Education', 
       amount: 2500, 
       raised: 2500, 
-      description: 'Textbooks for the upcoming semester. Truly grateful for the support.', 
+      description: 'Textbooks for the upcoming semester. Truly grateful for the support from the GUY community.', 
       status: 'Completed',
       timestamp: Date.now() - 259200000 
     },

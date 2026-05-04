@@ -13,14 +13,15 @@ import ActivityFeed from '@/components/ActivityFeed';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertCircle, CheckCircle2, ShieldAlert, Info, Search } from 'lucide-react';
+import { AlertCircle, CheckCircle2, ShieldAlert, Info, Search, User } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { MadeWithDyad } from "@/components/made-with-dyad";
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const Dashboard = () => {
-  const { isConnected, guyBalance, isMember, payMembership } = useWallet();
+  const { isConnected, guyBalance, isMember, payMembership, address } = useWallet();
   const { requests } = useRequests();
-  const [filter, setFilter] = useState<'recent' | 'trending'>('recent');
+  const [filter, setFilter] = useState<'recent' | 'trending' | 'my-requests'>('recent');
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredRequests = useMemo(() => {
@@ -34,14 +35,16 @@ const Dashboard = () => {
       );
     }
 
-    if (filter === 'trending') {
+    if (filter === 'my-requests') {
+      result = result.filter(req => req.user === address);
+    } else if (filter === 'trending') {
       result.sort((a, b) => (b.raised / b.amount) - (a.raised / a.amount));
     } else {
       result.sort((a, b) => b.timestamp - a.timestamp);
     }
 
     return result;
-  }, [requests, filter, searchQuery]);
+  }, [requests, filter, searchQuery, address]);
 
   if (!isConnected) {
     return (
@@ -122,8 +125,8 @@ const Dashboard = () => {
           <div className="lg:col-span-8 space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <h2 className="text-2xl font-bold">Active Requests</h2>
-              <div className="flex items-center gap-2">
-                <div className="relative flex-1 md:w-64">
+              <div className="flex flex-col sm:flex-row items-center gap-2">
+                <div className="relative w-full sm:w-64">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
                   <Input 
                     placeholder="Search requests..." 
@@ -132,24 +135,15 @@ const Dashboard = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
-                <div className="flex bg-white/5 rounded-lg p-1 border border-white/10">
-                  <Button 
-                    variant={filter === 'recent' ? 'secondary' : 'ghost'} 
-                    size="sm" 
-                    className="h-7 text-xs"
-                    onClick={() => setFilter('recent')}
-                  >
-                    Recent
-                  </Button>
-                  <Button 
-                    variant={filter === 'trending' ? 'secondary' : 'ghost'} 
-                    size="sm" 
-                    className="h-7 text-xs"
-                    onClick={() => setFilter('trending')}
-                  >
-                    Trending
-                  </Button>
-                </div>
+                <Tabs value={filter} onValueChange={(v: any) => setFilter(v)} className="w-full sm:w-auto">
+                  <TabsList className="bg-white/5 border border-white/10 h-9">
+                    <TabsTrigger value="recent" className="text-xs h-7">Recent</TabsTrigger>
+                    <TabsTrigger value="trending" className="text-xs h-7">Trending</TabsTrigger>
+                    <TabsTrigger value="my-requests" className="text-xs h-7 flex gap-1">
+                      <User size={12} /> Mine
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
               </div>
             </div>
 

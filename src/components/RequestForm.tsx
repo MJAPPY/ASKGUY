@@ -1,19 +1,21 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Upload, Send } from 'lucide-react';
+import { Upload, Send, X, FileText } from 'lucide-react';
 import { showSuccess } from '@/utils/toast';
 import { useRequests } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
 
 const RequestForm = () => {
   const [loading, setLoading] = useState(false);
+  const [preview, setPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { addRequest } = useRequests();
   const { address } = useWallet();
   
@@ -22,6 +24,19 @@ const RequestForm = () => {
     amount: '',
     description: ''
   });
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Mock preview
+      setPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const removePreview = () => {
+    setPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,6 +52,7 @@ const RequestForm = () => {
       });
       setLoading(false);
       setFormData({ category: 'medical', amount: '', description: '' });
+      setPreview(null);
       showSuccess("Request posted successfully!");
     }, 1000);
   };
@@ -92,10 +108,40 @@ const RequestForm = () => {
 
           <div className="space-y-2">
             <Label>Photo Proof</Label>
-            <div className="border-2 border-dashed border-white/10 rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer">
-              <Upload className="mx-auto text-muted-foreground mb-2" />
-              <p className="text-sm text-muted-foreground">Click to upload bill photo or receipt</p>
-            </div>
+            <input 
+              type="file" 
+              className="hidden" 
+              ref={fileInputRef} 
+              onChange={handleFileChange}
+              accept="image/*"
+            />
+            
+            {!preview ? (
+              <div 
+                onClick={() => fileInputRef.current?.click()}
+                className="border-2 border-dashed border-white/10 rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer group"
+              >
+                <Upload className="mx-auto text-muted-foreground group-hover:text-primary mb-2 transition-colors" />
+                <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">Click to upload bill photo or receipt</p>
+              </div>
+            ) : (
+              <div className="relative rounded-lg overflow-hidden border border-white/10 aspect-video bg-black/20">
+                <img src={preview} alt="Preview" className="w-full h-full object-contain" />
+                <Button 
+                  type="button" 
+                  variant="destructive" 
+                  size="icon" 
+                  className="absolute top-2 right-2 h-8 w-8 rounded-full"
+                  onClick={removePreview}
+                >
+                  <X size={14} />
+                </Button>
+                <div className="absolute bottom-0 left-0 right-0 bg-black/60 p-2 flex items-center gap-2">
+                  <FileText size={14} className="text-primary" />
+                  <span className="text-[10px] truncate">bill_proof_image.jpg</span>
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
         <CardFooter>

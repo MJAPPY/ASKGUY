@@ -1,20 +1,47 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { WalletProvider, useWallet } from '@/hooks/use-wallet';
 import { RequestsProvider, useRequests } from '@/hooks/use-requests';
 import Navbar from '@/components/Navbar';
 import RequestForm from '@/components/RequestForm';
 import RequestCard from '@/components/RequestCard';
 import Leaderboard from '@/components/Leaderboard';
+import HowItWorks from '@/components/HowItWorks';
+import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertCircle, CheckCircle2, ShieldAlert, Info } from 'lucide-react';
+import { AlertCircle, CheckCircle2, ShieldAlert, Info, Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { MadeWithDyad } from "@/components/made-with-dyad";
 
 const Dashboard = () => {
   const { isConnected, guyBalance, isMember, payMembership } = useWallet();
   const { requests } = useRequests();
+  const [filter, setFilter] = useState<'recent' | 'trending'>('recent');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredRequests = useMemo(() => {
+    let result = [...requests];
+    
+    if (searchQuery) {
+      result = result.filter(req => 
+        req.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        req.user.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        req.category.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    if (filter === 'trending') {
+      // Mock trending: sort by progress percentage
+      result.sort((a, b) => (b.raised / b.amount) - (a.raised / a.amount));
+    } else {
+      // Recent: sort by timestamp
+      result.sort((a, b) => b.timestamp - a.timestamp);
+    }
+
+    return result;
+  }, [requests, filter, searchQuery]);
 
   if (!isConnected) {
     return (
@@ -41,7 +68,7 @@ const Dashboard = () => {
   const hasGuyBalance = guyBalance >= 25000;
 
   return (
-    <div className="min-h-screen pb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="min-h-screen animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
@@ -90,28 +117,56 @@ const Dashboard = () => {
 
           {/* Right Column: Feed */}
           <div className="lg:col-span-8 space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <h2 className="text-2xl font-bold">Active Requests</h2>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm">Recent</Button>
-                <Button variant="ghost" size="sm">Trending</Button>
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1 md:w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
+                  <Input 
+                    placeholder="Search requests..." 
+                    className="pl-9 h-9 bg-white/5 border-white/10"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                <div className="flex bg-white/5 rounded-lg p-1 border border-white/10">
+                  <Button 
+                    variant={filter === 'recent' ? 'secondary' : 'ghost'} 
+                    size="sm" 
+                    className="h-7 text-xs"
+                    onClick={() => setFilter('recent')}
+                  >
+                    Recent
+                  </Button>
+                  <Button 
+                    variant={filter === 'trending' ? 'secondary' : 'ghost'} 
+                    size="sm" 
+                    className="h-7 text-xs"
+                    onClick={() => setFilter('trending')}
+                  >
+                    Trending
+                  </Button>
+                </div>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {requests.map((req) => (
+              {filteredRequests.map((req) => (
                 <RequestCard key={req.id} {...req} />
               ))}
             </div>
 
-            {requests.length === 0 && (
-              <div className="text-center py-20 glass-card rounded-2xl">
-                <p className="text-muted-foreground">No active requests found. Be the first to ask for help!</p>
+            {filteredRequests.length === 0 && (
+              <div className="text-center py-20 glass-card rounded-2xl border-dashed border-white/10">
+                <p className="text-muted-foreground">No requests found matching your criteria.</p>
               </div>
             )}
           </div>
         </div>
+
+        <HowItWorks />
       </div>
+      <Footer />
       <MadeWithDyad />
     </div>
   );

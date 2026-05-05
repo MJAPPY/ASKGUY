@@ -15,7 +15,7 @@ const Navbar = () => {
       <div className="container mx-auto px-4 h-20 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <div className="relative">
-            <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/50 shadow-[0_0_15px_rgba(0,229,255,0.3)]">
+            <div className="w-12 h-12 rounded-full overflow-hidden">
               <img 
                 src={logo} 
                 alt="GUY Logo" 

@@ -28,7 +28,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setIsConnected(true);
     setAddress("guy_user.xpr");
     setGuyBalance(30000); // Mocking > 25k GUY
-    setXprBalance(1250);
+    setXprBalance(5000); // Increased mock balance for the new fee
     showSuccess("WebAuth Wallet Connected");
   };
 
@@ -40,13 +40,14 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const payMembership = () => {
-    if (xprBalance < 250) {
-      showError("Insufficient XPR balance");
+    const FEE = 1500;
+    if (xprBalance < FEE) {
+      showError(`Insufficient XPR balance. Need ${FEE} XPR`);
       return;
     }
-    setXprBalance(prev => prev - 250);
+    setXprBalance(prev => prev - FEE);
     setIsMember(true);
-    showSuccess("Yearly Membership Activated! Sent 250 XPR to @tripseven");
+    showSuccess(`Yearly Membership Activated! Sent ${FEE} XPR to @tripseven`);
   };
 
   return (

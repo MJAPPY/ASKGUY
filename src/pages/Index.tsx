@@ -54,7 +54,7 @@ const Index = () => {
         <Navbar />
         <div className="flex-1 flex flex-col items-center justify-center p-4 text-center animate-in fade-in duration-700">
           <div className="max-w-md space-y-6">
-            <div className="w-32 h-32 rounded-3xl overflow-hidden border-4 border-primary/30 mx-auto mb-6 shadow-[0_0_30px_rgba(0,229,255,0.2)] animate-pulse">
+            <div className="w-32 h-32 rounded-3xl overflow-hidden mx-auto mb-6">
               <img 
                 src={logo} 
                 alt="GUY Logo" 
@@ -67,7 +67,7 @@ const Index = () => {
             </p>
             <div className="p-4 glass-card rounded-xl text-sm text-left space-y-2">
               <p className="flex items-center gap-2"><CheckCircle2 size={14} className="text-primary" /> Hold 25,000 GUY tokens</p>
-              <p className="flex items-center gap-2"><CheckCircle2 size={14} className="text-primary" /> Yearly membership: 250 XPR</p>
+              <p className="flex items-center gap-2"><CheckCircle2 size={14} className="text-primary" /> Yearly membership: 1500 XPR</p>
               <p className="flex items-center gap-2"><CheckCircle2 size={14} className="text-primary" /> Transparent community funding</p>
             </div>
             <Button onClick={connect} size="lg" className="w-full cyan-glow gap-2">
@@ -112,7 +112,7 @@ const Index = () => {
                     </div>
                   </div>
                   <Button onClick={payMembership} className="w-full cyan-glow">
-                    Pay 250 XPR to @tripseven
+                    Pay 1500 XPR to @tripseven
                   </Button>
                 </CardContent>
               </Card>

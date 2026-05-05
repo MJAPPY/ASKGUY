@@ -51,9 +51,10 @@ const Index = () => {
   if (!isConnected) {
     return (
       <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
-        {/* Background Glows */}
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 blur-[120px] rounded-full pointer-events-none" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full pointer-events-none" />
+        {/* Advanced Background Glows */}
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/10 blur-[140px] rounded-full pointer-events-none animate-pulse duration-[10s]" />
+        <div className="absolute top-[20%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full pointer-events-none" />
+        <div className="absolute bottom-[-10%] left-[20%] w-[40%] h-[40%] bg-red-500/5 blur-[120px] rounded-full pointer-events-none" />
         
         <Navbar />
         <div className="flex-1 space-y-0 relative z-10">
@@ -120,8 +121,9 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col animate-in fade-in duration-500 relative overflow-hidden">
       {/* Background Glows */}
-      <div className="absolute top-[20%] right-[-5%] w-[30%] h-[30%] bg-primary/5 blur-[100px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-[20%] left-[-5%] w-[30%] h-[30%] bg-blue-500/5 blur-[100px] rounded-full pointer-events-none" />
+      <div className="absolute top-[20%] right-[-10%] w-[40%] h-[40%] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-[10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/5 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] bg-red-500/[0.02] blur-[150px] rounded-full pointer-events-none" />
 
       <Navbar />
       <main className="flex-1 container mx-auto px-4 py-8 relative z-10">

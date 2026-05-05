@@ -105,26 +105,33 @@ const Index = () => {
                 </p>
               </div>
 
-              {/* Hero Image Section */}
+              {/* Hero Image Section - Blended & Glowing */}
               <div className="relative animate-in fade-in slide-in-from-right-8 duration-1000">
-                <div className="absolute -inset-4 bg-primary/10 blur-3xl rounded-full" />
-                <div className="relative rounded-3xl overflow-hidden border border-white/10 shadow-2xl glass-card aspect-square max-w-[500px] mx-auto">
-                  <img 
-                    src={heroGuy} 
-                    alt="AskGuy" 
-                    className="w-full h-full object-cover object-top"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent pointer-events-none" />
-                </div>
-                {/* Decorative Stats floating on image */}
-                <div className="absolute -bottom-6 -left-6 bg-background/80 backdrop-blur-xl border border-white/10 p-4 rounded-2xl shadow-2xl hidden md:block">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                      <ShieldCheck className="text-primary" size={20} />
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Community Aid</p>
-                      <p className="text-sm font-bold">142,500 XPR Distributed</p>
+                <div className="absolute inset-0 bg-primary/20 blur-[100px] rounded-full scale-110 pointer-events-none animate-pulse" />
+                <div className="relative max-w-[500px] mx-auto">
+                  <div className="relative rounded-[40px] overflow-hidden border border-white/10 shadow-[0_0_50px_rgba(255,215,0,0.15)] glass-card aspect-square group">
+                    <img 
+                      src={heroGuy} 
+                      alt="AskGuy" 
+                      className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                      style={{
+                        maskImage: 'radial-gradient(circle at 50% 40%, black 60%, transparent 100%)',
+                        WebkitMaskImage: 'radial-gradient(circle at 50% 40%, black 60%, transparent 100%)'
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent pointer-events-none opacity-60" />
+                  </div>
+                  
+                  {/* Decorative Stat floating on image */}
+                  <div className="absolute -bottom-4 -left-4 bg-background/80 backdrop-blur-xl border border-white/10 p-4 rounded-2xl shadow-2xl hidden md:block z-20">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                        <ShieldCheck className="text-primary" size={20} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Community Aid</p>
+                        <p className="text-sm font-bold">142,500 XPR Distributed</p>
+                      </div>
                     </div>
                   </div>
                 </div>

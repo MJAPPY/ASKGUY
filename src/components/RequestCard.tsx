@@ -33,18 +33,27 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, category, amount, raised,
     setContributionMessage("");
   };
 
+  const getCategoryColor = () => {
+    switch (category.toLowerCase()) {
+      case 'medical': return 'bg-red-500/10 text-red-400 border-red-500/20';
+      case 'utilities': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+      case 'emergency': return 'bg-red-500/20 text-red-500 border-red-500/30';
+      default: return 'bg-primary/10 text-primary border-primary/20';
+    }
+  };
+
   return (
-    <Card className={`glass-card overflow-hidden group hover:border-primary/30 transition-all duration-300 ${isUrgent && status === 'Open' ? 'border-primary/30' : ''}`}>
+    <Card className={`glass-card overflow-hidden group hover:border-primary/30 transition-all duration-300 ${isUrgent && status === 'Open' ? 'border-red-500/30 red-glow' : ''}`}>
       <CardContent className="p-6">
         <div className="flex justify-between items-start mb-4">
           <div className="space-y-1">
             <p className="text-xs text-muted-foreground">Posted by {user} {isOwner && "(You)"}</p>
             <div className="flex gap-2 items-center">
-              <Badge variant="secondary" className="bg-primary/10 text-primary border-none">
+              <Badge variant="secondary" className={`${getCategoryColor()} border`}>
                 {category}
               </Badge>
               {isUrgent && status === 'Open' && (
-                <Badge className="bg-primary/20 text-primary border-none flex gap-1 items-center">
+                <Badge className="bg-red-500/20 text-red-400 border-none flex gap-1 items-center animate-pulse">
                   <AlertTriangle size={10} /> Urgent
                 </Badge>
               )}
@@ -52,7 +61,7 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, category, amount, raised,
           </div>
           <Badge className={
             status === 'Open' ? 'bg-primary/10 text-primary' : 
-            status === 'Funded' ? 'bg-primary/20 text-primary font-bold' : 
+            status === 'Funded' ? 'bg-blue-500/20 text-blue-400 font-bold' : 
             'bg-green-500/20 text-green-400'
           }>
             {status}
@@ -68,7 +77,15 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, category, amount, raised,
             <span className="text-muted-foreground">Progress</span>
             <span className="font-medium">{raised.toLocaleString()} / {amount.toLocaleString()} XPR</span>
           </div>
-          <Progress value={progress} className="h-2" />
+          <Progress 
+            value={progress} 
+            className="h-2" 
+            style={{ 
+              backgroundColor: 'rgba(255, 255, 255, 0.05)',
+              // @ts-ignore
+              '--progress-background': status === 'Funded' ? 'hsl(var(--brand-blue))' : 'hsl(var(--primary))'
+            }} 
+          />
         </div>
       </CardContent>
 
@@ -76,14 +93,14 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, category, amount, raised,
         <div className="flex gap-2 w-full">
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="flex-1 gap-2">
-                <Eye size={14} /> Details
+              <Button variant="outline" size="sm" className="flex-1 gap-2 border-white/5 hover:bg-white/10 group">
+                <Eye size={14} className="group-hover:text-blue-400 transition-colors" /> Details
               </Button>
             </DialogTrigger>
             <DialogContent className="glass-card border-white/10 max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
               <DialogHeader>
                 <div className="flex justify-between items-center mb-2">
-                  <Badge variant="outline" className="border-primary text-primary">{category}</Badge>
+                  <Badge variant="outline" className={getCategoryColor()}>{category}</Badge>
                   <span className="text-xs text-muted-foreground">ID: {id}</span>
                 </div>
                 <DialogTitle className="text-2xl">Request by {user}</DialogTitle>
@@ -115,20 +132,22 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, category, amount, raised,
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Raised So Far</p>
-                      <p className="text-xl font-bold text-foreground">{raised.toLocaleString()} XPR</p>
+                      <p className={`text-xl font-bold ${status === 'Funded' ? 'text-blue-400' : 'text-foreground'}`}>
+                        {raised.toLocaleString()} XPR
+                      </p>
                     </div>
                   </div>
 
                   <div className="space-y-4">
                     <h4 className="font-bold text-sm uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                      <Heart size={14} className="text-primary" /> Supporters ({contributions.length})
+                      <Heart size={14} className="text-red-500" /> Supporters ({contributions.length})
                     </h4>
                     <div className="space-y-3">
                       {contributions.length > 0 ? (
                         contributions.map((c) => (
                           <div key={c.id} className="p-3 rounded-lg bg-white/5 border border-white/5 space-y-1">
                             <div className="flex justify-between items-center">
-                              <span className="text-xs font-bold text-primary">{c.user}</span>
+                              <span className="text-xs font-bold text-blue-400">{c.user}</span>
                               <span className="text-xs font-bold">{c.amount} XPR</span>
                             </div>
                             {c.message && (
@@ -147,8 +166,8 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, category, amount, raised,
             </DialogContent>
           </Dialog>
 
-          <Button variant="outline" size="icon" className="shrink-0">
-            <Share2 size={14} />
+          <Button variant="outline" size="icon" className="shrink-0 border-white/5 hover:bg-white/10 group">
+            <Share2 size={14} className="group-hover:text-primary transition-colors" />
           </Button>
         </div>
 
@@ -166,7 +185,7 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, category, amount, raised,
           <div className="space-y-2 animate-in slide-in-from-top-2 w-full">
             <div className="flex gap-2">
               <div className="relative flex-1">
-                <Coins className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
+                <Coins className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400" size={14} />
                 <Input 
                   type="number" 
                   className="pl-9 h-9 bg-white/5" 
@@ -174,7 +193,7 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, category, amount, raised,
                   onChange={(e) => setContributionAmount(e.target.value)}
                 />
               </div>
-              <Button size="sm" onClick={handleContribute} className="gold-glow">Send</Button>
+              <Button size="sm" onClick={handleContribute} className="blue-glow bg-blue-600 hover:bg-blue-700 text-white">Send</Button>
               <Button size="sm" variant="ghost" onClick={() => setIsContributing(false)}>X</Button>
             </div>
             <div className="relative">
@@ -190,10 +209,10 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, category, amount, raised,
         ) : (
           <Button 
             onClick={() => setIsContributing(true)} 
-            className="w-full gap-2 gold-glow"
-            disabled={status === 'Funded'}
+            className={`w-full gap-2 ${status === 'Funded' ? 'bg-blue-600 hover:bg-blue-700 blue-glow' : 'gold-glow bg-primary hover:bg-primary/90 text-black'}`}
+            disabled={status === 'Funded' && !isOwner}
           >
-            <Heart size={16} />
+            <Heart size={16} className={status === 'Funded' ? 'fill-white' : 'fill-black'} />
             {status === 'Funded' ? 'Fully Funded' : 'Contribute Now'}
           </Button>
         )}

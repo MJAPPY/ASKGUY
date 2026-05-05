@@ -12,6 +12,11 @@
     --popover-foreground: 0 0% 98%;
     --primary: 45 100% 50%;
     --primary-foreground: 240 5.9% 10%;
+    
+    /* New Brand Colors */
+    --brand-blue: 217 91% 60%;
+    --brand-red: 0 84% 60%;
+    
     --secondary: 240 3.7% 15.9%;
     --secondary-foreground: 0 0% 98%;
     --muted: 240 3.7% 15.9%;
@@ -43,4 +48,12 @@
 
 .gold-glow {
   box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+}
+
+.blue-glow {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+}
+
+.red-glow {
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
 }

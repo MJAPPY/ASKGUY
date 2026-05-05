@@ -63,10 +63,12 @@ const HowItWorks = () => {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map((feature, i) => (
-            <Card key={i} className="glass-card bg-white/[0.03] border-white/5 hover:bg-white/[0.06] transition-colors h-full">
+            <Card key={i} className="glass-card bg-white/[0.03] border-white/5 hover:bg-white/[0.06] transition-all duration-300 h-full group">
               <CardContent className="pt-8 space-y-4">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  {feature.icon}
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center transition-all duration-300 group-hover:bg-primary/20 group-hover:scale-110">
+                  <div className="transition-all duration-300 group-hover:brightness-150 group-hover:scale-110">
+                    {feature.icon}
+                  </div>
                 </div>
                 <h3 className="font-bold text-lg">{feature.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
@@ -87,10 +89,10 @@ const HowItWorks = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           {steps.map((step, i) => (
             <div key={i} className="space-y-4 group">
-              <span className="text-5xl font-black text-white/5 group-hover:text-primary/20 transition-colors duration-500">
+              <span className="text-5xl font-black text-white/5 group-hover:text-primary/20 transition-all duration-500 block transform group-hover:-translate-y-1">
                 {step.number}
               </span>
-              <h3 className="font-bold text-xl">{step.title}</h3>
+              <h3 className="font-bold text-xl group-hover:text-primary transition-colors">{step.title}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 {step.description}
               </p>

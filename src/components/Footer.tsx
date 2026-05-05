@@ -38,7 +38,7 @@ const Footer = () => {
                 href="https://snipverse.com/tripseven" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-primary/20 hover:text-primary transition-all group"
+                className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-primary/20 hover:text-white transition-all group"
                 title="Snipverse"
               >
                 <svg 
@@ -48,19 +48,19 @@ const Footer = () => {
                   strokeWidth="2" 
                   strokeLinecap="round" 
                   strokeLinejoin="round" 
-                  className="w-[18px] h-[18px]"
+                  className="w-[18px] h-[18px] transition-all group-hover:scale-110 group-hover:brightness-125"
                 >
                   <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
                 </svg>
               </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-primary/20 hover:text-primary transition-all">
-                <Twitter size={18} />
+              <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-primary/20 hover:text-white transition-all group">
+                <Twitter size={18} className="transition-all group-hover:scale-110 group-hover:brightness-125" />
               </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-primary/20 hover:text-primary transition-all">
-                <Github size={18} />
+              <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-primary/20 hover:text-white transition-all group">
+                <Github size={18} className="transition-all group-hover:scale-110 group-hover:brightness-125" />
               </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-primary/20 hover:text-primary transition-all">
-                <Globe size={18} />
+              <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-primary/20 hover:text-white transition-all group">
+                <Globe size={18} className="transition-all group-hover:scale-110 group-hover:brightness-125" />
               </a>
             </div>
             <p className="text-xs text-muted-foreground mt-6">

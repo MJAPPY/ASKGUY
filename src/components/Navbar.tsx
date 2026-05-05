@@ -39,11 +39,11 @@ const Navbar = () => {
             variant="outline" 
             size="sm" 
             asChild 
-            className="hidden md:flex gap-2 border-white/10 hover:bg-white/5 text-xs font-bold"
+            className="hidden md:flex gap-2 border-white/10 hover:bg-white/5 text-xs font-bold group"
           >
             <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer">
               Buy $GUY
-              <ExternalLink size={12} />
+              <ExternalLink size={12} className="transition-all group-hover:brightness-150 group-hover:scale-110" />
             </a>
           </Button>
 
@@ -60,20 +60,20 @@ const Navbar = () => {
                   {guyBalance.toLocaleString()} GUY
                 </span>
               </div>
-              <Button variant="ghost" size="sm" asChild className="h-9 w-9 p-0 sm:h-auto sm:w-auto sm:px-3 gap-2">
+              <Button variant="ghost" size="sm" asChild className="h-9 w-9 p-0 sm:h-auto sm:w-auto sm:px-3 gap-2 group">
                 <Link to="/profile">
-                  <User size={16} />
+                  <User size={16} className="transition-all group-hover:brightness-150 group-hover:scale-110" />
                   <span className="hidden sm:inline">Profile</span>
                 </Link>
               </Button>
-              <Button variant="secondary" size="sm" onClick={disconnect} className="h-9 w-9 p-0 sm:h-auto sm:w-auto sm:px-3 gap-2 bg-white/5 hover:bg-white/10 border-white/10">
-                <LogOut size={16} />
+              <Button variant="secondary" size="sm" onClick={disconnect} className="h-9 w-9 p-0 sm:h-auto sm:w-auto sm:px-3 gap-2 bg-white/5 hover:bg-white/10 border-white/10 group">
+                <LogOut size={16} className="transition-all group-hover:brightness-150 group-hover:scale-110" />
                 <span className="hidden sm:inline">Exit</span>
               </Button>
             </div>
           ) : (
-            <Button onClick={connect} className="gap-2 bg-primary hover:bg-primary/90 text-black font-bold rounded-full px-6 gold-glow">
-              <Wallet size={18} />
+            <Button onClick={connect} className="gap-2 bg-primary hover:bg-primary/90 text-black font-bold rounded-full px-6 gold-glow group">
+              <Wallet size={18} className="transition-all group-hover:scale-110" />
               Connect
             </Button>
           )}

@@ -54,7 +54,7 @@ const Index = () => {
       <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
         {/* Ambient Background Glows */}
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/10 blur-[140px] rounded-full pointer-events-none animate-pulse duration-[10s]" />
-        <div className="absolute bottom-[20%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full pointer-events-none" />
+        <div className="absolute bottom-[20%] right-[-10%] w-[40%] h-[40%] bg-blue-500/5 blur-[120px] rounded-full pointer-events-none" />
         
         <Navbar />
         <div className="flex-1 relative z-10 flex flex-col justify-center">
@@ -113,10 +113,11 @@ const Index = () => {
                     <img 
                       src={heroGuy} 
                       alt="AskGuy" 
-                      className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                       style={{
-                        maskImage: 'radial-gradient(circle at 50% 40%, black 60%, transparent 100%)',
-                        WebkitMaskImage: 'radial-gradient(circle at 50% 40%, black 60%, transparent 100%)'
+                        objectPosition: 'center 15%',
+                        maskImage: 'radial-gradient(circle at 50% 30%, black 75%, transparent 100%)',
+                        WebkitMaskImage: 'radial-gradient(circle at 50% 30%, black 75%, transparent 100%)'
                       }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent pointer-events-none opacity-60" />

@@ -9,13 +9,13 @@ import RequestCard from '@/components/RequestCard';
 import TransactionHistory from '@/components/TransactionHistory';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Heart, Send, Receipt, Award, ArrowLeft } from 'lucide-react';
+import { Heart, Send, Receipt, Award, ArrowLeft, Calendar, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const Profile = () => {
-  const { address, isConnected, guyBalance, isMember } = useWallet();
+  const { address, isConnected, guyBalance, isMember, membershipExpiry, payMembership } = useWallet();
   const { requests } = useRequests();
 
   const stats = useMemo(() => {
@@ -81,6 +81,21 @@ const Profile = () => {
                 </div>
               </div>
             </div>
+
+            {isMember && (
+              <div className="p-4 glass-card rounded-xl border-primary/20 flex items-center gap-6">
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-1">Membership Expiry</p>
+                  <p className="text-sm font-bold flex items-center gap-2">
+                    <Calendar size={14} className="text-primary" />
+                    {new Date(membershipExpiry!).toLocaleDateString()}
+                  </p>
+                </div>
+                <Button size="sm" variant="secondary" onClick={payMembership} className="h-9 px-4 font-bold border-white/10">
+                  Renew
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 

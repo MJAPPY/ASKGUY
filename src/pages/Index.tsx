@@ -15,13 +15,13 @@ import CTASection from '@/components/CTASection';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertCircle, ShieldAlert, Info, Search, User, ExternalLink, Wallet, Heart, ArrowRight } from 'lucide-react';
+import { AlertCircle, ShieldAlert, Info, Search, User, ExternalLink, Heart, ArrowRight, ShieldCheck, Calendar } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const Index = () => {
-  const { isConnected, guyBalance, isMember, payMembership, address, connect } = useWallet();
+  const { isConnected, guyBalance, isMember, membershipExpiry, payMembership, address, connect } = useWallet();
   const { requests } = useRequests();
   const [filter, setFilter] = useState<'recent' | 'trending' | 'my-requests'>('recent');
   const [searchQuery, setSearchQuery] = useState('');
@@ -139,22 +139,48 @@ const Index = () => {
                 </CardContent>
               </Card>
             ) : !isMember ? (
-              <Card className="border-primary/50 bg-primary/5">
+              <Card className="border-primary/50 bg-primary/5 overflow-hidden relative">
+                <div className="absolute top-0 right-0 p-4 opacity-10">
+                  <ShieldCheck size={48} className="text-primary" />
+                </div>
                 <CardContent className="p-6 space-y-4">
                   <div className="flex gap-4">
                     <ShieldAlert className="text-primary shrink-0" />
-                    <div className="space-y-1">
-                      <p className="font-bold text-primary">Membership Required</p>
-                      <p className="text-sm text-muted-foreground">Activate your yearly membership to post and contribute to requests.</p>
+                    <div className="space-y-2">
+                      <p className="font-bold text-primary text-lg">Yearly Membership Required</p>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        To keep AskGuy running smoothly (hosting, development, moderation & updates), we charge a yearly admin fee of 2,500 XPR.
+                      </p>
                     </div>
                   </div>
-                  <Button onClick={payMembership} className="w-full bg-primary hover:bg-primary/90 text-black font-bold h-12 gold-glow">
-                    Pay 1500 XPR to @tripseven
+                  <Button onClick={payMembership} className="w-full bg-primary hover:bg-primary/90 text-black font-bold h-12 gold-glow text-base">
+                    Pay 2,500 XPR & Join
                   </Button>
                 </CardContent>
               </Card>
             ) : (
-              <RequestForm />
+              <div className="space-y-6">
+                <Card className="glass-card border-primary/20 bg-primary/5">
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        <ShieldCheck className="text-primary" size={20} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold">Active Member</p>
+                        <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                          <Calendar size={10} />
+                          Expires: {new Date(membershipExpiry!).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={payMembership} className="text-[10px] h-8 font-bold uppercase tracking-wider text-primary hover:bg-primary/10">
+                      Renew
+                    </Button>
+                  </CardContent>
+                </Card>
+                <RequestForm />
+              </div>
             )}
             
             <ActivityFeed />

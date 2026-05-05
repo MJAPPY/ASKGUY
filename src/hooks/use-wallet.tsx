@@ -9,6 +9,7 @@ interface WalletContextType {
   guyBalance: number;
   xprBalance: number;
   isMember: boolean;
+  membershipExpiry: number | null;
   connect: () => void;
   disconnect: () => void;
   payMembership: () => void;
@@ -22,13 +23,14 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [guyBalance, setGuyBalance] = useState(0);
   const [xprBalance, setXprBalance] = useState(0);
   const [isMember, setIsMember] = useState(false);
+  const [membershipExpiry, setMembershipExpiry] = useState<number | null>(null);
 
   const connect = () => {
     // Mock connection
     setIsConnected(true);
     setAddress("guy_user.xpr");
     setGuyBalance(30000); // Mocking > 25k GUY
-    setXprBalance(5000); // Increased mock balance for the new fee
+    setXprBalance(10000); // Increased mock balance for the new fee
     showSuccess("WebAuth Wallet Connected");
   };
 
@@ -40,14 +42,22 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const payMembership = () => {
-    const FEE = 1500;
+    const FEE = 2500;
     if (xprBalance < FEE) {
       showError(`Insufficient XPR balance. Need ${FEE} XPR`);
       return;
     }
+    
     setXprBalance(prev => prev - FEE);
     setIsMember(true);
-    showSuccess(`Yearly Membership Activated! Sent ${FEE} XPR to @tripseven`);
+    
+    // Set or extend expiry by 1 year (365 days)
+    const oneYearInMs = 365 * 24 * 60 * 60 * 1000;
+    const currentExpiry = membershipExpiry || Date.now();
+    const newExpiry = (currentExpiry > Date.now() ? currentExpiry : Date.now()) + oneYearInMs;
+    
+    setMembershipExpiry(newExpiry);
+    showSuccess(`Membership ${membershipExpiry ? 'Renewed' : 'Activated'}! Sent ${FEE} XPR to @tripseven`);
   };
 
   return (
@@ -57,6 +67,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       guyBalance, 
       xprBalance, 
       isMember, 
+      membershipExpiry,
       connect, 
       disconnect,
       payMembership

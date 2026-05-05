@@ -34,7 +34,7 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, category, amount, raised,
   };
 
   return (
-    <Card className={`glass-card overflow-hidden group hover:border-primary/30 transition-all duration-300 ${isUrgent && status === 'Open' ? 'border-orange-500/30' : ''}`}>
+    <Card className={`glass-card overflow-hidden group hover:border-primary/30 transition-all duration-300 ${isUrgent && status === 'Open' ? 'border-primary/30' : ''}`}>
       <CardContent className="p-6">
         <div className="flex justify-between items-start mb-4">
           <div className="space-y-1">
@@ -44,15 +44,15 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, category, amount, raised,
                 {category}
               </Badge>
               {isUrgent && status === 'Open' && (
-                <Badge className="bg-orange-500/20 text-orange-400 border-none flex gap-1 items-center">
+                <Badge className="bg-primary/20 text-primary border-none flex gap-1 items-center">
                   <AlertTriangle size={10} /> Urgent
                 </Badge>
               )}
             </div>
           </div>
           <Badge className={
-            status === 'Open' ? 'bg-blue-500/20 text-blue-400' : 
-            status === 'Funded' ? 'bg-primary/20 text-primary' : 
+            status === 'Open' ? 'bg-primary/10 text-primary' : 
+            status === 'Funded' ? 'bg-primary/20 text-primary font-bold' : 
             'bg-green-500/20 text-green-400'
           }>
             {status}
@@ -174,7 +174,7 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, category, amount, raised,
                   onChange={(e) => setContributionAmount(e.target.value)}
                 />
               </div>
-              <Button size="sm" onClick={handleContribute} className="cyan-glow">Send</Button>
+              <Button size="sm" onClick={handleContribute} className="gold-glow">Send</Button>
               <Button size="sm" variant="ghost" onClick={() => setIsContributing(false)}>X</Button>
             </div>
             <div className="relative">
@@ -190,7 +190,7 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, category, amount, raised,
         ) : (
           <Button 
             onClick={() => setIsContributing(true)} 
-            className="w-full gap-2 cyan-glow"
+            className="w-full gap-2 gold-glow"
             disabled={status === 'Funded'}
           >
             <Heart size={16} />

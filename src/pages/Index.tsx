@@ -76,7 +76,7 @@ const Index = () => {
               <Button 
                 onClick={connect} 
                 size="lg" 
-                className="h-14 px-8 text-lg font-bold bg-primary hover:bg-primary/90 text-black rounded-xl flex gap-2 group transition-all orange-glow"
+                className="h-14 px-8 text-lg font-bold bg-primary hover:bg-primary/90 text-black rounded-xl flex gap-2 group transition-all gold-glow"
               >
                 <Heart size={20} className="fill-black" />
                 Connect & Join
@@ -145,7 +145,7 @@ const Index = () => {
                       <p className="text-sm text-muted-foreground">Activate your yearly membership to post and contribute to requests.</p>
                     </div>
                   </div>
-                  <Button onClick={payMembership} className="w-full bg-primary hover:bg-primary/90 text-black font-bold h-12">
+                  <Button onClick={payMembership} className="w-full bg-primary hover:bg-primary/90 text-black font-bold h-12 gold-glow">
                     Pay 1500 XPR to @tripseven
                   </Button>
                 </CardContent>
@@ -217,7 +217,6 @@ const Index = () => {
           </Button>
         </div>
 
-        <SuccessStories />
         <HowItWorks />
       </main>
       <Footer />

@@ -22,7 +22,7 @@ const Navbar = () => {
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#FF9100] rounded-full border-2 border-background" />
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border-2 border-background" />
           </div>
           <div className="flex flex-col leading-none">
             <span className="font-black text-2xl tracking-tight text-white">
@@ -48,7 +48,7 @@ const Navbar = () => {
           </Button>
 
           <div className="hidden md:flex items-center px-3 py-1.5 rounded-full bg-white/5 border border-white/10 gap-2">
-            <div className="w-2 h-2 rounded-full bg-[#00FF88] animate-pulse" />
+            <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
             <span className="text-xs font-bold text-white/90">XPR Network</span>
           </div>
 
@@ -56,7 +56,7 @@ const Navbar = () => {
             <div className="flex items-center gap-3">
               <div className="hidden lg:flex flex-col items-end text-[10px] font-bold uppercase tracking-wider">
                 <span className="text-muted-foreground">{address}</span>
-                <span className={guyBalance >= 25000 ? "text-[#00E5FF]" : "text-destructive"}>
+                <span className={guyBalance >= 25000 ? "text-primary" : "text-destructive"}>
                   {guyBalance.toLocaleString()} GUY
                 </span>
               </div>
@@ -72,7 +72,7 @@ const Navbar = () => {
               </Button>
             </div>
           ) : (
-            <Button onClick={connect} className="gap-2 bg-[#00E5FF] hover:bg-[#00B8CC] text-black font-bold rounded-full px-6">
+            <Button onClick={connect} className="gap-2 bg-primary hover:bg-primary/90 text-black font-bold rounded-full px-6 gold-glow">
               <Wallet size={18} />
               Connect
             </Button>

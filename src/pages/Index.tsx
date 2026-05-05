@@ -11,6 +11,7 @@ import HowItWorks from '@/components/HowItWorks';
 import CommunityStats from '@/components/CommunityStats';
 import ActivityFeed from '@/components/ActivityFeed';
 import SuccessStories from '@/components/SuccessStories';
+import CTASection from '@/components/CTASection';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -51,55 +52,58 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-background text-foreground flex flex-col">
         <Navbar />
-        <div className="flex-1 flex flex-col items-center justify-center p-4 text-center animate-in fade-in duration-700">
-          <div className="max-w-4xl space-y-10 px-4">
-            {/* Badge */}
-            <div className="flex justify-center">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/40 bg-primary/5 text-primary text-sm font-medium">
-                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                Built on XPR Network
+        <div className="flex-1 space-y-0">
+          <div className="flex flex-col items-center justify-center py-32 p-4 text-center animate-in fade-in duration-700">
+            <div className="max-w-4xl space-y-10 px-4">
+              <div className="flex justify-center">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/40 bg-primary/5 text-primary text-sm font-medium">
+                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                  Built on XPR Network
+                </div>
               </div>
+
+              <h1 className="text-6xl md:text-8xl font-black tracking-tight leading-none">
+                Real Help, <span className="text-primary">Real People</span>
+              </h1>
+
+              <p className="text-muted-foreground text-xl md:text-2xl max-w-2xl mx-auto leading-relaxed font-medium opacity-90">
+                AskGuy is a mutual assistance platform where XPR Network members help each other with real-life expenses. Post a need, send XPR, lift each other up.
+              </p>
+
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Button 
+                  onClick={connect} 
+                  size="lg" 
+                  className="h-14 px-8 text-lg font-bold bg-primary hover:bg-primary/90 text-black rounded-xl flex gap-2 group transition-all gold-glow"
+                >
+                  <Heart size={20} className="fill-black" />
+                  Connect & Join
+                  <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  asChild 
+                  className="h-14 px-8 text-lg font-bold border-white/10 hover:bg-white/5 rounded-xl flex gap-2"
+                >
+                  <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer">
+                    Buy GUY Tokens
+                    <ExternalLink size={20} className="text-muted-foreground" />
+                  </a>
+                </Button>
+              </div>
+
+              <p className="text-sm text-muted-foreground font-medium opacity-60">
+                Requires 25,000 GUY tokens · Powered by Proton WebAuth
+              </p>
             </div>
-
-            {/* Headline */}
-            <h1 className="text-6xl md:text-8xl font-black tracking-tight leading-none">
-              Real Help, <span className="text-primary">Real People</span>
-            </h1>
-
-            {/* Description */}
-            <p className="text-muted-foreground text-xl md:text-2xl max-w-2xl mx-auto leading-relaxed font-medium opacity-90">
-              AskGuy is a mutual assistance platform where XPR Network members help each other with real-life expenses. Post a need, send XPR, lift each other up.
-            </p>
-
-            {/* Buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button 
-                onClick={connect} 
-                size="lg" 
-                className="h-14 px-8 text-lg font-bold bg-primary hover:bg-primary/90 text-black rounded-xl flex gap-2 group transition-all gold-glow"
-              >
-                <Heart size={20} className="fill-black" />
-                Connect & Join
-                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                size="lg" 
-                asChild 
-                className="h-14 px-8 text-lg font-bold border-white/10 hover:bg-white/5 rounded-xl flex gap-2"
-              >
-                <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer">
-                  Buy GUY Tokens
-                  <ExternalLink size={20} className="text-muted-foreground" />
-                </a>
-              </Button>
-            </div>
-
-            {/* Subtext */}
-            <p className="text-sm text-muted-foreground font-medium opacity-60">
-              Requires 25,000 GUY tokens · Powered by Proton WebAuth
-            </p>
+          </div>
+          
+          <div className="container mx-auto px-4">
+            <HowItWorks />
+            <SuccessStories />
+            <CTASection />
           </div>
         </div>
         <Footer />
@@ -116,7 +120,6 @@ const Index = () => {
         <CommunityStats />
         
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left Column */}
           <div className="lg:col-span-4 space-y-6">
             {!hasGuyBalance ? (
               <Card className="border-destructive/50 bg-destructive/5">
@@ -167,7 +170,6 @@ const Index = () => {
             </Card>
           </div>
 
-          {/* Right Column */}
           <div className="lg:col-span-8 space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <h2 className="text-2xl font-bold">Active Requests</h2>
@@ -205,16 +207,6 @@ const Index = () => {
               </div>
             )}
           </div>
-        </div>
-
-        <div className="mt-12 p-6 glass-card border-none bg-primary/5 rounded-2xl text-center">
-          <h3 className="text-lg font-bold mb-2">Grow the Community</h3>
-          <p className="text-sm text-muted-foreground mb-4">The more members hold GUY, the stronger our mutual aid network becomes.</p>
-          <Button variant="outline" asChild className="border-primary/20 hover:bg-primary/10">
-            <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
-              Trade GUY Tokens <ExternalLink size={14} />
-            </a>
-          </Button>
         </div>
 
         <HowItWorks />

@@ -19,6 +19,7 @@ import { AlertCircle, ShieldAlert, Info, Search, User, ExternalLink, Heart, Arro
 import { Input } from '@/components/ui/input';
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import heroGuy from '@/assets/hero-guy.jpg';
 
 const Index = () => {
   const { isConnected, guyBalance, isMember, membershipExpiry, payMembership, address, connect } = useWallet();
@@ -51,57 +52,70 @@ const Index = () => {
   if (!isConnected) {
     return (
       <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
+        {/* Hero Image Blended Background */}
+        <div className="absolute top-0 right-0 w-full h-[800px] pointer-events-none z-0">
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/50 to-background z-10" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/40 to-transparent z-10" />
+          <img 
+            src={heroGuy} 
+            alt="AskGuy Hero" 
+            className="w-full h-full object-cover object-top opacity-20 lg:opacity-30 mix-blend-luminosity lg:mix-blend-normal lg:object-[80%_top]"
+          />
+        </div>
+
         {/* Advanced Background Glows */}
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/10 blur-[140px] rounded-full pointer-events-none animate-pulse duration-[10s]" />
         <div className="absolute top-[20%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full pointer-events-none" />
-        <div className="absolute bottom-[-10%] left-[20%] w-[40%] h-[40%] bg-red-500/5 blur-[120px] rounded-full pointer-events-none" />
         
         <Navbar />
         <div className="flex-1 space-y-0 relative z-10">
-          <div className="flex flex-col items-center justify-center py-32 p-4 text-center animate-in fade-in duration-700">
-            <div className="max-w-4xl space-y-10 px-4">
-              <div className="flex justify-center">
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/40 bg-primary/5 text-primary text-sm font-medium">
-                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                  Built on XPR Network
+          <div className="flex flex-col items-center lg:items-start justify-center py-32 lg:py-48 px-4 text-center lg:text-left animate-in fade-in slide-in-from-bottom-8 duration-1000">
+            <div className="container mx-auto">
+              <div className="max-w-4xl space-y-10">
+                <div className="flex justify-center lg:justify-start">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/40 bg-primary/5 text-primary text-sm font-medium">
+                    <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                    Built on XPR Network
+                  </div>
                 </div>
+
+                <h1 className="text-6xl md:text-8xl font-black tracking-tight leading-none drop-shadow-2xl">
+                  Real Help, <br />
+                  <span className="text-primary drop-shadow-[0_0_15px_rgba(255,215,0,0.4)]">Real People</span>
+                </h1>
+
+                <p className="text-muted-foreground text-xl md:text-2xl max-w-2xl leading-relaxed font-medium opacity-90">
+                  AskGuy is a mutual assistance platform where XPR Network members help each other with real-life expenses. Post a need, send XPR, lift each other up.
+                </p>
+
+                <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+                  <Button 
+                    onClick={connect} 
+                    size="lg" 
+                    className="h-14 px-8 text-lg font-bold bg-primary hover:bg-primary/90 text-black rounded-xl flex gap-2 group transition-all gold-glow btn-premium"
+                  >
+                    <Heart size={20} className="fill-black" />
+                    Connect & Join
+                    <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                  
+                  <Button 
+                    variant="outline" 
+                    size="lg" 
+                    asChild 
+                    className="h-14 px-8 text-lg font-bold border-white/10 hover:bg-white/5 rounded-xl flex gap-2 btn-premium backdrop-blur-sm"
+                  >
+                    <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer">
+                      Buy GUY Tokens
+                      <ExternalLink size={20} className="text-muted-foreground" />
+                    </a>
+                  </Button>
+                </div>
+
+                <p className="text-sm text-muted-foreground font-medium opacity-60">
+                  Requires 25,000 GUY tokens · Powered by Proton WebAuth
+                </p>
               </div>
-
-              <h1 className="text-6xl md:text-8xl font-black tracking-tight leading-none">
-                Real Help, <span className="text-primary">Real People</span>
-              </h1>
-
-              <p className="text-muted-foreground text-xl md:text-2xl max-w-2xl mx-auto leading-relaxed font-medium opacity-90">
-                AskGuy is a mutual assistance platform where XPR Network members help each other with real-life expenses. Post a need, send XPR, lift each other up.
-              </p>
-
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Button 
-                  onClick={connect} 
-                  size="lg" 
-                  className="h-14 px-8 text-lg font-bold bg-primary hover:bg-primary/90 text-black rounded-xl flex gap-2 group transition-all gold-glow btn-premium"
-                >
-                  <Heart size={20} className="fill-black" />
-                  Connect & Join
-                  <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  size="lg" 
-                  asChild 
-                  className="h-14 px-8 text-lg font-bold border-white/10 hover:bg-white/5 rounded-xl flex gap-2 btn-premium"
-                >
-                  <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer">
-                    Buy GUY Tokens
-                    <ExternalLink size={20} className="text-muted-foreground" />
-                  </a>
-                </Button>
-              </div>
-
-              <p className="text-sm text-muted-foreground font-medium opacity-60">
-                Requires 25,000 GUY tokens · Powered by Proton WebAuth
-              </p>
             </div>
           </div>
           
@@ -120,10 +134,18 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col animate-in fade-in duration-500 relative overflow-hidden">
+      {/* Background Hero Image - Subtle when connected */}
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] pointer-events-none z-0 opacity-[0.03] lg:opacity-[0.07]">
+         <img 
+            src={heroGuy} 
+            alt="Hero Guy Background" 
+            className="w-full h-full object-cover rounded-full blur-xl"
+          />
+      </div>
+
       {/* Background Glows */}
       <div className="absolute top-[20%] right-[-10%] w-[40%] h-[40%] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-[10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/5 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] bg-red-500/[0.02] blur-[150px] rounded-full pointer-events-none" />
 
       <Navbar />
       <main className="flex-1 container mx-auto px-4 py-8 relative z-10">

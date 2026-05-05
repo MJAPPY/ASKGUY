@@ -14,11 +14,10 @@ import SuccessStories from '@/components/SuccessStories';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertCircle, CheckCircle2, ShieldAlert, Info, Search, User, ExternalLink, Wallet } from 'lucide-react';
+import { AlertCircle, ShieldAlert, Info, Search, User, ExternalLink, Wallet, Heart, ArrowRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import logo from '@/assets/logo.jpg';
 
 const Index = () => {
   const { isConnected, guyBalance, isMember, payMembership, address, connect } = useWallet();
@@ -53,34 +52,54 @@ const Index = () => {
       <div className="min-h-screen bg-background text-foreground flex flex-col">
         <Navbar />
         <div className="flex-1 flex flex-col items-center justify-center p-4 text-center animate-in fade-in duration-700">
-          <div className="max-w-md space-y-6">
-            <div className="w-32 h-32 rounded-3xl overflow-hidden mx-auto mb-6">
-              <img 
-                src={logo} 
-                alt="GUY Logo" 
-                className="w-full h-full object-cover"
-              />
+          <div className="max-w-4xl space-y-10 px-4">
+            {/* Badge */}
+            <div className="flex justify-center">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/40 bg-primary/5 text-primary text-sm font-medium">
+                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                Built on XPR Network
+              </div>
             </div>
-            <h1 className="text-4xl font-bold tracking-tight">Real Help, Real People</h1>
-            <p className="text-muted-foreground text-lg leading-relaxed">
+
+            {/* Headline */}
+            <h1 className="text-6xl md:text-8xl font-black tracking-tight leading-none">
+              Real Help, <span className="text-primary">Real People</span>
+            </h1>
+
+            {/* Description */}
+            <p className="text-muted-foreground text-xl md:text-2xl max-w-2xl mx-auto leading-relaxed font-medium opacity-90">
               AskGuy is a mutual assistance platform where XPR Network members help each other with real-life expenses. Post a need, send XPR, lift each other up.
             </p>
-            <div className="p-4 glass-card rounded-xl text-sm text-left space-y-2">
-              <p className="flex items-center gap-2"><CheckCircle2 size={14} className="text-primary" /> Hold 25,000 GUY tokens</p>
-              <p className="flex items-center gap-2"><CheckCircle2 size={14} className="text-primary" /> Yearly membership: 1500 XPR</p>
-              <p className="flex items-center gap-2"><CheckCircle2 size={14} className="text-primary" /> Transparent community funding</p>
-            </div>
-            <div className="flex flex-col gap-3">
-              <Button onClick={connect} size="lg" className="w-full cyan-glow gap-2">
-                <Wallet size={18} />
-                Connect Wallet to Start
+
+            {/* Buttons */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Button 
+                onClick={connect} 
+                size="lg" 
+                className="h-14 px-8 text-lg font-bold bg-primary hover:bg-primary/90 text-black rounded-xl flex gap-2 group transition-all orange-glow"
+              >
+                <Heart size={20} className="fill-black" />
+                Connect & Join
+                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
               </Button>
-              <Button variant="link" asChild className="text-muted-foreground hover:text-primary">
-                <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
-                  Need GUY tokens? Buy here <ExternalLink size={14} />
+              
+              <Button 
+                variant="outline" 
+                size="lg" 
+                asChild 
+                className="h-14 px-8 text-lg font-bold border-white/10 hover:bg-white/5 rounded-xl flex gap-2"
+              >
+                <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer">
+                  Buy GUY Tokens
+                  <ExternalLink size={20} className="text-muted-foreground" />
                 </a>
               </Button>
             </div>
+
+            {/* Subtext */}
+            <p className="text-sm text-muted-foreground font-medium opacity-60">
+              Requires 25,000 GUY tokens · Powered by Proton WebAuth
+            </p>
           </div>
         </div>
         <Footer />
@@ -126,7 +145,7 @@ const Index = () => {
                       <p className="text-sm text-muted-foreground">Activate your yearly membership to post and contribute to requests.</p>
                     </div>
                   </div>
-                  <Button onClick={payMembership} className="w-full cyan-glow">
+                  <Button onClick={payMembership} className="w-full bg-primary hover:bg-primary/90 text-black font-bold h-12">
                     Pay 1500 XPR to @tripseven
                   </Button>
                 </CardContent>

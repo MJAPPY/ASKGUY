@@ -7,9 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Upload, Send, X, FileText, AlertCircle } from 'lucide-react';
+import { Upload, Send, X, FileText, AlertCircle, Coins } from 'lucide-react';
 import { showSuccess } from '@/utils/toast';
-import { useRequests } from '@/hooks/use-requests';
+import { useRequests, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
 
 const RequestForm = () => {
@@ -22,13 +22,13 @@ const RequestForm = () => {
   const [formData, setFormData] = useState({
     category: 'medical',
     amount: '',
+    token: 'XPR' as TokenSymbol,
     description: ''
   });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Mock preview
       setPreview(URL.createObjectURL(file));
     }
   };
@@ -48,10 +48,11 @@ const RequestForm = () => {
         user: address,
         category: formData.category.charAt(0).toUpperCase() + formData.category.slice(1),
         amount: parseFloat(formData.amount),
+        token: formData.token,
         description: formData.description,
       });
       setLoading(false);
-      setFormData({ category: 'medical', amount: '', description: '' });
+      setFormData({ category: 'medical', amount: '', token: 'XPR', description: '' });
       setPreview(null);
       showSuccess("Request posted successfully!");
     }, 1000);
@@ -65,7 +66,7 @@ const RequestForm = () => {
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Category</Label>
               <Select 
@@ -84,15 +85,31 @@ const RequestForm = () => {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Amount (XPR)</Label>
-              <Input 
-                type="number" 
-                placeholder="0.00" 
-                required 
-                value={formData.amount}
-                onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
-              />
+              <Label>Token</Label>
+              <Select 
+                value={formData.token} 
+                onValueChange={(v: TokenSymbol) => setFormData(prev => ({ ...prev, token: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select token" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="XPR">XPR (Main)</SelectItem>
+                  <SelectItem value="GUY">GUY (Community)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label>Amount ({formData.token})</Label>
+            <Input 
+              type="number" 
+              placeholder="0.00" 
+              required 
+              value={formData.amount}
+              onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+            />
           </div>
           
           <div className="space-y-2">
@@ -107,13 +124,7 @@ const RequestForm = () => {
           </div>
 
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>Photo Proof</Label>
-              <div className="flex items-center gap-1 text-[10px] text-orange-400 font-medium">
-                <AlertCircle size={10} />
-                <span>Hide sensitive info (address, acc numbers)</span>
-              </div>
-            </div>
+            <Label>Photo Proof</Label>
             <input 
               type="file" 
               className="hidden" 
@@ -128,7 +139,7 @@ const RequestForm = () => {
                 className="border-2 border-dashed border-white/10 rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer group"
               >
                 <Upload className="mx-auto text-muted-foreground group-hover:text-primary mb-2 transition-colors" />
-                <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">Click to upload bill photo or receipt</p>
+                <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">Click to upload bill photo</p>
               </div>
             ) : (
               <div className="relative rounded-lg overflow-hidden border border-white/10 aspect-video bg-black/20">
@@ -142,10 +153,6 @@ const RequestForm = () => {
                 >
                   <X size={14} />
                 </Button>
-                <div className="absolute bottom-0 left-0 right-0 bg-black/60 p-2 flex items-center gap-2">
-                  <FileText size={14} className="text-primary" />
-                  <span className="text-[10px] truncate">bill_proof_image.jpg</span>
-                </div>
               </div>
             )}
           </div>

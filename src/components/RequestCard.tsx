@@ -7,16 +7,18 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Heart, Share2, CheckCircle2, Coins, Eye, AlertTriangle, MessageSquare } from 'lucide-react';
 import { showSuccess } from '@/utils/toast';
-import { useRequests, AidRequest } from '@/hooks/use-requests';
+import { useRequests, AidRequest, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-const RequestCard: React.FC<AidRequest> = ({ id, user, category, amount, raised, description, status, proofUrl, isUrgent, contributions }) => {
+const RequestCard: React.FC<AidRequest> = ({ id, user, category, amount, token, raised, description, status, proofUrl, isUrgent, contributions }) => {
   const { contribute, markCompleted } = useRequests();
   const { address } = useWallet();
   const [contributionAmount, setContributionAmount] = useState("10");
+  const [contributionToken, setContributionToken] = useState<TokenSymbol>(token);
   const [contributionMessage, setContributionMessage] = useState("");
   const [isContributing, setIsContributing] = useState(false);
 
@@ -27,8 +29,8 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, category, amount, raised,
     const val = parseFloat(contributionAmount);
     if (isNaN(val) || val <= 0 || !address) return;
     
-    contribute(id, address, val, contributionMessage);
-    showSuccess(`Contributed ${val} XPR to ${user}'s request!`);
+    contribute(id, address, val, contributionToken, contributionMessage);
+    showSuccess(`Contributed ${val} ${contributionToken} to ${user}'s request!`);
     setIsContributing(false);
     setContributionMessage("");
   };
@@ -74,8 +76,8 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, category, amount, raised,
 
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Progress</span>
-            <span className="font-medium">{raised.toLocaleString()} / {amount.toLocaleString()} XPR</span>
+            <span className="text-muted-foreground">Progress ({token})</span>
+            <span className="font-medium">{raised.toLocaleString()} / {amount.toLocaleString()} {token}</span>
           </div>
           <Progress 
             value={progress} 
@@ -128,12 +130,12 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, category, amount, raised,
                   <div className="grid grid-cols-2 gap-4 p-4 bg-white/5 rounded-xl border border-white/5">
                     <div>
                       <p className="text-xs text-muted-foreground">Goal Amount</p>
-                      <p className="text-xl font-bold text-primary">{amount.toLocaleString()} XPR</p>
+                      <p className="text-xl font-bold text-primary">{amount.toLocaleString()} {token}</p>
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Raised So Far</p>
                       <p className={`text-xl font-bold ${status === 'Funded' ? 'text-blue-400' : 'text-foreground'}`}>
-                        {raised.toLocaleString()} XPR
+                        {raised.toLocaleString()} {token}
                       </p>
                     </div>
                   </div>
@@ -148,7 +150,7 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, category, amount, raised,
                           <div key={c.id} className="p-3 rounded-lg bg-white/5 border border-white/5 space-y-1">
                             <div className="flex justify-between items-center">
                               <span className="text-xs font-bold text-blue-400">{c.user}</span>
-                              <span className="text-xs font-bold">{c.amount} XPR</span>
+                              <span className="text-xs font-bold">{c.amount} {c.token}</span>
                             </div>
                             {c.message && (
                               <p className="text-xs text-muted-foreground italic">"{c.message}"</p>
@@ -193,6 +195,18 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, category, amount, raised,
                   onChange={(e) => setContributionAmount(e.target.value)}
                 />
               </div>
+              <Select 
+                value={contributionToken} 
+                onValueChange={(v: TokenSymbol) => setContributionToken(v)}
+              >
+                <SelectTrigger className="w-[80px] h-9 bg-white/5 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="XPR">XPR</SelectItem>
+                  <SelectItem value="GUY">GUY</SelectItem>
+                </SelectContent>
+              </Select>
               <Button size="sm" onClick={handleContribute} className="blue-glow bg-blue-600 hover:bg-blue-700 text-white">Send</Button>
               <Button size="sm" variant="ghost" onClick={() => setIsContributing(false)}>X</Button>
             </div>

@@ -26,7 +26,7 @@ const Navbar = () => {
           </div>
           <div className="flex flex-col leading-none">
             <span className="font-black text-2xl tracking-tight text-white">
-              AskGuy
+              Ask<span className="text-primary drop-shadow-[0_0_10px_rgba(255,215,0,0.6)]">Guy</span>
             </span>
             <span className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
               XPR Community

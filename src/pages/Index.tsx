@@ -50,9 +50,13 @@ const Index = () => {
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen bg-background text-foreground flex flex-col">
+      <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
+        {/* Background Glows */}
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 blur-[120px] rounded-full pointer-events-none" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full pointer-events-none" />
+        
         <Navbar />
-        <div className="flex-1 space-y-0">
+        <div className="flex-1 space-y-0 relative z-10">
           <div className="flex flex-col items-center justify-center py-32 p-4 text-center animate-in fade-in duration-700">
             <div className="max-w-4xl space-y-10 px-4">
               <div className="flex justify-center">
@@ -74,7 +78,7 @@ const Index = () => {
                 <Button 
                   onClick={connect} 
                   size="lg" 
-                  className="h-14 px-8 text-lg font-bold bg-primary hover:bg-primary/90 text-black rounded-xl flex gap-2 group transition-all gold-glow"
+                  className="h-14 px-8 text-lg font-bold bg-primary hover:bg-primary/90 text-black rounded-xl flex gap-2 group transition-all gold-glow btn-premium"
                 >
                   <Heart size={20} className="fill-black" />
                   Connect & Join
@@ -85,7 +89,7 @@ const Index = () => {
                   variant="outline" 
                   size="lg" 
                   asChild 
-                  className="h-14 px-8 text-lg font-bold border-white/10 hover:bg-white/5 rounded-xl flex gap-2"
+                  className="h-14 px-8 text-lg font-bold border-white/10 hover:bg-white/5 rounded-xl flex gap-2 btn-premium"
                 >
                   <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer">
                     Buy GUY Tokens
@@ -114,15 +118,19 @@ const Index = () => {
   const hasGuyBalance = guyBalance >= 25000;
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col animate-in fade-in duration-500">
+    <div className="min-h-screen bg-background text-foreground flex flex-col animate-in fade-in duration-500 relative overflow-hidden">
+      {/* Background Glows */}
+      <div className="absolute top-[20%] right-[-5%] w-[30%] h-[30%] bg-primary/5 blur-[100px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-[20%] left-[-5%] w-[30%] h-[30%] bg-blue-500/5 blur-[100px] rounded-full pointer-events-none" />
+
       <Navbar />
-      <main className="flex-1 container mx-auto px-4 py-8">
+      <main className="flex-1 container mx-auto px-4 py-8 relative z-10">
         <CommunityStats />
         
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-4 space-y-6">
             {!hasGuyBalance ? (
-              <Card className="border-destructive/50 bg-destructive/5">
+              <Card className="border-destructive/50 bg-destructive/5 glass-card">
                 <CardContent className="p-6 space-y-4">
                   <div className="flex gap-4">
                     <AlertCircle className="text-destructive shrink-0" />
@@ -131,7 +139,7 @@ const Index = () => {
                       <p className="text-sm text-muted-foreground">You need at least 25,000 GUY tokens to participate. Current: {guyBalance.toLocaleString()}</p>
                     </div>
                   </div>
-                  <Button variant="secondary" asChild className="w-full gap-2 border-white/10">
+                  <Button variant="secondary" asChild className="w-full gap-2 border-white/10 btn-premium">
                     <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer">
                       Buy $GUY on Vibrr <ExternalLink size={14} />
                     </a>
@@ -139,7 +147,7 @@ const Index = () => {
                 </CardContent>
               </Card>
             ) : !isMember ? (
-              <Card className="border-primary/50 bg-primary/5 overflow-hidden relative">
+              <Card className="border-primary/50 bg-primary/5 overflow-hidden relative glass-card">
                 <div className="absolute top-0 right-0 p-4 opacity-10">
                   <ShieldCheck size={48} className="text-primary" />
                 </div>
@@ -153,7 +161,7 @@ const Index = () => {
                       </p>
                     </div>
                   </div>
-                  <Button onClick={payMembership} className="w-full bg-primary hover:bg-primary/90 text-black font-bold h-12 gold-glow text-base">
+                  <Button onClick={payMembership} className="w-full bg-primary hover:bg-primary/90 text-black font-bold h-12 gold-glow text-base btn-premium">
                     Pay 2,500 XPR & Join
                   </Button>
                 </CardContent>
@@ -174,7 +182,7 @@ const Index = () => {
                         </p>
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm" onClick={payMembership} className="text-[10px] h-8 font-bold uppercase tracking-wider text-primary hover:bg-primary/10">
+                    <Button variant="ghost" size="sm" onClick={payMembership} className="text-[10px] h-8 font-bold uppercase tracking-wider text-primary hover:bg-primary/10 btn-premium">
                       Renew
                     </Button>
                   </CardContent>
@@ -204,7 +212,7 @@ const Index = () => {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
                   <Input 
                     placeholder="Search requests..." 
-                    className="pl-9 h-9 bg-white/5 border-white/10"
+                    className="pl-9 h-9 bg-white/5 border-white/10 focus:ring-primary/20"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />

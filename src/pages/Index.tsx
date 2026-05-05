@@ -14,7 +14,7 @@ import SuccessStories from '@/components/SuccessStories';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertCircle, CheckCircle2, ShieldAlert, Info, Search, User } from 'lucide-react';
+import { AlertCircle, CheckCircle2, ShieldAlert, Info, Search, User, ExternalLink } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -70,9 +70,17 @@ const Index = () => {
               <p className="flex items-center gap-2"><CheckCircle2 size={14} className="text-primary" /> Yearly membership: 1500 XPR</p>
               <p className="flex items-center gap-2"><CheckCircle2 size={14} className="text-primary" /> Transparent community funding</p>
             </div>
-            <Button onClick={connect} size="lg" className="w-full cyan-glow gap-2">
-              Connect Wallet to Start
-            </Button>
+            <div className="flex flex-col gap-3">
+              <Button onClick={connect} size="lg" className="w-full cyan-glow gap-2">
+                <Wallet size={18} />
+                Connect Wallet to Start
+              </Button>
+              <Button variant="link" asChild className="text-muted-foreground hover:text-primary">
+                <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                  Need GUY tokens? Buy here <ExternalLink size={14} />
+                </a>
+              </Button>
+            </div>
           </div>
         </div>
         <Footer />
@@ -93,12 +101,19 @@ const Index = () => {
           <div className="lg:col-span-4 space-y-6">
             {!hasGuyBalance ? (
               <Card className="border-destructive/50 bg-destructive/5">
-                <CardContent className="p-6 flex gap-4">
-                  <AlertCircle className="text-destructive shrink-0" />
-                  <div className="space-y-1">
-                    <p className="font-bold text-destructive">Insufficient GUY Balance</p>
-                    <p className="text-sm text-muted-foreground">You need at least 25,000 GUY tokens to participate. Current: {guyBalance.toLocaleString()}</p>
+                <CardContent className="p-6 space-y-4">
+                  <div className="flex gap-4">
+                    <AlertCircle className="text-destructive shrink-0" />
+                    <div className="space-y-1">
+                      <p className="font-bold text-destructive">Insufficient GUY Balance</p>
+                      <p className="text-sm text-muted-foreground">You need at least 25,000 GUY tokens to participate. Current: {guyBalance.toLocaleString()}</p>
+                    </div>
                   </div>
+                  <Button variant="secondary" asChild className="w-full gap-2 border-white/10">
+                    <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer">
+                      Buy $GUY on Vibrr <ExternalLink size={14} />
+                    </a>
+                  </Button>
                 </CardContent>
               </Card>
             ) : !isMember ? (
@@ -171,6 +186,16 @@ const Index = () => {
               </div>
             )}
           </div>
+        </div>
+
+        <div className="mt-12 p-6 glass-card border-none bg-primary/5 rounded-2xl text-center">
+          <h3 className="text-lg font-bold mb-2">Grow the Community</h3>
+          <p className="text-sm text-muted-foreground mb-4">The more members hold GUY, the stronger our mutual aid network becomes.</p>
+          <Button variant="outline" asChild className="border-primary/20 hover:bg-primary/10">
+            <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+              Trade GUY Tokens <ExternalLink size={14} />
+            </a>
+          </Button>
         </div>
 
         <SuccessStories />

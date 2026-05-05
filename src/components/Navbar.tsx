@@ -3,7 +3,7 @@
 import React from 'react';
 import { useWallet } from '@/hooks/use-wallet';
 import { Button } from '@/components/ui/button';
-import { Wallet, LogOut, User } from 'lucide-react';
+import { Wallet, LogOut, User, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import logo from '@/assets/logo.jpg';
 
@@ -34,7 +34,19 @@ const Navbar = () => {
           </div>
         </Link>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            asChild 
+            className="hidden md:flex gap-2 border-white/10 hover:bg-white/5 text-xs font-bold"
+          >
+            <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer">
+              Buy $GUY
+              <ExternalLink size={12} />
+            </a>
+          </Button>
+
           <div className="hidden md:flex items-center px-3 py-1.5 rounded-full bg-white/5 border border-white/10 gap-2">
             <div className="w-2 h-2 rounded-full bg-[#00FF88] animate-pulse" />
             <span className="text-xs font-bold text-white/90">XPR Network</span>

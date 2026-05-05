@@ -18,6 +18,7 @@ export interface Contribution {
 export interface AidRequest {
   id: string;
   user: string;
+  title: string;
   category: string;
   amount: number;
   token: TokenSymbol;
@@ -44,7 +45,8 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     { 
       id: '1', 
       user: 'alice.xpr', 
-      category: 'Medical', 
+      title: 'Emergency Dental Care',
+      category: 'Medical / Healthcare', 
       amount: 1200, 
       token: 'XPR',
       raised: 850, 
@@ -61,7 +63,8 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     { 
       id: '2', 
       user: 'bob.xpr', 
-      category: 'Utilities', 
+      title: 'Overdue Electricity Bill',
+      category: 'Utilities (Electricity, Water, Internet)', 
       amount: 450, 
       token: 'XPR',
       raised: 450, 
@@ -98,9 +101,6 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           message,
           timestamp: Date.now()
         };
-        // Simple logic: if contributing in the same token as requested, count towards progress
-        // If different token, we still track it but don't automatically calculate 'funded' status 
-        // to avoid complex conversion logic in a demo.
         const newRaised = token === req.token ? req.raised + amount : req.raised;
         const newStatus = newRaised >= req.amount ? 'Funded' : req.status;
         

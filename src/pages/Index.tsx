@@ -33,6 +33,7 @@ const Index = () => {
     if (searchQuery) {
       result = result.filter(req => 
         req.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        req.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         req.user.toLowerCase().includes(searchQuery.toLowerCase()) ||
         req.category.toLowerCase().includes(searchQuery.toLowerCase())
       );
@@ -53,7 +54,7 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
         {/* Ambient Background Glows */}
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/10 blur-[140px] rounded-full pointer-events-none animate-pulse duration-[10s]" />
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/5 blur-[140px] rounded-full pointer-events-none animate-pulse duration-[10s]" />
         <div className="absolute bottom-[20%] right-[-10%] w-[40%] h-[40%] bg-blue-500/5 blur-[120px] rounded-full pointer-events-none" />
         
         <Navbar />
@@ -62,14 +63,14 @@ const Index = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
               {/* Text Content */}
               <div className="space-y-10 animate-in fade-in slide-in-from-left-8 duration-1000">
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/40 bg-primary/5 text-primary text-sm font-medium">
-                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/5 text-emerald-400 text-sm font-medium">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                   Built on XPR Network
                 </div>
 
                 <h1 className="text-6xl md:text-8xl font-black tracking-tight leading-none">
                   Real Help, <br />
-                  <span className="text-primary drop-shadow-[0_0_15px_rgba(255,215,0,0.4)]">Real People</span>
+                  <span className="text-emerald-400 drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]">Real People</span>
                 </h1>
 
                 <p className="text-muted-foreground text-xl md:text-2xl max-w-2xl leading-relaxed font-medium">
@@ -80,9 +81,9 @@ const Index = () => {
                   <Button 
                     onClick={connect} 
                     size="lg" 
-                    className="h-14 px-8 text-lg font-bold bg-primary hover:bg-primary/90 text-black rounded-xl flex gap-2 group transition-all gold-glow btn-premium"
+                    className="h-14 px-8 text-lg font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl flex gap-2 group transition-all shadow-[0_0_30px_rgba(16,185,129,0.2)] btn-premium"
                   >
-                    <Heart size={20} className="fill-black" />
+                    <Heart size={20} className="fill-white" />
                     Connect & Join
                     <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                   </Button>
@@ -107,9 +108,9 @@ const Index = () => {
 
               {/* Hero Image Section - Blended & Glowing */}
               <div className="relative animate-in fade-in slide-in-from-right-8 duration-1000">
-                <div className="absolute inset-0 bg-primary/20 blur-[100px] rounded-full scale-110 pointer-events-none animate-pulse" />
+                <div className="absolute inset-0 bg-emerald-500/10 blur-[100px] rounded-full scale-110 pointer-events-none animate-pulse" />
                 <div className="relative max-w-[500px] mx-auto">
-                  <div className="relative rounded-[40px] overflow-hidden border border-white/10 shadow-[0_0_50px_rgba(255,215,0,0.15)] glass-card aspect-square group">
+                  <div className="relative rounded-[40px] overflow-hidden border border-white/10 shadow-[0_0_50px_rgba(16,185,129,0.1)] glass-card aspect-square group">
                     <img 
                       src={heroGuy} 
                       alt="AskGuy" 
@@ -126,8 +127,8 @@ const Index = () => {
                   {/* Decorative Stat floating on image */}
                   <div className="absolute -bottom-4 -left-4 bg-background/80 backdrop-blur-xl border border-white/10 p-4 rounded-2xl shadow-2xl hidden md:block z-20">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                        <ShieldCheck className="text-primary" size={20} />
+                      <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                        <ShieldCheck className="text-emerald-400" size={20} />
                       </div>
                       <div>
                         <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Community Aid</p>
@@ -156,7 +157,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col animate-in fade-in duration-500 relative overflow-hidden">
       {/* Background Decorative Element */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] pointer-events-none z-0 opacity-[0.03] lg:opacity-[0.07]">
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] pointer-events-none z-0 opacity-[0.02] lg:opacity-[0.04]">
          <img 
             src={heroGuy} 
             alt="Hero Guy Background" 
@@ -188,32 +189,32 @@ const Index = () => {
                 </CardContent>
               </Card>
             ) : !isMember ? (
-              <Card className="border-primary/50 bg-primary/5 overflow-hidden relative glass-card">
+              <Card className="border-emerald-500/50 bg-emerald-500/5 overflow-hidden relative glass-card">
                 <div className="absolute top-0 right-0 p-4 opacity-10">
-                  <ShieldCheck size={48} className="text-primary" />
+                  <ShieldCheck size={48} className="text-emerald-400" />
                 </div>
                 <CardContent className="p-6 space-y-4">
                   <div className="flex gap-4">
-                    <ShieldAlert className="text-primary shrink-0" />
+                    <ShieldAlert className="text-emerald-400 shrink-0" />
                     <div className="space-y-2">
-                      <p className="font-bold text-primary text-lg">Yearly Membership Required</p>
+                      <p className="font-bold text-emerald-400 text-lg">Yearly Membership Required</p>
                       <p className="text-sm text-muted-foreground leading-relaxed">
                         To keep AskGuy running smoothly (hosting, development, moderation & updates), we charge a yearly admin fee of 2,500 XPR.
                       </p>
                     </div>
                   </div>
-                  <Button onClick={payMembership} className="w-full bg-primary hover:bg-primary/90 text-black font-bold h-12 gold-glow text-base btn-premium">
+                  <Button onClick={payMembership} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold h-12 shadow-emerald-900/20 text-base btn-premium">
                     Pay 2,500 XPR & Join
                   </Button>
                 </CardContent>
               </Card>
             ) : (
               <div className="space-y-6">
-                <Card className="glass-card border-primary/20 bg-primary/5">
+                <Card className="glass-card border-emerald-500/20 bg-emerald-500/5">
                   <CardContent className="p-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <ShieldCheck className="text-primary" size={20} />
+                      <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                        <ShieldCheck className="text-emerald-400" size={20} />
                       </div>
                       <div>
                         <p className="text-sm font-bold">Active Member</p>
@@ -223,7 +224,7 @@ const Index = () => {
                         </p>
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm" onClick={payMembership} className="text-[10px] h-8 font-bold uppercase tracking-wider text-primary hover:bg-primary/10 btn-premium">
+                    <Button variant="ghost" size="sm" onClick={payMembership} className="text-[10px] h-8 font-bold uppercase tracking-wider text-emerald-400 hover:bg-emerald-500/10 btn-premium">
                       Renew
                     </Button>
                   </CardContent>
@@ -237,14 +238,14 @@ const Index = () => {
           </div>
 
           <div className="lg:col-span-8 space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div id="browse-requests" className="flex flex-col md:flex-row md:items-center justify-between gap-4 scroll-mt-24">
               <h2 className="text-2xl font-bold">Active Requests</h2>
               <div className="flex flex-col sm:flex-row items-center gap-2">
                 <div className="relative w-full sm:w-64">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
                   <Input 
                     placeholder="Search requests..." 
-                    className="pl-9 h-9 bg-white/5 border-white/10 focus:ring-primary/20"
+                    className="pl-9 h-9 bg-white/5 border-white/10 focus:ring-emerald-500/20"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />

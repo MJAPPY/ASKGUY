@@ -61,9 +61,9 @@ const Index = () => {
                 className="w-full h-full object-cover"
               />
             </div>
-            <h1 className="text-4xl font-bold tracking-tight">AskGuy XPR Mutual Aid</h1>
-            <p className="text-muted-foreground text-lg">
-              A community-driven platform for XPR Network users to support each other through mutual aid.
+            <h1 className="text-4xl font-bold tracking-tight">Real Help, Real People</h1>
+            <p className="text-muted-foreground text-lg leading-relaxed">
+              AskGuy is a mutual assistance platform where XPR Network members help each other with real-life expenses. Post a need, send XPR, lift each other up.
             </p>
             <div className="p-4 glass-card rounded-xl text-sm text-left space-y-2">
               <p className="flex items-center gap-2"><CheckCircle2 size={14} className="text-primary" /> Hold 25,000 GUY tokens</p>

@@ -14,7 +14,7 @@ import SuccessStories from '@/components/SuccessStories';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertCircle, CheckCircle2, ShieldAlert, Info, Search, User, ExternalLink } from 'lucide-react';
+import { AlertCircle, CheckCircle2, ShieldAlert, Info, Search, User, ExternalLink, Wallet } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';

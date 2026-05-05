@@ -5,6 +5,7 @@ import { useWallet } from '@/hooks/use-wallet';
 import { Button } from '@/components/ui/button';
 import { Wallet, LogOut, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import logo from '@/assets/logo.jpg';
 
 const Navbar = () => {
   const { isConnected, address, guyBalance, connect, disconnect } = useWallet();
@@ -16,7 +17,7 @@ const Navbar = () => {
           <div className="relative">
             <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/50 shadow-[0_0_15px_rgba(0,229,255,0.3)]">
               <img 
-                src="https://dyad-media.s3.amazonaws.com/media/ASKGUY/.dyad/media/e48bf5ea61700a2671a347dd3f69639c.PNG" 
+                src={logo} 
                 alt="GUY Logo" 
                 className="w-full h-full object-cover"
               />

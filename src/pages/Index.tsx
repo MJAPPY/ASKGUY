@@ -18,6 +18,7 @@ import { AlertCircle, CheckCircle2, ShieldAlert, Info, Search, User } from 'luci
 import { Input } from '@/components/ui/input';
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import logo from '@/assets/logo.jpg';
 
 const Index = () => {
   const { isConnected, guyBalance, isMember, payMembership, address, connect } = useWallet();
@@ -55,7 +56,7 @@ const Index = () => {
           <div className="max-w-md space-y-6">
             <div className="w-32 h-32 rounded-3xl overflow-hidden border-4 border-primary/30 mx-auto mb-6 shadow-[0_0_30px_rgba(0,229,255,0.2)] animate-pulse">
               <img 
-                src="https://dyad-media.s3.amazonaws.com/media/ASKGUY/.dyad/media/e48bf5ea61700a2671a347dd3f69639c.PNG" 
+                src={logo} 
                 alt="GUY Logo" 
                 className="w-full h-full object-cover"
               />

@@ -52,43 +52,31 @@ const Index = () => {
   if (!isConnected) {
     return (
       <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
-        {/* Hero Image Blended Background */}
-        <div className="absolute top-0 right-0 w-full h-[800px] pointer-events-none z-0">
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/50 to-background z-10" />
-          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/40 to-transparent z-10" />
-          <img 
-            src={heroGuy} 
-            alt="AskGuy Hero" 
-            className="w-full h-full object-cover object-top opacity-20 lg:opacity-30 mix-blend-luminosity lg:mix-blend-normal lg:object-[80%_top]"
-          />
-        </div>
-
-        {/* Advanced Background Glows */}
+        {/* Ambient Background Glows */}
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/10 blur-[140px] rounded-full pointer-events-none animate-pulse duration-[10s]" />
-        <div className="absolute top-[20%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full pointer-events-none" />
+        <div className="absolute bottom-[20%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full pointer-events-none" />
         
         <Navbar />
-        <div className="flex-1 space-y-0 relative z-10">
-          <div className="flex flex-col items-center lg:items-start justify-center py-32 lg:py-48 px-4 text-center lg:text-left animate-in fade-in slide-in-from-bottom-8 duration-1000">
-            <div className="container mx-auto">
-              <div className="max-w-4xl space-y-10">
-                <div className="flex justify-center lg:justify-start">
-                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/40 bg-primary/5 text-primary text-sm font-medium">
-                    <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                    Built on XPR Network
-                  </div>
+        <div className="flex-1 relative z-10 flex flex-col justify-center">
+          <div className="container mx-auto px-4 py-20">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+              {/* Text Content */}
+              <div className="space-y-10 animate-in fade-in slide-in-from-left-8 duration-1000">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/40 bg-primary/5 text-primary text-sm font-medium">
+                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                  Built on XPR Network
                 </div>
 
-                <h1 className="text-6xl md:text-8xl font-black tracking-tight leading-none drop-shadow-2xl">
+                <h1 className="text-6xl md:text-8xl font-black tracking-tight leading-none">
                   Real Help, <br />
                   <span className="text-primary drop-shadow-[0_0_15px_rgba(255,215,0,0.4)]">Real People</span>
                 </h1>
 
-                <p className="text-muted-foreground text-xl md:text-2xl max-w-2xl leading-relaxed font-medium opacity-90">
+                <p className="text-muted-foreground text-xl md:text-2xl max-w-2xl leading-relaxed font-medium">
                   AskGuy is a mutual assistance platform where XPR Network members help each other with real-life expenses. Post a need, send XPR, lift each other up.
                 </p>
 
-                <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+                <div className="flex flex-col sm:flex-row gap-4">
                   <Button 
                     onClick={connect} 
                     size="lg" 
@@ -116,6 +104,31 @@ const Index = () => {
                   Requires 25,000 GUY tokens · Powered by Proton WebAuth
                 </p>
               </div>
+
+              {/* Hero Image Section */}
+              <div className="relative animate-in fade-in slide-in-from-right-8 duration-1000">
+                <div className="absolute -inset-4 bg-primary/10 blur-3xl rounded-full" />
+                <div className="relative rounded-3xl overflow-hidden border border-white/10 shadow-2xl glass-card aspect-square max-w-[500px] mx-auto">
+                  <img 
+                    src={heroGuy} 
+                    alt="AskGuy" 
+                    className="w-full h-full object-cover object-top"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent pointer-events-none" />
+                </div>
+                {/* Decorative Stats floating on image */}
+                <div className="absolute -bottom-6 -left-6 bg-background/80 backdrop-blur-xl border border-white/10 p-4 rounded-2xl shadow-2xl hidden md:block">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                      <ShieldCheck className="text-primary" size={20} />
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Community Aid</p>
+                      <p className="text-sm font-bold">142,500 XPR Distributed</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           
@@ -134,7 +147,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col animate-in fade-in duration-500 relative overflow-hidden">
-      {/* Background Hero Image - Subtle when connected */}
+      {/* Background Decorative Element */}
       <div className="absolute top-0 right-0 w-[600px] h-[600px] pointer-events-none z-0 opacity-[0.03] lg:opacity-[0.07]">
          <img 
             src={heroGuy} 
@@ -142,10 +155,6 @@ const Index = () => {
             className="w-full h-full object-cover rounded-full blur-xl"
           />
       </div>
-
-      {/* Background Glows */}
-      <div className="absolute top-[20%] right-[-10%] w-[40%] h-[40%] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-[10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/5 blur-[120px] rounded-full pointer-events-none" />
 
       <Navbar />
       <main className="flex-1 container mx-auto px-4 py-8 relative z-10">
@@ -217,15 +226,6 @@ const Index = () => {
             
             <ActivityFeed />
             <Leaderboard />
-
-            <Card className="glass-card border-white/5">
-              <CardContent className="p-4 flex gap-3 items-start">
-                <Info className="text-primary shrink-0 mt-0.5" size={16} />
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  All contributions are sent directly to the requester's XPR address. AskGuy does not hold any funds.
-                </p>
-              </CardContent>
-            </Card>
           </div>
 
           <div className="lg:col-span-8 space-y-6">

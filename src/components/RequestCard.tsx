@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Heart, Share2, CheckCircle2, Coins, Eye, AlertTriangle, MessageSquare, ImageIcon } from 'lucide-react';
+import { Heart, Share2, CheckCircle2, Coins, Eye, AlertTriangle, MessageSquare, ImageIcon, ShieldCheck, X } from 'lucide-react';
 import { showSuccess } from '@/utils/toast';
 import { useRequests, AidRequest, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
@@ -51,10 +51,10 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, title, category, amount, 
       <CardContent className="p-6">
         <div className="flex justify-between items-start mb-4">
           <div className="space-y-1">
-            <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground flex items-center gap-1.5">
+            <div className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground flex items-center gap-1.5">
               <span>{user}</span>
               {isOwner && <Badge variant="outline" className="text-[8px] h-3 px-1 border-white/20">You</Badge>}
-            </p>
+            </div>
             <div className="flex gap-2 items-center flex-wrap">
               <Badge variant="outline" className={`${getCategoryColor()} border text-[10px] h-5`}>
                 {category}

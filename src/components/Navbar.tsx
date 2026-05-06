@@ -3,7 +3,7 @@
 import React from 'react';
 import { useWallet } from '@/hooks/use-wallet';
 import { Button } from '@/components/ui/button';
-import { Wallet, LogOut, User, ExternalLink } from 'lucide-react';
+import { Wallet, LogOut, User, ExternalLink, Trophy } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import logo from '@/assets/logo.jpg';
 
@@ -39,6 +39,18 @@ const Navbar = () => {
 
         <div className="flex items-center gap-2 sm:gap-4">
           <Button 
+            variant="ghost" 
+            size="sm" 
+            asChild 
+            className="hidden lg:flex gap-2 text-xs font-bold hover:text-primary transition-colors"
+          >
+            <Link to="/leaderboard">
+              <Trophy size={14} className="text-primary" />
+              Top Contributors
+            </Link>
+          </Button>
+
+          <Button 
             variant="outline" 
             size="sm" 
             asChild 
@@ -49,11 +61,6 @@ const Navbar = () => {
               <ExternalLink size={12} className="transition-all group-hover:brightness-150 group-hover:scale-110" />
             </a>
           </Button>
-
-          <div className="hidden md:flex items-center px-3 py-1.5 rounded-full bg-white/5 border border-white/10 gap-2">
-            <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            <span className="text-xs font-bold text-white/90">XPR Network</span>
-          </div>
 
           {isConnected ? (
             <div className="flex items-center gap-3">

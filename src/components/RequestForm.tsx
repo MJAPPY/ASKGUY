@@ -165,7 +165,7 @@ const RequestForm = () => {
             </div>
             
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">The Full Story</Label>
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">My Brief situation</Label>
               <Textarea 
                 placeholder="Explain your situation. Being detailed helps donors understand your need..." 
                 className="min-h-[120px] bg-white/5 border-white/10 focus:border-emerald-500/50 leading-relaxed" 
@@ -274,7 +274,3 @@ const RequestForm = () => {
         </CardFooter>
       </form>
     </Card>
-  );
-};
-
-export default RequestForm;

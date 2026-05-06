@@ -39,14 +39,14 @@
     @apply bg-background text-foreground antialiased selection:bg-primary/30;
     font-feature-settings: "ss01", "ss02", "cv01", "cv02";
     
-    /* Immersive Mesh Background */
-    background-color: #0a0a0c;
+    /* Updated Gradient Background: Black, Purple, Cobalt Blue */
+    background-color: #000000;
     background-image: 
-      radial-gradient(circle at 0% 0%, rgba(255, 215, 0, 0.08) 0%, transparent 40%),
-      radial-gradient(circle at 100% 0%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
-      radial-gradient(circle at 50% 50%, rgba(239, 68, 68, 0.03) 0%, transparent 60%),
-      radial-gradient(circle at 0% 100%, rgba(59, 130, 246, 0.05) 0%, transparent 40%),
-      radial-gradient(circle at 100% 100%, rgba(255, 215, 0, 0.05) 0%, transparent 40%);
+      radial-gradient(circle at 0% 0%, rgba(128, 0, 128, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 100% 0%, rgba(0, 71, 171, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, rgba(75, 0, 130, 0.05) 0%, transparent 70%),
+      radial-gradient(circle at 0% 100%, rgba(0, 71, 171, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 100% 100%, rgba(128, 0, 128, 0.1) 0%, transparent 50%);
     background-attachment: fixed;
   }
 }

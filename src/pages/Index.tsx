@@ -85,7 +85,7 @@ const Index = () => {
                 </h1>
 
                 <p className="text-muted-foreground text-xl md:text-2xl max-w-2xl leading-relaxed font-medium">
-                  AskGuy is a mutual assistance platform where XPR Network members help each other with real-life expenses. Post a need, send XPR, lift each other up.
+                  AskGuy is a mutual assistance platform where XPR Network members help each other with real-life expenses. Post a need, send tokens, lift each other up.
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4">

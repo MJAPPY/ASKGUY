@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Upload, Send, X, AlertCircle, ShieldCheck, Image as ImageIcon } from 'lucide-react';
+import { Upload, Send, X, AlertCircle, ShieldCheck, Info } from 'lucide-react';
 import { showSuccess } from '@/utils/toast';
 import { useRequests, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
@@ -18,7 +18,7 @@ const RequestForm = () => {
   const [preview, setPreview] = useState<string | null>(null);
   const [skipProof, setSkipProof] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { addRequest } = useRequests();
+  const { requests, addRequest } = useRequests();
   const { address } = useWallet();
   
   const [formData, setFormData] = useState({
@@ -29,6 +29,12 @@ const RequestForm = () => {
     token: 'XPR' as TokenSymbol,
     description: ''
   });
+
+  const activeRequestsCount = useMemo(() => {
+    return requests.filter(req => req.user === address && (req.status === 'Open' || req.status === 'Funded')).length;
+  }, [requests, address]);
+
+  const isLimitReached = activeRequestsCount >= 3;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -45,7 +51,7 @@ const RequestForm = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!address) return;
+    if (!address || isLimitReached) return;
     
     setLoading(true);
     
@@ -54,7 +60,7 @@ const RequestForm = () => {
       : formData.category;
 
     setTimeout(() => {
-      addRequest({
+      const success = addRequest({
         user: address,
         title: formData.title,
         category: categoryToSubmit,
@@ -63,21 +69,23 @@ const RequestForm = () => {
         description: formData.description,
         proofUrl: preview || undefined
       });
+
+      if (success) {
+        setFormData({ 
+          title: '',
+          category: 'Medical / Healthcare', 
+          customCategory: '',
+          amount: '', 
+          token: 'XPR', 
+          description: '' 
+        });
+        setPreview(null);
+        setSkipProof(false);
+        showSuccess("Request posted successfully!");
+        const browseSection = document.getElementById('browse-requests');
+        if (browseSection) browseSection.scrollIntoView({ behavior: 'smooth' });
+      }
       setLoading(false);
-      setFormData({ 
-        title: '',
-        category: 'Medical / Healthcare', 
-        customCategory: '',
-        amount: '', 
-        token: 'XPR', 
-        description: '' 
-      });
-      setPreview(null);
-      setSkipProof(false);
-      showSuccess("Request posted successfully!");
-      // Focus the browse section
-      const browseSection = document.getElementById('browse-requests');
-      if (browseSection) browseSection.scrollIntoView({ behavior: 'smooth' });
     }, 1000);
   };
 
@@ -94,11 +102,16 @@ const RequestForm = () => {
   return (
     <Card className="glass-card border-emerald-500/20 shadow-emerald-500/5">
       <CardHeader className="pb-4">
-        <div className="flex items-center gap-2 mb-1">
-          <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-            <Send className="text-emerald-400" size={18} />
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+              <Send className="text-emerald-400" size={18} />
+            </div>
+            <CardTitle className="text-emerald-400 text-xl">Post New Request</CardTitle>
           </div>
-          <CardTitle className="text-emerald-400 text-xl">Post New Request</CardTitle>
+          <div className={`text-[10px] font-bold px-2 py-1 rounded-full border ${isLimitReached ? 'bg-red-500/10 border-red-500/30 text-red-400' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'}`}>
+            {activeRequestsCount}/3 Active
+          </div>
         </div>
         <CardDescription className="text-muted-foreground/80">
           Be honest and clear. The community is here to support you.
@@ -107,7 +120,17 @@ const RequestForm = () => {
       
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-5">
-          <div className="space-y-4">
+          {isLimitReached && (
+            <div className="flex items-start gap-3 p-3.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-100 text-xs font-semibold leading-normal animate-in fade-in slide-in-from-top-2">
+              <AlertCircle size={18} className="shrink-0 text-red-400 mt-0.5" />
+              <p>
+                <span className="text-red-400 font-bold uppercase tracking-tight mr-1">Limit Reached:</span> 
+                You have 3 active requests. Please mark an existing request as "Completed" before posting a new one.
+              </p>
+            </div>
+          )}
+
+          <div className={`space-y-4 ${isLimitReached ? 'opacity-50 pointer-events-none' : ''}`}>
             <div className="space-y-2">
               <Label htmlFor="title" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Short Summary</Label>
               <Input 
@@ -175,14 +198,12 @@ const RequestForm = () => {
               />
             </div>
 
-            {/* Proof Section */}
             <div className="space-y-4 pt-2">
               <div className="flex items-center justify-between">
                 <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Proof of Need (Highly Recommended)</Label>
               </div>
               
               <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 space-y-4">
-                {/* Moved and restyled warning box */}
                 <div className="flex items-start gap-3 p-3.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-100 text-xs font-semibold leading-normal shadow-sm">
                   <AlertCircle size={18} className="shrink-0 text-amber-400 mt-0.5" />
                   <p>
@@ -257,13 +278,15 @@ const RequestForm = () => {
           <Button 
             type="submit" 
             className="w-full gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold h-12 rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)]" 
-            disabled={loading}
+            disabled={loading || isLimitReached}
           >
             {loading ? (
               <span className="flex items-center gap-2">
                 <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                 Posting Request...
               </span>
+            ) : isLimitReached ? (
+              "Limit Reached"
             ) : (
               <>
                 <Send size={18} />

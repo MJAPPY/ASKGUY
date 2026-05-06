@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState } from 'react';
-import { showSuccess } from '@/utils/toast';
+import { showSuccess, showError } from '@/utils/toast';
 
 export type RequestStatus = 'Open' | 'Funded' | 'Completed';
 export type TokenSymbol = 'XPR' | 'GUY';
@@ -33,7 +33,7 @@ export interface AidRequest {
 
 interface RequestsContextType {
   requests: AidRequest[];
-  addRequest: (request: Omit<AidRequest, 'id' | 'raised' | 'status' | 'timestamp' | 'contributions'>) => void;
+  addRequest: (request: Omit<AidRequest, 'id' | 'raised' | 'status' | 'timestamp' | 'contributions'>) => boolean;
   contribute: (id: string, user: string, amount: number, token: TokenSymbol, message?: string) => void;
   markCompleted: (id: string) => void;
 }
@@ -79,6 +79,13 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   ]);
 
   const addRequest = (newReq: Omit<AidRequest, 'id' | 'raised' | 'status' | 'timestamp' | 'contributions'>) => {
+    const activeCount = requests.filter(req => req.user === newReq.user && (req.status === 'Open' || req.status === 'Funded')).length;
+    
+    if (activeCount >= 3) {
+      showError("You can only have 3 active requests at a time. Please complete an existing one first.");
+      return false;
+    }
+
     const request: AidRequest = {
       ...newReq,
       id: Math.random().toString(36).substr(2, 9),
@@ -88,6 +95,7 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       contributions: [],
     };
     setRequests(prev => [request, ...prev]);
+    return true;
   };
 
   const contribute = (id: string, user: string, amount: number, token: TokenSymbol, message?: string) => {

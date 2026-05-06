@@ -15,18 +15,21 @@ import CTASection from '@/components/CTASection';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertCircle, ShieldAlert, Info, Search, User, ExternalLink, Heart, ArrowRight, ShieldCheck, Calendar, LayoutGrid, Zap, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, ShieldAlert, Info, Search, User, ExternalLink, Heart, ArrowRight, ShieldCheck, Calendar, LayoutGrid, Zap, CheckCircle2, ArrowUpDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import heroGuy from '@/assets/hero-guy.jpg';
 
 type FilterType = 'all' | 'active' | 'funded' | 'my-requests';
+type SortType = 'newest' | 'oldest';
 
 const Index = () => {
   const { isConnected, guyBalance, isMember, membershipExpiry, payMembership, address, connect } = useWallet();
   const { requests } = useRequests();
   const [filter, setFilter] = useState<FilterType>('all');
+  const [sortBy, setSortBy] = useState<SortType>('oldest');
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredRequests = useMemo(() => {
@@ -51,11 +54,14 @@ const Index = () => {
       result = result.filter(req => req.status === 'Funded' || req.status === 'Completed');
     }
 
-    // 3. Always Sort Newest to Oldest (Default)
-    result.sort((a, b) => b.timestamp - a.timestamp);
+    // 3. Apply Sorting (Oldest as default)
+    result.sort((a, b) => {
+      if (sortBy === 'newest') return b.timestamp - a.timestamp;
+      return a.timestamp - b.timestamp;
+    });
 
     return result;
-  }, [requests, filter, searchQuery, address]);
+  }, [requests, filter, searchQuery, address, sortBy]);
 
   if (!isConnected) {
     return (
@@ -243,15 +249,29 @@ const Index = () => {
             <div id="browse-requests" className="flex flex-col md:flex-row md:items-center justify-between gap-4 scroll-mt-24">
               <h2 className="text-2xl font-bold">Browse Requests</h2>
               <div className="flex flex-col sm:flex-row items-center gap-2">
-                <div className="relative w-full sm:w-64">
+                <div className="relative w-full sm:w-48">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
                   <Input 
-                    placeholder="Search requests..." 
+                    placeholder="Search..." 
                     className="pl-9 h-9 bg-white/5 border-white/10 focus:ring-emerald-500/20"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
+                
+                <Select value={sortBy} onValueChange={(v: SortType) => setSortBy(v)}>
+                  <SelectTrigger className="w-full sm:w-32 h-9 bg-white/5 border-white/10 text-xs">
+                    <div className="flex items-center gap-2">
+                      <ArrowUpDown size={12} />
+                      <SelectValue placeholder="Sort" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent className="glass-card">
+                    <SelectItem value="oldest">Oldest First</SelectItem>
+                    <SelectItem value="newest">Newest First</SelectItem>
+                  </SelectContent>
+                </Select>
+
                 <Tabs value={filter} onValueChange={(v: any) => setFilter(v)} className="w-full sm:w-auto">
                   <TabsList className="bg-white/5 border border-white/10 h-9">
                     <TabsTrigger value="all" className="text-xs h-7 flex gap-1">

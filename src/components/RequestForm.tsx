@@ -107,12 +107,6 @@ const RequestForm = () => {
       
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-5">
-          {/* Public Warning */}
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-amber-500/5 border border-amber-500/20 text-amber-200/80 text-[11px] font-medium leading-tight">
-            <AlertCircle size={14} className="shrink-0 text-amber-400" />
-            Warning: All requests and photos are public. Please blur sensitive personal ID numbers.
-          </div>
-
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="title" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Short Summary</Label>
@@ -187,7 +181,16 @@ const RequestForm = () => {
                 <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Proof of Need (Highly Recommended)</Label>
               </div>
               
-              <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 space-y-3">
+              <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 space-y-4">
+                {/* Moved and restyled warning box */}
+                <div className="flex items-start gap-3 p-3.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-100 text-xs font-semibold leading-normal shadow-sm">
+                  <AlertCircle size={18} className="shrink-0 text-amber-400 mt-0.5" />
+                  <p>
+                    <span className="text-amber-400 font-bold uppercase tracking-tight mr-1">Warning:</span> 
+                    All requests and photos are public. Please blur or cover sensitive personal ID numbers before uploading.
+                  </p>
+                </div>
+
                 <div className="flex gap-3">
                   <ShieldCheck className="text-emerald-400 shrink-0 mt-0.5" size={16} />
                   <p className="text-[11px] leading-relaxed text-emerald-100/70">

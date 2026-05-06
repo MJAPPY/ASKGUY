@@ -274,3 +274,7 @@ const RequestForm = () => {
         </CardFooter>
       </form>
     </Card>
+  );
+};
+
+export default RequestForm;

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { ShieldCheck, Github, Twitter, Globe } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
   return (
@@ -9,12 +10,12 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
+            <Link to="/" className="flex items-center gap-2 group w-fit">
+              <div className="w-6 h-6 bg-primary rounded flex items-center justify-center transition-transform group-hover:scale-110">
                 <ShieldCheck className="text-background" size={14} />
               </div>
-              <span className="font-bold text-lg">AskGuy XPR</span>
-            </div>
+              <span className="font-bold text-lg group-hover:text-primary transition-colors">AskGuy XPR</span>
+            </Link>
             <p className="text-sm text-muted-foreground leading-relaxed">
               A peer-to-peer mutual aid platform built for the XPR Network community. 
               Empowering users to support each other through transparent, direct aid.

@@ -13,19 +13,22 @@ const Navbar = () => {
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-white/5 bg-background/80 backdrop-blur-md">
       <div className="container mx-auto px-4 h-20 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+        <Link 
+          to="/" 
+          className="flex items-center gap-3 hover:opacity-80 transition-all duration-300 group active:scale-95"
+        >
           <div className="relative">
-            <div className="w-12 h-12 rounded-full overflow-hidden">
+            <div className="w-12 h-12 rounded-full overflow-hidden border border-white/10 group-hover:border-primary/50 transition-colors">
               <img 
                 src={logo} 
                 alt="GUY Logo" 
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border-2 border-background" />
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border-2 border-background shadow-[0_0_10px_rgba(255,215,0,0.4)]" />
           </div>
           <div className="flex flex-col leading-none">
-            <span className="font-black text-2xl tracking-tight text-white">
+            <span className="font-black text-2xl tracking-tight text-white group-hover:text-primary transition-colors">
               Ask<span className="text-primary drop-shadow-[0_0_10px_rgba(255,215,0,0.6)]">Guy</span>
             </span>
             <span className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">

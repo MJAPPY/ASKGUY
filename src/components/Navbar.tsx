@@ -19,7 +19,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -51,7 +50,40 @@ const Navbar = () => {
               <img src={logo} alt="Logo" className="w-full h-full object-cover" />
             </div>
             <span className="font-bold text-lg hidden sm:inline-block">
-              Ask<span className="text<dyad-write path="src/components/Navbar.tsx" description="Completing the Navbar component with the Activity link removed">
+              Ask<span className="text-primary">Guy</span>
+            </span>
+          </Link>
+
+          <div className="hidden lg:flex items-center gap-1">
+            {navItems.map((item) => (
+              <Button
+                key={item.label}
+                variant="ghost"
+                asChild
+                className={`gap-2 text-sm font-medium h-9 px-4 hover:bg-white/5 transition-colors ${
+                  isActive(item.path) ? 'text-primary bg-primary/5' : 'text-muted-foreground hover:text-white'
+                }`}
+              >
+                <Link to={item.path}>
+                  {item.icon}
+                  {item.label}
+                </Link>
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {/* Right Side: Balances & Profile */}
+        <div className="flex items-center gap-3">
+          {isConnected ? (
+            <>
+              {/* Balance Pills */}
+              <div className="hidden md:flex items-center gap-2">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[11px] font-bold">
+                  <span className="text-muted-foreground">{xprBalance.toFixed(4)}</span>
+                  <span className="text-white/60">XPR</span>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[<dyad-write path="src/components/Navbar.tsx" description="Fixing syntax error and completing the Navbar component">
 "use client";
 
 import React from 'react';
@@ -73,7 +105,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";

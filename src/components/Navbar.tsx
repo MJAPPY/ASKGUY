@@ -7,7 +7,6 @@ import {
   LayoutGrid, 
   List, 
   Trophy, 
-  Activity, 
   LogOut, 
   User, 
   RefreshCw, 
@@ -35,7 +34,60 @@ const Navbar = () => {
     { label: 'Dashboard', icon: <LayoutGrid size={18} />, path: '/' },
     { label: 'Browse', icon: <List size={18} />, path: '/#browse-requests' },
     { label: 'Leaderboard', icon: <Trophy size={18} />, path: '/leaderboard' },
-    { label: 'Activity', icon: <Activity size={18} />, path: '/#activity' },
+  ];
+
+  const isActive = (path: string) => {
+    if (path.startsWith('/#')) return false;
+    return location.pathname === path;
+  };
+
+  return (
+    <nav className="sticky top-0 z-50 w-full border-b border-white/5 bg-[#0a0a0c]/80 backdrop-blur-md">
+      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+        {/* Left Side: Logo & Nav Links */}
+        <div className="flex items-center gap-8">
+          <Link to="/" className="flex items-center gap-2 group">
+            <div className="w-8 h-8 rounded-lg overflow-hidden border border-white/10">
+              <img src={logo} alt="Logo" className="w-full h-full object-cover" />
+            </div>
+            <span className="font-bold text-lg hidden sm:inline-block">
+              Ask<span className="text<dyad-write path="src/components/Navbar.tsx" description="Completing the Navbar component with the Activity link removed">
+"use client";
+
+import React from 'react';
+import { useWallet } from '@/hooks/use-wallet';
+import { Button } from '@/components/ui/button';
+import { 
+  LayoutGrid, 
+  List, 
+  Trophy, 
+  LogOut, 
+  User, 
+  RefreshCw, 
+  ChevronDown,
+  ExternalLink,
+  AlertCircle
+} from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import logo from '@/assets/logo.jpg';
+
+const Navbar = () => {
+  const { isConnected, address, guyBalance, xprBalance, connect, disconnect } = useWallet();
+  const location = useLocation();
+
+  const navItems = [
+    { label: 'Dashboard', icon: <LayoutGrid size={18} />, path: '/' },
+    { label: 'Browse', icon: <List size={18} />, path: '/#browse-requests' },
+    { label: 'Leaderboard', icon: <Trophy size={18} />, path: '/leaderboard' },
   ];
 
   const isActive = (path: string) => {

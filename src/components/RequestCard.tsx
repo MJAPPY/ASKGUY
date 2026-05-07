@@ -14,7 +14,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-const RequestCard: React.FC<AidRequest> = ({ id, user, title, category, amount, token, raised, description, status, proofUrl, isUrgent, contributions }) => {
+interface RequestCardProps extends AidRequest {
+  variant?: 'grid' | 'list';
+}
+
+const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, amount, token, raised, description, status, proofUrl, isUrgent, contributions, variant = 'grid' }) => {
   const { contribute, markCompleted } = useRequests();
   const { address } = useWallet();
   const [contributionAmount, setContributionAmount] = useState("10");
@@ -67,9 +71,11 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, title, category, amount, 
     return 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
   };
 
+  const isList = variant === 'list';
+
   return (
-    <Card className={`glass-card overflow-hidden group hover:border-emerald-500/40 transition-all duration-300 ${isUrgent && status === 'Open' ? 'border-red-500/40 red-glow' : ''}`}>
-      <CardContent className="p-6">
+    <Card className={`glass-card overflow-hidden group hover:border-emerald-500/40 transition-all duration-300 ${isUrgent && status === 'Open' ? 'border-red-500/40 red-glow' : ''} ${isList ? 'flex flex-col md:flex-row items-center' : ''}`}>
+      <CardContent className={`p-6 ${isList ? 'flex-1' : ''}`}>
         <div className="flex justify-between items-start mb-4">
           <div className="space-y-1.5">
             <div className="text-[10px] uppercase font-black tracking-widest text-muted-foreground flex items-center gap-2">
@@ -100,7 +106,7 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, title, category, amount, 
           {title}
         </h3>
 
-        <p className="text-sm line-clamp-2 mb-6 text-foreground/80 min-h-[2.5rem] leading-relaxed font-medium">
+        <p className={`text-sm mb-6 text-foreground/80 leading-relaxed font-medium ${isList ? 'line-clamp-1' : 'line-clamp-2 min-h-[2.5rem]'}`}>
           {description}
         </p>
 
@@ -120,7 +126,7 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, title, category, amount, 
         </div>
       </CardContent>
 
-      <CardFooter className="p-6 pt-0 flex flex-col gap-3">
+      <CardFooter className={`p-6 flex flex-col gap-3 ${isList ? 'md:w-72 md:border-l border-white/5 pt-6' : 'pt-0'}`}>
         <div className="flex gap-2 w-full">
           <Dialog>
             <DialogTrigger asChild>
@@ -156,7 +162,7 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, title, category, amount, 
                         <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Verified Proof</h4>
                         <ShieldCheck className="text-emerald-400" size={14} />
                       </div>
-                      <div className="rounded-2xl overflow-hidden border border-emerald-500/20 aspect-video bg-black/40 shadow-2xl group cursor-zoom-in">
+                      <div className="rounded-2xl overflow-hidden border border-emerald-500/20 max-h-[300px] bg-black/40 shadow-2xl group cursor-zoom-in">
                         <img src={proofUrl} alt="Proof" className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700" />
                       </div>
                     </div>

@@ -15,7 +15,7 @@ import CTASection from '@/components/CTASection';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertCircle, ShieldAlert, Search, User, ExternalLink, Heart, ArrowRight, ShieldCheck, Calendar, LayoutGrid, Zap, CheckCircle2, ArrowUpDown } from 'lucide-react';
+import { AlertCircle, ShieldAlert, Search, User, ExternalLink, Heart, ArrowRight, ShieldCheck, Calendar, LayoutGrid, Zap, CheckCircle2, ArrowUpDown, List } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -24,12 +24,14 @@ import heroGuy from '@/assets/hero-guy.jpg';
 
 type FilterType = 'all' | 'active' | 'funded' | 'my-requests';
 type SortType = 'newest' | 'oldest';
+type ViewMode = 'grid' | 'list';
 
 const Index = () => {
   const { isConnected, guyBalance, isMember, membershipExpiry, payMembership, address, connect } = useWallet();
   const { requests } = useRequests();
   const [filter, setFilter] = useState<FilterType>('active');
   const [sortBy, setSortBy] = useState<SortType>('oldest');
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredRequests = useMemo(() => {
@@ -49,14 +51,12 @@ const Index = () => {
     if (filter === 'my-requests' && address) {
       result = result.filter(req => req.user === address);
     } else if (filter === 'active') {
-      // Only show Open requests in the Active tab
       result = result.filter(req => req.status === 'Open');
     } else if (filter === 'funded') {
-      // Show both Funded and Completed in the Funded tab
       result = result.filter(req => req.status === 'Funded' || req.status === 'Completed');
     }
 
-    // 3. Apply Sorting (Oldest as default)
+    // 3. Apply Sorting
     result.sort((a, b) => {
       if (sortBy === 'newest') return b.timestamp - a.timestamp;
       return a.timestamp - b.timestamp;
@@ -260,6 +260,25 @@ const Index = () => {
                   />
                 </div>
                 
+                <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-lg p-1">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className={`h-7 w-7 ${viewMode === 'grid' ? 'bg-white/10 text-primary' : 'text-muted-foreground'}`}
+                    onClick={() => setViewMode('grid')}
+                  >
+                    <LayoutGrid size={14} />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className={`h-7 w-7 ${viewMode === 'list' ? 'bg-white/10 text-primary' : 'text-muted-foreground'}`}
+                    onClick={() => setViewMode('list')}
+                  >
+                    <List size={14} />
+                  </Button>
+                </div>
+
                 <Select value={sortBy} onValueChange={(v: SortType) => setSortBy(v)}>
                   <SelectTrigger className="w-full sm:w-32 h-9 bg-white/5 border-white/10 text-xs">
                     <div className="flex items-center gap-2">
@@ -292,9 +311,9 @@ const Index = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 gap-6" : "flex flex-col gap-4"}>
               {filteredRequests.map((req) => (
-                <RequestCard key={req.id} {...req} />
+                <RequestCard key={req.id} {...req} variant={viewMode} />
               ))}
             </div>
 

@@ -5,7 +5,6 @@ import { useWallet } from '@/hooks/use-wallet';
 import { Button } from '@/components/ui/button';
 import { 
   LayoutGrid, 
-  List, 
   Trophy, 
   LogOut, 
   User, 
@@ -31,12 +30,10 @@ const Navbar = () => {
 
   const navItems = [
     { label: 'Dashboard', icon: <LayoutGrid size={18} />, path: '/', private: true },
-    { label: 'Browse', icon: <List size={18} />, path: '/#browse-requests', private: true },
     { label: 'Leaderboard', icon: <Trophy size={18} />, path: '/leaderboard', private: false },
   ];
 
   const isActive = (path: string) => {
-    if (path.startsWith('/#')) return false;
     return location.pathname === path;
   };
 

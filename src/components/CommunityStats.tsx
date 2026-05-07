@@ -10,7 +10,6 @@ const CommunityStats = () => {
       label: "Total Aid Provided",
       value: "142,500 XPR",
       icon: <Coins className="text-emerald-400" size={20} />,
-      color: "from-emerald-500/20 to-transparent",
       borderColor: "border-emerald-500/20",
       description: "Directly to community members"
     },
@@ -18,7 +17,6 @@ const CommunityStats = () => {
       label: "Bills Fully Funded",
       value: "342",
       icon: <CheckCircle2 className="text-blue-400" size={20} />,
-      color: "from-blue-500/20 to-transparent",
       borderColor: "border-blue-500/20",
       description: "100% success rate"
     },
@@ -26,7 +24,6 @@ const CommunityStats = () => {
       label: "Active Members",
       value: "1,204",
       icon: <Users className="text-purple-400" size={20} />,
-      color: "from-purple-500/20 to-transparent",
       borderColor: "border-purple-500/20",
       description: "Verified GUY holders"
     },
@@ -34,7 +31,6 @@ const CommunityStats = () => {
       label: "Total Contributors",
       value: "856",
       icon: <Heart className="text-rose-400" size={20} />,
-      color: "from-rose-500/20 to-transparent",
       borderColor: "border-rose-500/20",
       description: "Unique donors this month"
     }

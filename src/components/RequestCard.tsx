@@ -201,10 +201,10 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, title, category, amount, 
           <div className="space-y-2 animate-in slide-in-from-top-2 w-full pt-1">
             <div className="flex gap-2">
               <div className="relative flex-1">
-                <Coins className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-400" size={14} />
+                <Coins className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-400" size={16} />
                 <Input 
                   type="number" 
-                  className="pl-9 h-10 bg-white/5 border-white/10 focus:border-emerald-500/50" 
+                  className="pl-10 h-11 bg-white/5 border-white/10 focus:border-emerald-500/50 text-base font-bold" 
                   value={contributionAmount}
                   onChange={(e) => setContributionAmount(e.target.value)}
                 />
@@ -213,7 +213,7 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, title, category, amount, 
                 value={contributionToken} 
                 onValueChange={(v: TokenSymbol) => setContributionToken(v)}
               >
-                <SelectTrigger className="w-[80px] h-10 bg-white/5 border-white/10 text-[10px] font-bold">
+                <SelectTrigger className="w-[90px] h-11 bg-white/5 border-white/10 text-xs font-bold">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="glass-card">
@@ -221,9 +221,9 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, title, category, amount, 
                   <SelectItem value="GUY">GUY</SelectItem>
                 </SelectContent>
               </Select>
-              <Button size="sm" onClick={handleContribute} className="bg-emerald-600 hover:bg-emerald-500 text-white h-10 px-4 font-bold">Send</Button>
-              <Button size="sm" variant="ghost" onClick={() => setIsContributing(false)} className="h-10 w-10 p-0 text-muted-foreground hover:text-white">
-                <X size={16} />
+              <Button size="sm" onClick={handleContribute} className="bg-emerald-600 hover:bg-emerald-500 text-white h-11 px-4 font-bold">Send</Button>
+              <Button size="sm" variant="ghost" onClick={() => setIsContributing(false)} className="h-11 w-11 p-0 text-muted-foreground hover:text-white">
+                <X size={18} />
               </Button>
             </div>
             <div className="relative">

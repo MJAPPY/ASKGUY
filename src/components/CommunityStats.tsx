@@ -52,7 +52,6 @@ const CommunityStats = () => {
             <h3 className="text-2xl font-black text-white mb-1 tracking-tight">{stat.value}</h3>
             <p className="text-[10px] text-muted-foreground/70 font-medium">{stat.description}</p>
           </CardContent>
-          <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
         </Card>
       ))}
     </div>

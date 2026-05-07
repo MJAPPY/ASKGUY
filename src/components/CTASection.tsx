@@ -11,8 +11,6 @@ const CTASection = () => {
   return (
     <section className="py-20 px-4">
       <div className="max-w-3xl mx-auto glass-card rounded-3xl p-12 text-center space-y-8 border-primary/20 bg-primary/5 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
-        
         <div className="flex justify-center">
           <Heart className="text-primary fill-primary animate-pulse" size={48} />
         </div>

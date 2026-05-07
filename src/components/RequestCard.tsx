@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Heart, Share2, CheckCircle2, Coins, Eye, MessageSquare, ImageIcon, ShieldCheck, X, Calendar, User } from 'lucide-react';
-import { showSuccess } from '@/utils/toast';
+import { showSuccess, showError } from '@/utils/toast';
 import { useRequests, AidRequest, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
 import { Input } from '@/components/ui/input';
@@ -33,6 +33,27 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, title, category, amount, 
     showSuccess(`Contributed ${val} ${contributionToken} to ${user}'s request!`);
     setIsContributing(false);
     setContributionMessage("");
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: `AskGuy: ${title}`,
+      text: `Help ${user} with "${title}" on AskGuy XPR Network.`,
+      url: window.location.origin
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`);
+        showSuccess("Link copied to clipboard!");
+      }
+    } catch (err) {
+      if ((err as Error).name !== 'AbortError') {
+        showError("Could not share request");
+      }
+    }
   };
 
   const getCategoryColor = () => {
@@ -135,7 +156,7 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, title, category, amount, 
                         <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Verified Proof</h4>
                         <ShieldCheck className="text-emerald-400" size={14} />
                       </div>
-                      <div className="rounded-2xl overflow-hidden border border-emerald-500/20 max-h-[300px] bg-black/40 shadow-2xl group cursor-zoom-in">
+                      <div className="rounded-2xl overflow-hidden border border-emerald-500/20 aspect-video bg-black/40 shadow-2xl group cursor-zoom-in">
                         <img src={proofUrl} alt="Proof" className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700" />
                       </div>
                     </div>
@@ -186,7 +207,12 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, title, category, amount, 
             </DialogContent>
           </Dialog>
 
-          <Button variant="outline" size="icon" className="shrink-0 border-white/10 bg-white/5 hover:bg-white/10 group h-10 w-10">
+          <Button 
+            variant="outline" 
+            size="icon" 
+            className="shrink-0 border-white/10 bg-white/5 hover:bg-white/10 group h-10 w-10"
+            onClick={handleShare}
+          >
             <Share2 size={14} className="group-hover:text-emerald-400 transition-colors" />
           </Button>
         </div>

@@ -42,14 +42,14 @@ const Navbar = () => {
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-white/5 bg-[#0a0a0c]/80 backdrop-blur-md">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+      <div className="container mx-auto px-4 h-20 flex items-center justify-between">
         {/* Left Side: Logo & Nav Links */}
-        <div className="flex items-center gap-8">
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-lg overflow-hidden border border-white/10">
+        <div className="flex items-center gap-10">
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="w-12 h-12 rounded-xl overflow-hidden border border-white/10 shadow-lg transition-transform group-hover:scale-105">
               <img src={logo} alt="Logo" className="w-full h-full object-cover" />
             </div>
-            <span className="font-bold text-lg hidden sm:inline-block">
+            <span className="font-black text-xl hidden sm:inline-block tracking-tight">
               Ask<span className="text-primary">Guy</span>
             </span>
           </Link>
@@ -60,7 +60,7 @@ const Navbar = () => {
                 key={item.label}
                 variant="ghost"
                 asChild
-                className={`gap-2 text-sm font-medium h-9 px-4 hover:bg-white/5 transition-colors ${
+                className={`gap-2 text-sm font-medium h-10 px-4 hover:bg-white/5 transition-colors ${
                   isActive(item.path) ? 'text-primary bg-primary/5' : 'text-muted-foreground hover:text-white'
                 }`}
               >
@@ -79,11 +79,11 @@ const Navbar = () => {
             <>
               {/* Balance Pills */}
               <div className="hidden md:flex items-center gap-2">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[11px] font-bold">
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-[11px] font-bold">
                   <span className="text-muted-foreground">{xprBalance.toFixed(4)}</span>
                   <span className="text-white/60">XPR</span>
                 </div>
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[11px] font-bold">
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-[11px] font-bold">
                   <span className={guyBalance < 25000 ? "text-red-400" : "text-primary"}>
                     {guyBalance.toLocaleString()}
                   </span>
@@ -94,8 +94,8 @@ const Navbar = () => {
               {/* Profile Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="h-10 gap-3 px-2 hover:bg-white/5 rounded-xl group">
-                    <Avatar className="h-7 w-7 border border-white/10">
+                  <Button variant="ghost" className="h-12 gap-3 px-2 hover:bg-white/5 rounded-xl group">
+                    <Avatar className="h-8 w-8 border border-white/10">
                       <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${address}`} />
                       <AvatarFallback className="bg-primary text-black font-bold text-[10px]">
                         {address?.substring(0, 2).toUpperCase()}
@@ -160,7 +160,7 @@ const Navbar = () => {
               </DropdownMenu>
             </>
           ) : (
-            <Button onClick={connect} className="gap-2 bg-primary hover:bg-primary/90 text-black font-bold rounded-full px-6 gold-glow">
+            <Button onClick={connect} className="gap-2 bg-primary hover:bg-primary/90 text-black font-bold rounded-full px-6 h-11 gold-glow">
               Connect Wallet
             </Button>
           )}

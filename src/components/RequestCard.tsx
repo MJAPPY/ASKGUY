@@ -108,20 +108,22 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, title, category, amount, 
                 <Eye size={14} className="group-hover:text-emerald-400 transition-colors" /> Details
               </Button>
             </DialogTrigger>
-            <DialogContent className="glass-card border-white/10 max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-              <DialogHeader>
-                <div className="flex justify-between items-center mb-2">
-                  <Badge variant="outline" className={getCategoryColor()}>{category}</Badge>
-                  <span className="text-xs text-muted-foreground">ID: {id}</span>
-                </div>
-                <DialogTitle className="text-2xl">{title}</DialogTitle>
-                <DialogDescription className="text-muted-foreground flex items-center gap-2">
-                  Requested by <span className="text-emerald-400 font-bold">{user}</span> • {new Date().toLocaleDateString()}
-                </DialogDescription>
-              </DialogHeader>
+            <DialogContent className="glass-card border-white/10 max-w-2xl w-[95vw] max-h-[85vh] overflow-hidden flex flex-col p-0">
+              <div className="p-6 pb-2">
+                <DialogHeader>
+                  <div className="flex justify-between items-center mb-2">
+                    <Badge variant="outline" className={getCategoryColor()}>{category}</Badge>
+                    <span className="text-xs text-muted-foreground">ID: {id}</span>
+                  </div>
+                  <DialogTitle className="text-2xl">{title}</DialogTitle>
+                  <DialogDescription className="text-muted-foreground flex items-center gap-2">
+                    Requested by <span className="text-emerald-400 font-bold">{user}</span> • {new Date().toLocaleDateString()}
+                  </DialogDescription>
+                </DialogHeader>
+              </div>
               
-              <ScrollArea className="flex-1 pr-4">
-                <div className="space-y-6 py-4">
+              <ScrollArea className="flex-1 px-6">
+                <div className="space-y-6 py-4 pb-8">
                   <div className="space-y-2">
                     <h4 className="font-bold text-[10px] uppercase tracking-wider text-muted-foreground">The Story</h4>
                     <p className="text-foreground leading-relaxed whitespace-pre-wrap">{description}</p>

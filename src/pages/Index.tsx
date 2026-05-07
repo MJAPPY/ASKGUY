@@ -49,7 +49,7 @@ const Index = () => {
     if (filter === 'my-requests' && address) {
       result = result.filter(req => req.user === address);
     } else if (filter === 'active') {
-      result = result.filter(req => req.status === 'Open');
+      result = result.filter(req => result.filter(req => req.status === 'Open'));
     } else if (filter === 'funded') {
       result = result.filter(req => req.status === 'Funded' || req.status === 'Completed');
     }
@@ -100,14 +100,13 @@ const Index = () => {
                   </Button>
                   
                   <Button 
-                    variant="outline" 
                     size="lg" 
                     asChild 
-                    className="h-14 px-8 text-lg font-bold border-white/10 hover:bg-white/5 rounded-xl flex gap-2 btn-premium backdrop-blur-sm"
+                    className="h-14 px-8 text-lg font-bold bg-primary hover:bg-primary/90 text-black rounded-xl flex gap-2 gold-glow shimmer-effect"
                   >
                     <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer">
                       Buy GUY Tokens
-                      <ExternalLink size={20} className="text-muted-foreground" />
+                      <ExternalLink size={20} className="text-black" />
                     </a>
                   </Button>
                 </div>

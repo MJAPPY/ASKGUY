@@ -46,11 +46,11 @@ const Navbar = () => {
         {/* Left Side: Logo & Nav Links */}
         <div className="flex items-center gap-10">
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-12 h-12 rounded-xl overflow-hidden border border-white/10 shadow-lg transition-transform group-hover:scale-105">
+            <div className="w-12 h-12 rounded-xl overflow-hidden border border-white/10 shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:border-primary/50">
               <img src={logo} alt="Logo" className="w-full h-full object-cover" />
             </div>
-            <span className="font-black text-xl hidden sm:inline-block tracking-tight">
-              Ask<span className="text-primary">Guy</span>
+            <span className="font-black text-xl hidden sm:inline-block tracking-tight group-hover:text-primary transition-colors">
+              Ask<span className="text-primary group-hover:text-white transition-colors">Guy</span>
             </span>
           </Link>
 
@@ -60,8 +60,10 @@ const Navbar = () => {
                 key={item.label}
                 variant="ghost"
                 asChild
-                className={`gap-2 text-sm font-medium h-10 px-4 hover:bg-white/5 transition-colors ${
-                  isActive(item.path) ? 'text-primary bg-primary/5' : 'text-muted-foreground hover:text-white'
+                className={`gap-2 text-sm font-medium h-10 px-4 transition-all duration-300 hover:scale-105 ${
+                  isActive(item.path) 
+                    ? 'text-primary bg-primary/10 border border-primary/20' 
+                    : 'text-muted-foreground hover:text-white hover:bg-white/5'
                 }`}
               >
                 <Link to={item.path}>
@@ -79,11 +81,11 @@ const Navbar = () => {
             <>
               {/* Balance Pills */}
               <div className="hidden md:flex items-center gap-2">
-                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-[11px] font-bold">
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-[11px] font-bold hover:bg-white/10 transition-colors cursor-default">
                   <span className="text-muted-foreground">{xprBalance.toFixed(4)}</span>
                   <span className="text-white/60">XPR</span>
                 </div>
-                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-[11px] font-bold">
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-[11px] font-bold hover:bg-white/10 transition-colors cursor-default">
                   <span className={guyBalance < 25000 ? "text-red-400" : "text-primary"}>
                     {guyBalance.toLocaleString()}
                   </span>
@@ -94,18 +96,18 @@ const Navbar = () => {
               {/* Profile Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="h-12 gap-3 px-2 hover:bg-white/5 rounded-xl group">
-                    <Avatar className="h-8 w-8 border border-white/10">
+                  <Button variant="ghost" className="h-12 gap-3 px-2 hover:bg-white/5 rounded-xl group transition-all duration-300">
+                    <Avatar className="h-8 w-8 border border-white/10 group-hover:border-primary/50 transition-colors">
                       <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${address}`} />
                       <AvatarFallback className="bg-primary text-black font-bold text-[10px]">
                         {address?.substring(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="text-sm font-bold hidden sm:inline-block">{address}</span>
+                    <span className="text-sm font-bold hidden sm:inline-block group-hover:text-primary transition-colors">{address}</span>
                     <ChevronDown size={14} className="text-muted-foreground group-data-[state=open]:rotate-180 transition-transform" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64 glass-card border-white/10 p-2 mt-2">
+                <DropdownMenuContent align="end" className="w-64 glass-card border-white/10 p-2 mt-2 animate-in fade-in zoom-in-95 duration-200">
                   <div className="p-3 space-y-3">
                     <div className="space-y-1">
                       <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Balances</p>
@@ -126,7 +128,7 @@ const Navbar = () => {
                       </div>
                     )}
 
-                    <Button variant="outline" size="sm" className="w-full h-8 text-[10px] font-bold gap-2 border-white/10 hover:bg-white/5" asChild>
+                    <Button variant="outline" size="sm" className="w-full h-8 text-[10px] font-bold gap-2 border-white/10 hover:bg-white/10 hover:border-primary/30 transition-all" asChild>
                       <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer">
                         Buy $GUY on DEX <ExternalLink size={10} />
                       </a>
@@ -135,14 +137,14 @@ const Navbar = () => {
 
                   <DropdownMenuSeparator className="bg-white/5" />
                   
-                  <DropdownMenuItem asChild className="cursor-pointer focus:bg-white/5 rounded-lg">
+                  <DropdownMenuItem asChild className="cursor-pointer focus:bg-white/10 rounded-lg transition-colors">
                     <Link to="/profile" className="flex items-center gap-2 py-2">
                       <User size={16} className="text-muted-foreground" />
                       <span className="text-sm font-medium">My Profile</span>
                     </Link>
                   </DropdownMenuItem>
                   
-                  <DropdownMenuItem className="cursor-pointer focus:bg-white/5 rounded-lg flex items-center gap-2 py-2">
+                  <DropdownMenuItem className="cursor-pointer focus:bg-white/10 rounded-lg flex items-center gap-2 py-2 transition-colors">
                     <RefreshCw size={16} className="text-muted-foreground" />
                     <span className="text-sm font-medium">Refresh Balances</span>
                   </DropdownMenuItem>
@@ -151,7 +153,7 @@ const Navbar = () => {
 
                   <DropdownMenuItem 
                     onClick={disconnect}
-                    className="cursor-pointer focus:bg-red-500/10 text-red-400 rounded-lg flex items-center gap-2 py-2"
+                    className="cursor-pointer focus:bg-red-500/10 text-red-400 rounded-lg flex items-center gap-2 py-2 transition-colors"
                   >
                     <LogOut size={16} />
                     <span className="text-sm font-medium">Disconnect</span>
@@ -160,7 +162,7 @@ const Navbar = () => {
               </DropdownMenu>
             </>
           ) : (
-            <Button onClick={connect} className="gap-2 bg-primary hover:bg-primary/90 text-black font-bold rounded-full px-6 h-11 gold-glow">
+            <Button onClick={connect} className="gap-2 bg-primary hover:bg-primary/90 text-black font-bold rounded-full px-6 h-11 gold-glow btn-premium">
               Connect Wallet
             </Button>
           )}

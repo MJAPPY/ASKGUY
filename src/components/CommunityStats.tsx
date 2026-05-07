@@ -53,7 +53,6 @@ const CommunityStats = () => {
             <p className="text-[10px] text-muted-foreground/70 font-medium">{stat.description}</p>
           </CardContent>
           <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
-          <div className={`absolute bottom-0 left-0 h-[2px] w-full bg-gradient-to-r ${stat.color.replace('/20', '')} opacity-30`} />
         </Card>
       ))}
     </div>

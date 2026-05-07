@@ -49,8 +49,10 @@ const Index = () => {
     if (filter === 'my-requests' && address) {
       result = result.filter(req => req.user === address);
     } else if (filter === 'active') {
-      result = result.filter(req => result.filter(req => req.status === 'Open'));
+      // Only show Open requests in the Active tab
+      result = result.filter(req => req.status === 'Open');
     } else if (filter === 'funded') {
+      // Show both Funded and Completed in the Funded tab
       result = result.filter(req => req.status === 'Funded' || req.status === 'Completed');
     }
 

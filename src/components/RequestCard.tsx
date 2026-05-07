@@ -135,24 +135,11 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, title, category, amount, 
                         <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Verified Proof</h4>
                         <ShieldCheck className="text-emerald-400" size={14} />
                       </div>
-                      <div className="rounded-2xl overflow-hidden border border-emerald-500/20 aspect-video bg-black/40 shadow-2xl group cursor-zoom-in">
-                        <img src={proofUrl} alt="Proof" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                      <div className="rounded-2xl overflow-hidden border border-emerald-500/20 max-h-[300px] bg-black/40 shadow-2xl group cursor-zoom-in">
+                        <img src={proofUrl} alt="Proof" className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700" />
                       </div>
                     </div>
                   )}
-
-                  <div className="grid grid-cols-2 gap-4 p-6 bg-white/[0.03] rounded-2xl border border-white/5">
-                    <div className="space-y-1">
-                      <p className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Goal Amount</p>
-                      <p className="text-2xl font-black text-emerald-400">{amount.toLocaleString()} <span className="text-xs opacity-60">{token}</span></p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Raised</p>
-                      <p className={`text-2xl font-black ${status === 'Funded' ? 'text-blue-400' : 'text-white'}`}>
-                        {raised.toLocaleString()} <span className="text-xs opacity-60">{token}</span>
-                      </p>
-                    </div>
-                  </div>
 
                   <div className="space-y-4">
                     <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
@@ -181,6 +168,21 @@ const RequestCard: React.FC<AidRequest> = ({ id, user, title, category, amount, 
                   </div>
                 </div>
               </ScrollArea>
+
+              <div className="p-6 border-t border-white/5 bg-white/[0.02]">
+                <div className="grid grid-cols-2 gap-4 p-5 bg-white/[0.03] rounded-2xl border border-white/5 shadow-inner">
+                  <div className="space-y-1">
+                    <p className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Goal Amount</p>
+                    <p className="text-2xl font-black text-emerald-400">{amount.toLocaleString()} <span className="text-xs opacity-60">{token}</span></p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Raised</p>
+                    <p className={`text-2xl font-black ${status === 'Funded' ? 'text-blue-400' : 'text-white'}`}>
+                      {raised.toLocaleString()} <span className="text-xs opacity-60">{token}</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
             </DialogContent>
           </Dialog>
 

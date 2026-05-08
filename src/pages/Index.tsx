@@ -163,6 +163,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col animate-in fade-in duration-500 relative overflow-hidden">
+      {/* Dynamic Background Element */}
       <div className="absolute top-0 right-0 w-[600px] h-[600px] pointer-events-none z-0 opacity-[0.02] lg:opacity-[0.04]">
          <img 
             src={heroGuy} 
@@ -247,6 +248,7 @@ const Index = () => {
           </div>
 
           <div className="lg:col-span-8 space-y-6">
+            {/* Search and Filters */}
             <div id="browse-requests" className="flex flex-col md:flex-row md:items-center justify-between gap-4 scroll-mt-24">
               <h2 className="text-2xl font-bold">Browse Requests</h2>
               <div className="flex flex-col sm:flex-row items-center gap-2">

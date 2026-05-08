@@ -1,8 +1,9 @@
 "use client";
 
 import React from 'react';
-import { ShieldCheck, Github, Twitter, Globe } from 'lucide-react';
+import { Github, Twitter, Globe } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import logo from '@/assets/logo.jpg';
 
 const Footer = () => {
   return (
@@ -10,9 +11,9 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           <div className="space-y-4">
-            <Link to="/" className="flex items-center gap-2 group w-fit">
-              <div className="w-6 h-6 bg-primary rounded flex items-center justify-center transition-transform group-hover:scale-110">
-                <ShieldCheck className="text-background" size={14} />
+            <Link to="/" className="flex items-center gap-3 group w-fit">
+              <div className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 transition-transform group-hover:scale-110">
+                <img src={logo} alt="AskGuy Logo" className="w-full h-full object-cover" />
               </div>
               <span className="font-bold text-lg group-hover:text-primary transition-colors">AskGuy XPR</span>
             </Link>

@@ -111,7 +111,7 @@ const Index = () => {
                 </div>
 
                 <p className="text-sm text-muted-foreground font-medium opacity-60">
-                  Requires 25,000 GUY tokens · Powered by Proton WebAuth
+                  Requires 7,770 GUY tokens · Powered by Proton WebAuth
                 </p>
               </div>
 
@@ -159,7 +159,7 @@ const Index = () => {
     );
   }
 
-  const hasGuyBalance = guyBalance >= 25000;
+  const hasGuyBalance = guyBalance >= 7770;
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col animate-in fade-in duration-500 relative overflow-hidden">
@@ -184,7 +184,7 @@ const Index = () => {
                     <AlertCircle className="text-destructive shrink-0" />
                     <div className="space-y-1">
                       <p className="font-bold text-destructive">Insufficient GUY Balance</p>
-                      <p className="text-sm text-muted-foreground">You need at least 25,000 GUY tokens to participate. Current: {guyBalance.toLocaleString()}</p>
+                      <p className="text-sm text-muted-foreground">You need at least 7,770 GUY tokens to participate. Current: {guyBalance.toLocaleString()}</p>
                     </div>
                   </div>
                   <Button variant="secondary" asChild className="w-full gap-2 border-white/10 btn-premium">

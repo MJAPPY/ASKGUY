@@ -9,7 +9,7 @@ const HowItWorks = () => {
     {
       icon: <ShieldCheck className="text-primary" size={20} />,
       title: "Membership Protected",
-      description: "Only holders of 25,000+ GUY tokens can participate, ensuring a tight-knit, trustworthy community."
+      description: "Only holders of 7,770+ GUY tokens can participate, ensuring a tight-knit, trustworthy community."
     },
     {
       icon: <Zap className="text-primary" size={20} />,
@@ -37,7 +37,7 @@ const HowItWorks = () => {
     {
       number: "02",
       title: "Verify Membership",
-      description: "Hold at least 25,000 GUY tokens to access the platform."
+      description: "Hold at least 7,770 GUY tokens to access the platform."
     },
     {
       number: "03",

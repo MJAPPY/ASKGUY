@@ -86,7 +86,7 @@ const Navbar = () => {
                   <span className="text-white/60">XPR</span>
                 </div>
                 <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-[11px] font-bold hover:bg-white/10 transition-colors cursor-default">
-                  <span className={guyBalance < 25000 ? "text-red-400" : "text-primary"}>
+                  <span className={guyBalance < 7770 ? "text-red-400" : "text-primary"}>
                     {guyBalance.toLocaleString()}
                   </span>
                   <span className="text-white/60">GUY</span>
@@ -115,16 +115,16 @@ const Navbar = () => {
                         <span className="text-sm font-bold">{xprBalance.toFixed(4)} XPR</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className={`text-sm font-bold ${guyBalance < 25000 ? 'text-red-400' : 'text-primary'}`}>
+                        <span className={`text-sm font-bold ${guyBalance < 7770 ? 'text-red-400' : 'text-primary'}`}>
                           {guyBalance.toLocaleString()} GUY
                         </span>
                       </div>
                     </div>
 
-                    {guyBalance < 25000 && (
+                    {guyBalance < 7770 && (
                       <div className="p-2 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center gap-2">
                         <AlertCircle size={14} className="text-red-400 shrink-0" />
-                        <p className="text-[10px] font-bold text-red-400">Below 25,000 GUY minimum</p>
+                        <p className="text-[10px] font-bold text-red-400">Below 7,770 GUY minimum</p>
                       </div>
                     )}
 

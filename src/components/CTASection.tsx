@@ -18,7 +18,7 @@ const CTASection = () => {
         <div className="space-y-4">
           <h2 className="text-3xl md:text-4xl font-bold">Ready to help or be helped?</h2>
           <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
-            Join the AskGuy community today. Hold 25,000 GUY and start making a difference.
+            Join the AskGuy community today. Hold 7,770 GUY and start making a difference.
           </p>
         </div>
 

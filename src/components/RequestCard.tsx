@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Heart, Share2, CheckCircle2, Coins, Eye, MessageSquare, ShieldCheck, X, Calendar, User, MessageCircle, Gift } from 'lucide-react';
+import { Heart, Share2, CheckCircle2, Coins, Eye, MessageSquare, ShieldCheck, X, Calendar, User, MessageCircle, Gift, Sparkles } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useRequests, AidRequest, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
@@ -30,7 +30,6 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
   const messageCount = contributions.filter(c => c.message).length;
 
   const totalGuyBonus = useMemo(() => {
-    // Only count GUY as a "bonus" if the main request isn't in GUY
     if (token === 'GUY') return 0;
     return contributions
       .filter(c => c.token === 'GUY')
@@ -141,12 +140,21 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
           </div>
 
           {totalGuyBonus > 0 && (
-            <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-primary/10 border border-primary/20 animate-in fade-in zoom-in-95 duration-500">
-              <div className="flex items-center gap-2">
-                <Gift size={14} className="text-primary animate-bounce" />
-                <span className="text-[10px] font-black uppercase tracking-wider text-primary">GUY Bonus Gift</span>
+            <div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-gradient-to-r from-primary/20 via-primary/5 to-primary/20 border border-primary/40 shadow-[0_0_15px_rgba(244,201,93,0.15)] animate-in fade-in zoom-in-95 duration-500 relative overflow-hidden group/bonus">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover/bonus:translate-x-full transition-transform duration-1000" />
+              <div className="flex items-center gap-2.5 relative z-10">
+                <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center">
+                  <Gift size={14} className="text-primary animate-bounce" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[9px] font-black uppercase tracking-[0.1em] text-primary leading-none mb-0.5">Community Gifting</span>
+                  <span className="text-[10px] font-bold text-white/90">GUY Bonus Gift</span>
+                </div>
               </div>
-              <span className="text-xs font-black text-white">{totalGuyBonus.toLocaleString()} GUY</span>
+              <div className="text-right relative z-10 flex items-baseline gap-1">
+                <span className="text-sm font-black text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">+{totalGuyBonus.toLocaleString()}</span>
+                <span className="text-[8px] font-black text-primary uppercase">GUY</span>
+              </div>
             </div>
           )}
         </div>
@@ -237,14 +245,21 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
                   </div>
                 </div>
                 {totalGuyBonus > 0 && (
-                  <div className="mt-4 flex items-center justify-between px-4 py-3 rounded-xl bg-primary/10 border border-primary/20">
+                  <div className="mt-4 flex items-center justify-between px-5 py-3.5 rounded-2xl bg-gradient-to-r from-primary/20 via-primary/5 to-primary/20 border border-primary/40 shadow-[0_0_20px_rgba(244,201,93,0.15)] relative overflow-hidden">
+                    <Sparkles className="absolute -right-2 -top-2 text-primary/10 w-12 h-12 rotate-12" />
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                        <Gift size={16} className="text-primary" />
+                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                        <Gift size={20} className="text-primary animate-bounce" />
                       </div>
-                      <span className="text-xs font-black uppercase tracking-widest text-primary">Extra GUY Bonus Gifts Received</span>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Exclusive Bonus</span>
+                        <span className="text-xs font-bold text-white">Extra GUY Bonus Gifts Received</span>
+                      </div>
                     </div>
-                    <span className="text-lg font-black text-white">{totalGuyBonus.toLocaleString()} <span className="text-xs opacity-60">GUY</span></span>
+                    <div className="flex flex-col items-end">
+                      <span className="text-2xl font-black text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.4)] tracking-tighter">+{totalGuyBonus.toLocaleString()}</span>
+                      <span className="text-[10px] font-black text-primary tracking-widest leading-none">GUY</span>
+                    </div>
                   </div>
                 )}
               </div>

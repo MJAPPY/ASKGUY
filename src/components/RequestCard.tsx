@@ -133,14 +133,14 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
           </div>
 
           {totalGuyBonus > 0 && (
-            <div className={`flex items-center justify-between px-3 py-2 rounded-xl bg-gradient-to-r from-primary/20 to-primary/5 border border-primary/30 gold-glow shimmer-effect animate-pulse-subtle ${isList ? 'mt-4' : ''}`}>
+            <div className={`flex items-center justify-between px-3 py-2 rounded-xl bg-gradient-to-r from-red-500/20 via-blue-600/20 to-red-500/20 border border-white/10 shimmer-effect animate-pulse-subtle ${isList ? 'mt-4' : ''}`}>
               <div className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center">
-                  <Sparkles size={10} className="text-primary animate-spin-slow" />
+                <div className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center">
+                  <Gift size={10} className="text-white animate-pulse" />
                 </div>
-                <span className="text-[10px] font-black text-primary uppercase tracking-tight">GUY Bonus Gift</span>
+                <span className="text-[10px] font-black text-white uppercase tracking-tight">GUY Bonus Gift</span>
               </div>
-              <span className="text-sm font-black text-primary drop-shadow-sm">+{totalGuyBonus.toLocaleString()} GUY</span>
+              <span className="text-sm font-black text-white drop-shadow-md">+{totalGuyBonus.toLocaleString()} GUY</span>
             </div>
           )}
         </div>

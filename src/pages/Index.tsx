@@ -206,7 +206,7 @@ const Index = () => {
                     <div className="space-y-2">
                       <p className="font-bold text-primary text-lg">Unlock Posting Rights</p>
                       <p className="text-sm text-muted-foreground leading-relaxed">
-                        To post a request and receive given, a yearly membership fee of <span className="text-primary font-bold">2,500 XPR</span> is required. This supports platform hosting and moderation.
+                        To post a request and receive help, a yearly membership fee of <span className="text-primary font-bold">2,500 XPR</span> is required. This supports platform hosting and moderation.
                       </p>
                     </div>
                   </div>

@@ -18,7 +18,7 @@ const Footer = () => {
               <span className="font-bold text-lg group-hover:text-primary transition-colors">AskGuy</span>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              A peer-to-peer mutual given platform built for the XPR Network community. 
+              A peer-to-peer mutual help platform built for the XPR Network community. 
               Empowering users to support each other through gifting XPR and GUY tokens.
             </p>
           </div>

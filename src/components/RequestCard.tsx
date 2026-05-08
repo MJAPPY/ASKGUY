@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Heart, Share2, CheckCircle2, Coins, Eye, MessageSquare, ImageIcon, ShieldCheck, X, Calendar, User } from 'lucide-react';
+import { Heart, Share2, CheckCircle2, Coins, Eye, MessageSquare, ImageIcon, ShieldCheck, X, Calendar, User, MessageCircle } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useRequests, AidRequest, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
@@ -28,6 +28,7 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
 
   const progress = Math.min((raised / amount) * 100, 100);
   const isOwner = address === user;
+  const messageCount = contributions.filter(c => c.message).length;
 
   const handleContribute = () => {
     const val = parseFloat(contributionAmount);
@@ -86,9 +87,9 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
               <Badge variant="outline" className={`${getCategoryColor()} border text-[10px] font-bold h-5 px-2`}>
                 {category}
               </Badge>
-              {proofUrl && (
-                <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px] font-bold h-5 px-2 flex gap-1 items-center">
-                  <ImageIcon size={10} /> PROOF
+              {messageCount > 0 && (
+                <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/20 text-[10px] font-bold h-5 px-2 flex gap-1 items-center">
+                  <MessageCircle size={10} /> {messageCount} {messageCount === 1 ? 'MESSAGE' : 'MESSAGES'}
                 </Badge>
               )}
             </div>
@@ -181,7 +182,10 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
                               <span className="text-xs font-black text-white">{c.amount} {c.token}</span>
                             </div>
                             {c.message && (
-                              <p className="text-xs text-muted-foreground leading-relaxed italic font-medium">"{c.message}"</p>
+                              <div className="relative p-3 rounded-lg bg-blue-500/5 border border-blue-500/10 mt-1">
+                                <MessageSquare className="absolute -left-1.5 -top-1.5 text-blue-400/40" size={12} />
+                                <p className="text-xs text-blue-100/90 leading-relaxed italic font-medium">"{c.message}"</p>
+                              </div>
                             )}
                             <p className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest">{new Date(c.timestamp).toLocaleDateString()}</p>
                           </div>

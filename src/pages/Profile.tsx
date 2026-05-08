@@ -9,7 +9,7 @@ import RequestCard from '@/components/RequestCard';
 import TransactionHistory from '@/components/TransactionHistory';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Heart, Send, Receipt, Award, ArrowLeft, Calendar, ShieldCheck } from 'lucide-react';
+import { Heart, Send, Receipt, Award, ArrowLeft, Calendar, MessageSquare, Quote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -44,6 +44,23 @@ const Profile = () => {
   const myContributions = requests.filter(req => 
     req.contributions.some(c => c.user === address)
   );
+
+  const receivedMessages = useMemo(() => {
+    const messages: { user: string, message: string, timestamp: number, requestTitle: string }[] = [];
+    myRequests.forEach(req => {
+      req.contributions.forEach(c => {
+        if (c.message) {
+          messages.push({
+            user: c.user,
+            message: c.message,
+            timestamp: c.timestamp,
+            requestTitle: req.title
+          });
+        }
+      });
+    });
+    return messages.sort((a, b) => b.timestamp - a.timestamp);
+  }, [myRequests]);
 
   if (!isConnected) {
     return (
@@ -143,6 +160,9 @@ const Profile = () => {
               <TabsList className="bg-white/5 border border-white/10">
                 <TabsTrigger value="my-requests">My Requests ({myRequests.length})</TabsTrigger>
                 <TabsTrigger value="my-contributions">My Contributions ({myContributions.length})</TabsTrigger>
+                <TabsTrigger value="messages" className="flex gap-2">
+                  <MessageSquare size={14} /> Messages ({receivedMessages.length})
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="my-requests">
@@ -169,6 +189,38 @@ const Profile = () => {
                 ) : (
                   <div className="text-center py-20 glass-card rounded-2xl border-dashed border-white/10">
                     <p className="text-muted-foreground">You haven't made any contributions yet.</p>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="messages">
+                {receivedMessages.length > 0 ? (
+                  <div className="space-y-4">
+                    {receivedMessages.map((m, i) => (
+                      <Card key={i} className="glass-card border-blue-500/10 bg-blue-500/5">
+                        <CardContent className="p-6 flex gap-4">
+                          <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
+                            <Quote className="text-blue-400" size={18} />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <p className="text-sm font-bold text-blue-400">{m.user}</p>
+                                <p className="text-[10px] text-muted-foreground">on "{m.requestTitle}"</p>
+                              </div>
+                              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">
+                                {new Date(m.timestamp).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <p className="text-sm italic text-foreground/90 leading-relaxed">"{m.message}"</p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-20 glass-card rounded-2xl border-dashed border-white/10">
+                    <p className="text-muted-foreground">No messages received yet.</p>
                   </div>
                 )}
               </TabsContent>

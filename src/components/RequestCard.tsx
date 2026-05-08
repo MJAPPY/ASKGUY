@@ -87,8 +87,8 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
   const isList = variant === 'list';
 
   return (
-    <Card className={`glass-card overflow-hidden group hover:border-emerald-500/40 transition-all duration-300 ${isUrgent && status === 'Open' ? 'border-red-500/40 red-glow' : ''} ${isList ? 'flex flex-col md:flex-row items-center' : ''}`}>
-      <CardContent className={`p-6 ${isList ? 'flex-1' : ''}`}>
+    <Card className={`glass-card overflow-hidden group hover:border-emerald-500/40 transition-all duration-300 ${isUrgent && status === 'Open' ? 'border-red-500/40 red-glow' : ''} ${isList ? 'flex flex-col md:flex-row' : ''}`}>
+      <CardContent className={`p-6 ${isList ? 'flex-1 pb-6' : ''}`}>
         <div className="flex justify-between items-start mb-4">
           <div className="space-y-1.5">
             <div className="text-[10px] uppercase font-black tracking-widest text-muted-foreground flex items-center gap-2">
@@ -119,7 +119,7 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
           {title}
         </h3>
 
-        <p className={`text-sm mb-6 text-foreground/80 leading-relaxed font-medium ${isList ? 'line-clamp-1' : 'line-clamp-2 min-h-[2.5rem]'}`}>
+        <p className={`text-sm mb-6 text-foreground/80 leading-relaxed font-medium ${isList ? 'line-clamp-1 mb-4' : 'line-clamp-2 min-h-[2.5rem]'}`}>
           {description}
         </p>
 
@@ -129,32 +129,16 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
               <span className="text-muted-foreground">Progress ({token})</span>
               <span className="text-foreground">{raised.toLocaleString()} / {amount.toLocaleString()}</span>
             </div>
-            <Progress 
-              value={progress} 
-              className="h-2 bg-white/5" 
-              style={{ 
-                // @ts-ignore
-                '--progress-background': status === 'Funded' ? 'hsl(var(--brand-blue))' : 'hsl(var(--primary))'
-              }} 
-            />
+            <Progress value={progress} className="h-1.5 bg-white/5" />
           </div>
 
-          {totalGuyBonus > 0 && (
-            <div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-gradient-to-r from-primary/20 via-primary/5 to-primary/20 border border-primary/40 shadow-[0_0_15px_rgba(244,201,93,0.15)] animate-in fade-in zoom-in-95 duration-500 relative overflow-hidden group/bonus">
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover/bonus:translate-x-full transition-transform duration-1000" />
-              <div className="flex items-center gap-2.5 relative z-10">
-                <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center">
-                  <Gift size={14} className="text-primary animate-bounce" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[9px] font-black uppercase tracking-[0.1em] text-primary leading-none mb-0.5">Community Gifting</span>
-                  <span className="text-[10px] font-bold text-white/90">GUY Bonus Gift</span>
-                </div>
+          {totalGuyBonus > 0 && !isList && (
+            <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-primary/5 border border-primary/20">
+              <div className="flex items-center gap-2">
+                <Gift size={12} className="text-primary" />
+                <span className="text-[10px] font-bold text-white/90">GUY Bonus Gift</span>
               </div>
-              <div className="text-right relative z-10 flex items-baseline gap-1">
-                <span className="text-sm font-black text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">+{totalGuyBonus.toLocaleString()}</span>
-                <span className="text-[8px] font-black text-primary uppercase">GUY</span>
-              </div>
+              <span className="text-xs font-black text-primary">+{totalGuyBonus.toLocaleString()} GUY</span>
             </div>
           )}
         </div>
@@ -164,18 +148,18 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
         <div className="flex gap-2 w-full">
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="flex-1 gap-2 border-white/10 bg-white/5 hover:bg-white/10 group h-10 font-bold text-xs">
-                <Eye size={14} className="group-hover:text-emerald-400 transition-colors" /> VIEW DETAILS
+              <Button variant="outline" size="sm" className="flex-1 gap-2 border-white/10 bg-white/5 hover:bg-white/10 h-10 font-bold text-xs">
+                <Eye size={14} /> VIEW DETAILS
               </Button>
             </DialogTrigger>
-            <DialogContent className="glass-card border-white/10 max-w-2xl w-[95vw] max-h-[85vh] overflow-hidden flex flex-col p-0 shadow-2xl">
-              <div className="p-6 border-b border-white/5 bg-white/[0.02] shrink-0">
+            <DialogContent className="glass-card border-white/10 max-w-2xl w-[95vw] max-h-[85vh] overflow-hidden flex flex-col p-0">
+              <div className="p-6 border-b border-white/5 bg-white/[0.02]">
                 <DialogHeader className="space-y-3">
                   <div className="flex justify-between items-center">
                     <Badge variant="outline" className={`${getCategoryColor()} font-bold`}>{category}</Badge>
-                    <span className="text-[10px] font-black text-muted-foreground tracking-widest">ID: {id.toUpperCase()}</span>
+                    <span className="text-[10px] font-black text-muted-foreground">ID: {id.toUpperCase()}</span>
                   </div>
-                  <DialogTitle className="text-2xl font-black tracking-tight leading-tight">{title}</DialogTitle>
+                  <DialogTitle className="text-2xl font-black">{title}</DialogTitle>
                   <DialogDescription className="text-muted-foreground flex items-center gap-4 text-xs font-bold">
                     <span className="flex items-center gap-1.5"><User size={14} className="text-emerald-400" /> {user}</span>
                     <span className="flex items-center gap-1.5"><Calendar size={14} /> {new Date().toLocaleDateString()}</span>
@@ -183,85 +167,48 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
                 </DialogHeader>
               </div>
               
-              <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
-                <div className="space-y-3">
-                  <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground">The Situation</h4>
-                  <p className="text-foreground/90 leading-relaxed whitespace-pre-wrap font-medium text-sm">{description}</p>
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div className="space-y-2">
+                  <h4 className="font-black text-[10px] uppercase text-muted-foreground">The Situation</h4>
+                  <p className="text-foreground/90 leading-relaxed text-sm">{description}</p>
                 </div>
 
                 {proofUrl && (
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Verified Proof</h4>
-                      <ShieldCheck className="text-emerald-400" size={14} />
-                    </div>
-                    <div className="rounded-2xl overflow-hidden border border-emerald-500/20 max-h-[400px] bg-black/40 shadow-2xl group cursor-zoom-in">
-                      <img src={proofUrl} alt="Proof" className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700" />
+                  <div className="space-y-2">
+                    <h4 className="font-black text-[10px] uppercase text-muted-foreground">Verified Proof</h4>
+                    <div className="rounded-xl overflow-hidden border border-emerald-500/20 bg-black/40">
+                      <img src={proofUrl} alt="Proof" className="w-full object-contain max-h-[300px]" />
                     </div>
                   </div>
                 )}
 
                 <div className="space-y-4">
-                  <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
-                    <Heart size={14} className="text-red-500 fill-red-500" /> Supporters ({contributions.length})
-                  </h4>
-                  <div className="grid grid-cols-1 gap-3">
-                    {contributions.length > 0 ? (
-                      contributions.map((c) => (
-                        <div key={c.id} className="p-4 rounded-xl bg-white/[0.03] border border-white/5 space-y-2 hover:bg-white/[0.06] transition-colors">
-                          <div className="flex justify-between items-center">
-                            <span className="text-xs font-black text-emerald-400">{c.user}</span>
-                            <span className="text-xs font-black text-white">{c.amount} {c.token}</span>
-                          </div>
-                          {c.message && (
-                            <div className="relative p-3 rounded-lg bg-blue-500/5 border border-blue-500/10 mt-1">
-                              <MessageSquare className="absolute -left-1.5 -top-1.5 text-blue-400/40" size={12} />
-                              <p className="text-xs text-blue-100/90 leading-relaxed italic font-medium">"{c.message}"</p>
-                            </div>
-                          )}
-                          <p className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest">{new Date(c.timestamp).toLocaleDateString()}</p>
+                  <h4 className="font-black text-[10px] uppercase text-muted-foreground">Supporters ({contributions.length})</h4>
+                  <div className="space-y-3">
+                    {contributions.map((c) => (
+                      <div key={c.id} className="p-3 rounded-lg bg-white/[0.03] border border-white/5">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-xs font-black text-emerald-400">{c.user}</span>
+                          <span className="text-xs font-black text-white">{c.amount} {c.token}</span>
                         </div>
-                      ))
-                    ) : (
-                      <div className="text-center py-8 px-4 rounded-2xl bg-white/[0.02] border border-dashed border-white/10">
-                        <p className="text-xs text-muted-foreground italic font-medium">No contributions yet. Be the first to help!</p>
+                        {c.message && <p className="text-xs italic text-muted-foreground">"{c.message}"</p>}
                       </div>
-                    )}
+                    ))}
                   </div>
                 </div>
               </div>
 
-              <div className="p-6 border-t border-white/5 bg-white/[0.02] shrink-0">
-                <div className="grid grid-cols-2 gap-4 p-5 bg-white/[0.03] rounded-2xl border border-white/5 shadow-inner">
-                  <div className="space-y-1">
-                    <p className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Goal Amount</p>
-                    <p className="text-2xl font-black text-emerald-400">{amount.toLocaleString()} <span className="text-xs opacity-60">{token}</span></p>
+              <div className="p-6 border-t border-white/5 bg-white/[0.02]">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-white/[0.03] rounded-xl border border-white/5">
+                    <p className="text-[10px] font-black text-muted-foreground uppercase">Goal</p>
+                    <p className="text-lg font-black text-emerald-400">{amount.toLocaleString()} {token}</p>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Raised</p>
-                    <p className={`text-2xl font-black ${status === 'Funded' ? 'text-blue-400' : 'text-white'}`}>
-                      {raised.toLocaleString()} <span className="text-xs opacity-60">{token}</span>
-                    </p>
+                  <div className="p-4 bg-white/[0.03] rounded-xl border border-white/5">
+                    <p className="text-[10px] font-black text-muted-foreground uppercase">Raised</p>
+                    <p className="text-lg font-black text-white">{raised.toLocaleString()} {token}</p>
                   </div>
                 </div>
-                {totalGuyBonus > 0 && (
-                  <div className="mt-4 flex items-center justify-between px-5 py-3.5 rounded-2xl bg-gradient-to-r from-primary/20 via-primary/5 to-primary/20 border border-primary/40 shadow-[0_0_20px_rgba(244,201,93,0.15)] relative overflow-hidden">
-                    <Sparkles className="absolute -right-2 -top-2 text-primary/10 w-12 h-12 rotate-12" />
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                        <Gift size={20} className="text-primary animate-bounce" />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Exclusive Bonus</span>
-                        <span className="text-xs font-bold text-white">Extra GUY Bonus Gifts Received</span>
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end">
-                      <span className="text-2xl font-black text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.4)] tracking-tighter">+{totalGuyBonus.toLocaleString()}</span>
-                      <span className="text-[10px] font-black text-primary tracking-widest leading-none">GUY</span>
-                    </div>
-                  </div>
-                )}
               </div>
             </DialogContent>
           </Dialog>
@@ -269,74 +216,57 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
           <Button 
             variant="outline" 
             size="icon" 
-            className="shrink-0 border-white/10 bg-white/5 hover:bg-white/10 group h-10 w-10"
+            className="shrink-0 border-white/10 bg-white/5 hover:bg-white/10 h-10 w-10"
             onClick={handleShare}
           >
-            <Share2 size={14} className="group-hover:text-emerald-400 transition-colors" />
+            <Share2 size={14} />
           </Button>
         </div>
 
         {status === 'Completed' ? (
-          <Button variant="outline" className="w-full gap-2 border-emerald-500/40 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 h-11 font-black text-xs tracking-widest" disabled>
-            <CheckCircle2 size={16} />
-            GIVEN COMPLETED
+          <Button variant="outline" className="w-full gap-2 border-emerald-500/40 text-emerald-400 bg-emerald-500/10 h-11 font-black text-xs" disabled>
+            <CheckCircle2 size={16} /> GIVEN COMPLETED
           </Button>
         ) : status === 'Funded' && isOwner ? (
-          <Button onClick={() => markCompleted(id)} className="w-full gap-2 bg-emerald-600 hover:bg-emerald-500 h-11 font-black text-xs tracking-widest text-white shadow-lg shadow-emerald-900/20">
-            <CheckCircle2 size={16} />
-            MARK AS COMPLETED
+          <Button onClick={() => markCompleted(id)} className="w-full gap-2 bg-emerald-600 hover:bg-emerald-500 h-11 font-black text-xs text-white">
+            <CheckCircle2 size={16} /> MARK COMPLETED
           </Button>
         ) : isContributing ? (
-          <div className="space-y-3 animate-in slide-in-from-top-2 w-full pt-1">
+          <div className="space-y-2 w-full pt-1">
             <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Coins className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-400" size={20} />
-                <Input 
-                  type="number" 
-                  className="pl-12 h-14 bg-white/10 border-white/20 focus:border-emerald-500/50 text-xl font-black" 
-                  value={contributionAmount}
-                  onChange={(e) => setContributionAmount(e.target.value)}
-                />
-              </div>
-              <Select 
-                value={contributionToken} 
-                onValueChange={(v: TokenSymbol) => setContributionToken(v)}
-              >
-                <SelectTrigger className="w-[100px] h-14 bg-white/10 border-white/20 text-sm font-black">
+              <Input 
+                type="number" 
+                className="h-10 bg-white/10 border-white/20 text-sm font-bold" 
+                value={contributionAmount}
+                onChange={(e) => setContributionAmount(e.target.value)}
+              />
+              <Select value={contributionToken} onValueChange={(v: TokenSymbol) => setContributionToken(v)}>
+                <SelectTrigger className="w-24 h-10 bg-white/10">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="glass-card border-white/10">
-                  <SelectItem value="XPR" className="font-bold">XPR</SelectItem>
-                  <SelectItem value="GUY" className="font-bold">GUY</SelectItem>
+                <SelectContent>
+                  <SelectItem value="XPR">XPR</SelectItem>
+                  <SelectItem value="GUY">GUY</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div className="relative">
-              <MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
-              <Input 
-                placeholder="Add a message of support..." 
-                className="pl-9 h-10 text-xs bg-white/5 border-white/10 focus:border-emerald-500/50 font-medium" 
-                value={contributionMessage}
-                onChange={(e) => setContributionMessage(e.target.value)}
-              />
-            </div>
             <div className="flex gap-2">
-              <Button onClick={handleContribute} className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white h-12 font-black text-xs tracking-widest shadow-lg shadow-emerald-900/20">
-                SEND CONTRIBUTION
+              <Button onClick={handleContribute} className="flex-1 bg-emerald-600 text-white h-10 font-black text-xs">
+                SEND
               </Button>
-              <Button variant="ghost" onClick={() => setIsContributing(false)} className="h-12 w-12 p-0 text-muted-foreground hover:text-white hover:bg-white/5">
-                <X size={20} />
+              <Button variant="ghost" onClick={() => setIsContributing(false)} className="h-10 w-10">
+                <X size={16} />
               </Button>
             </div>
           </div>
         ) : (
           <Button 
             onClick={() => setIsContributing(true)} 
-            className={`w-full gap-2 font-black text-xs tracking-widest h-11 transition-all ${status === 'Funded' ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-900/20' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/20'}`}
+            className={`w-full gap-2 font-black text-xs h-11 transition-all ${status === 'Funded' ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-emerald-600 hover:bg-emerald-500 text-white'}`}
             disabled={status === 'Funded' && !isOwner}
           >
             <Heart size={16} className="fill-current" />
-            {status === 'Funded' ? 'FULLY FUNDED' : 'CONTRIBUTE NOW'}
+            {status === 'Funded' ? 'FULLY FUNDED' : 'CONTRIBUTE'}
           </Button>
         )}
       </CardFooter>

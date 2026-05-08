@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Upload, Send, X, AlertCircle, ShieldCheck, Info } from 'lucide-react';
+import { Upload, Send, X, AlertCircle, ShieldCheck } from 'lucide-react';
 import { showSuccess } from '@/utils/toast';
 import { useRequests, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
@@ -114,7 +114,7 @@ const RequestForm = () => {
           </div>
         </div>
         <CardDescription className="text-muted-foreground/80">
-          Be honest and clear. The community is here to support you.
+          Share your situation with the community.
         </CardDescription>
       </CardHeader>
       
@@ -125,17 +125,17 @@ const RequestForm = () => {
               <AlertCircle size={18} className="shrink-0 text-red-400 mt-0.5" />
               <p>
                 <span className="text-red-400 font-bold uppercase tracking-tight mr-1">Limit Reached:</span> 
-                You have 3 active requests. Please mark an existing request as "Completed" before posting a new one.
+                You have 3 active requests. Please complete an existing one before posting again.
               </p>
             </div>
           )}
 
           <div className={`space-y-4 ${isLimitReached ? 'opacity-50 pointer-events-none' : ''}`}>
             <div className="space-y-2">
-              <Label htmlFor="title" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Short Summary</Label>
+              <Label htmlFor="title" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Request Title</Label>
               <Input 
                 id="title"
-                placeholder="e.g. Help with Rent for March" 
+                placeholder="Briefly summarize your need..." 
                 required 
                 value={formData.title}
                 onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
@@ -176,7 +176,7 @@ const RequestForm = () => {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Amount Needed (XPR)</Label>
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Amount Requested (XPR)</Label>
               <Input 
                 type="number" 
                 placeholder="0.00" 
@@ -188,9 +188,9 @@ const RequestForm = () => {
             </div>
             
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">My Brief situation</Label>
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Brief Situation</Label>
               <Textarea 
-                placeholder="Explain your situation. Being detailed helps donors understand your need..." 
+                placeholder="Explain your situation..." 
                 className="min-h-[120px] bg-white/5 border-white/10 focus:border-emerald-500/50 leading-relaxed" 
                 required 
                 value={formData.description}
@@ -199,23 +199,13 @@ const RequestForm = () => {
             </div>
 
             <div className="space-y-4 pt-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Proof of Need (Highly Recommended)</Label>
-              </div>
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Proof of Need (Recommended)</Label>
               
               <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 space-y-4">
-                <div className="flex items-start gap-3 p-3.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-100 text-xs font-semibold leading-normal shadow-sm">
-                  <AlertCircle size={18} className="shrink-0 text-amber-400 mt-0.5" />
-                  <p>
-                    <span className="text-amber-400 font-bold uppercase tracking-tight mr-1">Warning:</span> 
-                    All requests and photos are public. Please blur or cover sensitive personal ID numbers before uploading.
-                  </p>
-                </div>
-
                 <div className="flex gap-3">
                   <ShieldCheck className="text-emerald-400 shrink-0 mt-0.5" size={16} />
                   <p className="text-[11px] leading-relaxed text-emerald-100/70">
-                    <span className="font-bold text-emerald-400">Recommended:</span> Upload a photo of your bill with your <span className="text-emerald-400 font-bold">@{address}</span> handwritten clearly on a piece of paper next to it. This builds trust and increases chances of receiving help.
+                    Upload a photo of your bill with your <span className="text-emerald-400 font-bold">@{address}</span> handwritten next to it to build trust.
                   </p>
                 </div>
 
@@ -234,7 +224,7 @@ const RequestForm = () => {
                   >
                     <Upload className={`mx-auto mb-2 transition-colors ${skipProof ? 'text-muted-foreground' : 'text-emerald-400 group-hover:scale-110'}`} size={24} />
                     <p className="text-sm font-medium">Click to upload photo proof</p>
-                    <p className="text-[10px] text-muted-foreground mt-1">Supports JPG, PNG</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">JPG or PNG</p>
                   </div>
                 ) : (
                   <div className="relative rounded-xl overflow-hidden border border-emerald-500/30 aspect-video bg-black/40 group">
@@ -280,19 +270,7 @@ const RequestForm = () => {
             className="w-full gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold h-12 rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)]" 
             disabled={loading || isLimitReached}
           >
-            {loading ? (
-              <span className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                Posting Request...
-              </span>
-            ) : isLimitReached ? (
-              "Limit Reached"
-            ) : (
-              <>
-                <Send size={18} />
-                Submit Bill Request
-              </>
-            )}
+            {loading ? "Posting..." : isLimitReached ? "Limit Reached" : "Submit Request"}
           </Button>
         </CardFooter>
       </form>

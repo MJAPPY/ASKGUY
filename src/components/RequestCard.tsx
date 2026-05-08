@@ -5,13 +5,12 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Heart, Share2, CheckCircle2, Coins, Eye, MessageSquare, ImageIcon, ShieldCheck, X, Calendar, User, MessageCircle } from 'lucide-react';
+import { Heart, Share2, CheckCircle2, Coins, Eye, MessageSquare, ShieldCheck, X, Calendar, User, MessageCircle } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useRequests, AidRequest, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface RequestCardProps extends AidRequest {
@@ -135,8 +134,8 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
                 <Eye size={14} className="group-hover:text-emerald-400 transition-colors" /> VIEW DETAILS
               </Button>
             </DialogTrigger>
-            <DialogContent className="glass-card border-white/10 max-w-2xl w-[95vw] max-h-[90vh] overflow-hidden flex flex-col p-0 shadow-2xl">
-              <div className="p-6 border-b border-white/5 bg-white/[0.02]">
+            <DialogContent className="glass-card border-white/10 max-w-2xl w-[95vw] max-h-[85vh] overflow-hidden flex flex-col p-0 shadow-2xl">
+              <div className="p-6 border-b border-white/5 bg-white/[0.02] shrink-0">
                 <DialogHeader className="space-y-3">
                   <div className="flex justify-between items-center">
                     <Badge variant="outline" className={`${getCategoryColor()} font-bold`}>{category}</Badge>
@@ -150,57 +149,55 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
                 </DialogHeader>
               </div>
               
-              <ScrollArea className="flex-1">
-                <div className="p-6 space-y-8">
+              <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
+                <div className="space-y-3">
+                  <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground">The Situation</h4>
+                  <p className="text-foreground/90 leading-relaxed whitespace-pre-wrap font-medium text-sm">{description}</p>
+                </div>
+
+                {proofUrl && (
                   <div className="space-y-3">
-                    <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground">The Situation</h4>
-                    <p className="text-foreground/90 leading-relaxed whitespace-pre-wrap font-medium text-sm">{description}</p>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Verified Proof</h4>
+                      <ShieldCheck className="text-emerald-400" size={14} />
+                    </div>
+                    <div className="rounded-2xl overflow-hidden border border-emerald-500/20 max-h-[400px] bg-black/40 shadow-2xl group cursor-zoom-in">
+                      <img src={proofUrl} alt="Proof" className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700" />
+                    </div>
                   </div>
+                )}
 
-                  {proofUrl && (
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Verified Proof</h4>
-                        <ShieldCheck className="text-emerald-400" size={14} />
-                      </div>
-                      <div className="rounded-2xl overflow-hidden border border-emerald-500/20 max-h-[300px] bg-black/40 shadow-2xl group cursor-zoom-in">
-                        <img src={proofUrl} alt="Proof" className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700" />
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="space-y-4">
-                    <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
-                      <Heart size={14} className="text-red-500 fill-red-500" /> Supporters ({contributions.length})
-                    </h4>
-                    <div className="grid grid-cols-1 gap-3">
-                      {contributions.length > 0 ? (
-                        contributions.map((c) => (
-                          <div key={c.id} className="p-4 rounded-xl bg-white/[0.03] border border-white/5 space-y-2 hover:bg-white/[0.06] transition-colors">
-                            <div className="flex justify-between items-center">
-                              <span className="text-xs font-black text-emerald-400">{c.user}</span>
-                              <span className="text-xs font-black text-white">{c.amount} {c.token}</span>
-                            </div>
-                            {c.message && (
-                              <div className="relative p-3 rounded-lg bg-blue-500/5 border border-blue-500/10 mt-1">
-                                <MessageSquare className="absolute -left-1.5 -top-1.5 text-blue-400/40" size={12} />
-                                <p className="text-xs text-blue-100/90 leading-relaxed italic font-medium">"{c.message}"</p>
-                              </div>
-                            )}
-                            <p className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest">{new Date(c.timestamp).toLocaleDateString()}</p>
+                <div className="space-y-4">
+                  <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
+                    <Heart size={14} className="text-red-500 fill-red-500" /> Supporters ({contributions.length})
+                  </h4>
+                  <div className="grid grid-cols-1 gap-3">
+                    {contributions.length > 0 ? (
+                      contributions.map((c) => (
+                        <div key={c.id} className="p-4 rounded-xl bg-white/[0.03] border border-white/5 space-y-2 hover:bg-white/[0.06] transition-colors">
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs font-black text-emerald-400">{c.user}</span>
+                            <span className="text-xs font-black text-white">{c.amount} {c.token}</span>
                           </div>
-                        ))
-                      ) : (
-                        <div className="text-center py-8 px-4 rounded-2xl bg-white/[0.02] border border-dashed border-white/10">
-                          <p className="text-xs text-muted-foreground italic font-medium">No contributions yet. Be the first to help!</p>
+                          {c.message && (
+                            <div className="relative p-3 rounded-lg bg-blue-500/5 border border-blue-500/10 mt-1">
+                              <MessageSquare className="absolute -left-1.5 -top-1.5 text-blue-400/40" size={12} />
+                              <p className="text-xs text-blue-100/90 leading-relaxed italic font-medium">"{c.message}"</p>
+                            </div>
+                          )}
+                          <p className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest">{new Date(c.timestamp).toLocaleDateString()}</p>
                         </div>
-                      )}
-                    </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-8 px-4 rounded-2xl bg-white/[0.02] border border-dashed border-white/10">
+                        <p className="text-xs text-muted-foreground italic font-medium">No contributions yet. Be the first to help!</p>
+                      </div>
+                    )}
                   </div>
                 </div>
-              </ScrollArea>
+              </div>
 
-              <div className="p-6 border-t border-white/5 bg-white/[0.02]">
+              <div className="p-6 border-t border-white/5 bg-white/[0.02] shrink-0">
                 <div className="grid grid-cols-2 gap-4 p-5 bg-white/[0.03] rounded-2xl border border-white/5 shadow-inner">
                   <div className="space-y-1">
                     <p className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Goal Amount</p>

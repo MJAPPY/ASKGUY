@@ -132,13 +132,15 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
             <Progress value={progress} className="h-1.5 bg-white/5" />
           </div>
 
-          {totalGuyBonus > 0 && !isList && (
-            <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-primary/5 border border-primary/20">
+          {totalGuyBonus > 0 && (
+            <div className={`flex items-center justify-between px-3 py-2 rounded-xl bg-gradient-to-r from-primary/20 to-primary/5 border border-primary/30 gold-glow shimmer-effect animate-pulse-subtle ${isList ? 'mt-4' : ''}`}>
               <div className="flex items-center gap-2">
-                <Gift size={12} className="text-primary" />
-                <span className="text-[10px] font-bold text-white/90">GUY Bonus Gift</span>
+                <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center">
+                  <Sparkles size={10} className="text-primary animate-spin-slow" />
+                </div>
+                <span className="text-[10px] font-black text-primary uppercase tracking-tight">GUY Bonus Gift</span>
               </div>
-              <span className="text-xs font-black text-primary">+{totalGuyBonus.toLocaleString()} GUY</span>
+              <span className="text-sm font-black text-primary drop-shadow-sm">+{totalGuyBonus.toLocaleString()} GUY</span>
             </div>
           )}
         </div>

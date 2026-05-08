@@ -15,7 +15,7 @@ const Footer = () => {
               <div className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 transition-transform group-hover:scale-110">
                 <img src={logo} alt="AskGuy Logo" className="w-full h-full object-cover" />
               </div>
-              <span className="font-bold text-lg group-hover:text-primary transition-colors">AskGuy XPR</span>
+              <span className="font-bold text-lg group-hover:text-primary transition-colors">AskGuy</span>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed">
               A peer-to-peer mutual given platform built for the XPR Network community. 

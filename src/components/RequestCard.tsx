@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Heart, Share2, CheckCircle2, Coins, Eye, MessageSquare, ShieldCheck, X, Calendar, User, MessageCircle } from 'lucide-react';
+import { Heart, Share2, CheckCircle2, Coins, Eye, MessageSquare, ShieldCheck, X, Calendar, User, MessageCircle, Gift } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useRequests, AidRequest, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
@@ -29,12 +29,26 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
   const isOwner = address === user;
   const messageCount = contributions.filter(c => c.message).length;
 
+  const totalGuyBonus = useMemo(() => {
+    // Only count GUY as a "bonus" if the main request isn't in GUY
+    if (token === 'GUY') return 0;
+    return contributions
+      .filter(c => c.token === 'GUY')
+      .reduce((acc, c) => acc + c.amount, 0);
+  }, [contributions, token]);
+
   const handleContribute = () => {
     const val = parseFloat(contributionAmount);
     if (isNaN(val) || val <= 0 || !address) return;
     
     contribute(id, address, val, contributionToken, contributionMessage);
-    showSuccess(`Contributed ${val} ${contributionToken} to ${user}'s request!`);
+    
+    if (contributionToken === 'GUY' && token !== 'GUY') {
+      showSuccess(`Sent ${val} GUY as a bonus gift to ${user}!`);
+    } else {
+      showSuccess(`Contributed ${val} ${contributionToken} to ${user}'s request!`);
+    }
+    
     setIsContributing(false);
     setContributionMessage("");
   };
@@ -110,19 +124,31 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
           {description}
         </p>
 
-        <div className="space-y-2.5">
-          <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
-            <span className="text-muted-foreground">Progress ({token})</span>
-            <span className="text-foreground">{raised.toLocaleString()} / {amount.toLocaleString()}</span>
+        <div className="space-y-3">
+          <div className="space-y-2">
+            <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
+              <span className="text-muted-foreground">Progress ({token})</span>
+              <span className="text-foreground">{raised.toLocaleString()} / {amount.toLocaleString()}</span>
+            </div>
+            <Progress 
+              value={progress} 
+              className="h-2 bg-white/5" 
+              style={{ 
+                // @ts-ignore
+                '--progress-background': status === 'Funded' ? 'hsl(var(--brand-blue))' : 'hsl(var(--primary))'
+              }} 
+            />
           </div>
-          <Progress 
-            value={progress} 
-            className="h-2 bg-white/5" 
-            style={{ 
-              // @ts-ignore
-              '--progress-background': status === 'Funded' ? 'hsl(var(--brand-blue))' : 'hsl(var(--primary))'
-            }} 
-          />
+
+          {totalGuyBonus > 0 && (
+            <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-primary/10 border border-primary/20 animate-in fade-in zoom-in-95 duration-500">
+              <div className="flex items-center gap-2">
+                <Gift size={14} className="text-primary animate-bounce" />
+                <span className="text-[10px] font-black uppercase tracking-wider text-primary">GUY Bonus Gift</span>
+              </div>
+              <span className="text-xs font-black text-white">{totalGuyBonus.toLocaleString()} GUY</span>
+            </div>
+          )}
         </div>
       </CardContent>
 
@@ -210,6 +236,17 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
                     </p>
                   </div>
                 </div>
+                {totalGuyBonus > 0 && (
+                  <div className="mt-4 flex items-center justify-between px-4 py-3 rounded-xl bg-primary/10 border border-primary/20">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                        <Gift size={16} className="text-primary" />
+                      </div>
+                      <span className="text-xs font-black uppercase tracking-widest text-primary">Extra GUY Bonus Gifts Received</span>
+                    </div>
+                    <span className="text-lg font-black text-white">{totalGuyBonus.toLocaleString()} <span className="text-xs opacity-60">GUY</span></span>
+                  </div>
+                )}
               </div>
             </DialogContent>
           </Dialog>

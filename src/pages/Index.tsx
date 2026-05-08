@@ -138,7 +138,7 @@ const Index = () => {
                         <ShieldCheck className="text-emerald-400" size={20} />
                       </div>
                       <div>
-                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Community Given</p>
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Community has Given</p>
                         <p className="text-sm font-bold">142,500 XPR Distributed</p>
                       </div>
                     </div>

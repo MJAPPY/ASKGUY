@@ -227,7 +227,7 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
         {status === 'Completed' ? (
           <Button variant="outline" className="w-full gap-2 border-emerald-500/40 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 h-11 font-black text-xs tracking-widest" disabled>
             <CheckCircle2 size={16} />
-            AID COMPLETED
+            GIVEN COMPLETED
           </Button>
         ) : status === 'Funded' && isOwner ? (
           <Button onClick={() => markCompleted(id)} className="w-full gap-2 bg-emerald-600 hover:bg-emerald-500 h-11 font-black text-xs tracking-widest text-white shadow-lg shadow-emerald-900/20">

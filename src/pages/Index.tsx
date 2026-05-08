@@ -138,7 +138,7 @@ const Index = () => {
                         <ShieldCheck className="text-emerald-400" size={20} />
                       </div>
                       <div>
-                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Community Aid</p>
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Community Given</p>
                         <p className="text-sm font-bold">142,500 XPR Distributed</p>
                       </div>
                     </div>
@@ -205,7 +205,7 @@ const Index = () => {
                     <div className="space-y-2">
                       <p className="font-bold text-primary text-lg">Unlock Posting Rights</p>
                       <p className="text-sm text-muted-foreground leading-relaxed">
-                        To post a request and receive aid, a yearly membership fee of <span className="text-primary font-bold">2,500 XPR</span> is required. This supports platform hosting and moderation.
+                        To post a request and receive given, a yearly membership fee of <span className="text-primary font-bold">2,500 XPR</span> is required. This supports platform hosting and moderation.
                       </p>
                     </div>
                   </div>

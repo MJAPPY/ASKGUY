@@ -7,7 +7,7 @@ import { Coins, Users, CheckCircle2, Heart } from 'lucide-react';
 const CommunityStats = () => {
   const stats = [
     {
-      label: "Total Aid Provided",
+      label: "Total Given",
       value: "142,500 XPR",
       icon: <Coins className="text-emerald-400" size={20} />,
       borderColor: "border-emerald-500/20",

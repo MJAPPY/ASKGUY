@@ -36,7 +36,7 @@ const LeaderboardPage = () => {
               
               <div className="flex gap-4">
                 <div className="text-center px-6 py-3 rounded-2xl bg-white/5 border border-white/10">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Total Aid</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Total Given</p>
                   <p className="text-xl font-black text-primary">142,500 XPR</p>
                 </div>
               </div>

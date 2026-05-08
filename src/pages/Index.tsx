@@ -15,7 +15,7 @@ import CTASection from '@/components/CTASection';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertCircle, ShieldAlert, Search, User, ExternalLink, Heart, ArrowRight, ShieldCheck, Calendar, LayoutGrid, Zap, CheckCircle2, ArrowUpDown, List } from 'lucide-react';
+import { AlertCircle, ShieldAlert, Search, User, ExternalLink, Heart, ArrowRight, ShieldCheck, Calendar, LayoutGrid, Zap, CheckCircle2, ArrowUpDown, List, Lock } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -37,7 +37,6 @@ const Index = () => {
   const filteredRequests = useMemo(() => {
     let result = [...requests];
     
-    // 1. Apply Search
     if (searchQuery) {
       result = result.filter(req => 
         req.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -47,7 +46,6 @@ const Index = () => {
       );
     }
 
-    // 2. Apply Status/User Filter
     if (filter === 'my-requests' && address) {
       result = result.filter(req => req.user === address);
     } else if (filter === 'active') {
@@ -56,7 +54,6 @@ const Index = () => {
       result = result.filter(req => req.status === 'Funded' || req.status === 'Completed');
     }
 
-    // 3. Apply Sorting
     result.sort((a, b) => {
       if (sortBy === 'newest') return b.timestamp - a.timestamp;
       return a.timestamp - b.timestamp;
@@ -198,23 +195,26 @@ const Index = () => {
                 </CardContent>
               </Card>
             ) : !isMember ? (
-              <Card className="border-emerald-500/50 bg-emerald-500/5 overflow-hidden relative glass-card">
+              <Card className="border-primary/50 bg-primary/5 overflow-hidden relative glass-card">
                 <div className="absolute top-0 right-0 p-4 opacity-10">
-                  <ShieldCheck size={48} className="text-emerald-400" />
+                  <Lock size={48} className="text-primary" />
                 </div>
                 <CardContent className="p-6 space-y-4">
                   <div className="flex gap-4">
-                    <ShieldAlert className="text-emerald-400 shrink-0" />
+                    <ShieldAlert className="text-primary shrink-0" />
                     <div className="space-y-2">
-                      <p className="font-bold text-emerald-400 text-lg">Yearly Membership Required</p>
+                      <p className="font-bold text-primary text-lg">Unlock Posting Rights</p>
                       <p className="text-sm text-muted-foreground leading-relaxed">
-                        To keep AskGuy running smoothly (hosting, development, moderation & updates), we charge a yearly admin fee of 2,500 XPR.
+                        To post a request and receive aid, a yearly membership fee of <span className="text-primary font-bold">2,500 XPR</span> is required. This supports platform hosting and moderation.
                       </p>
                     </div>
                   </div>
-                  <Button onClick={payMembership} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold h-12 shadow-emerald-900/20 text-base btn-premium">
-                    Pay 2,500 XPR & Join
+                  <Button onClick={payMembership} className="w-full bg-primary hover:bg-primary/90 text-black font-bold h-12 shadow-primary/20 text-base btn-premium gold-glow">
+                    Pay 2,500 XPR to Post
                   </Button>
+                  <p className="text-[10px] text-center text-muted-foreground italic">
+                    You can still browse and contribute to others without a membership.
+                  </p>
                 </CardContent>
               </Card>
             ) : (

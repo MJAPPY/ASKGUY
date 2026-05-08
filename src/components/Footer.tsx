@@ -18,7 +18,7 @@ const Footer = () => {
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed">
               A peer-to-peer mutual given platform built for the XPR Network community. 
-              Empowering users to support each other through transparent, direct given.
+              Empowering users to support each other through gifting XPR and GUY tokens.
             </p>
           </div>
           

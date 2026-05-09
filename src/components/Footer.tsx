@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Github, Twitter } from 'lucide-react';
+import { Twitter } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import logo from '@/assets/logo.jpg';
 
@@ -78,9 +78,6 @@ const Footer = () => {
                 className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-primary/20 hover:text-white transition-all group"
               >
                 <Twitter size={18} className="transition-all group-hover:scale-110 group-hover:brightness-125" />
-              </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-primary/20 hover:text-white transition-all group">
-                <Github size={18} className="transition-all group-hover:scale-110 group-hover:brightness-125" />
               </a>
             </div>
             <p className="text-xs text-muted-foreground mt-6">

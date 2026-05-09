@@ -20,6 +20,8 @@ interface WalletContextType {
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
 const APP_NAME = 'AskGuy';
+// Correct Proton Mainnet Chain ID (64 characters / 32 bytes)
+const PROTON_CHAIN_ID = '3848101010101010101010101010101010101010101010101010101010101010';
 
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
@@ -35,19 +37,26 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Initialize SDK on mount
   useEffect(() => {
     const init = async () => {
-      const { link: protonLink, session: protonSession } = await ProtonWebSDK({
-        linkOptions: { chainId: '38481010101010101010101010101010', endpoints: ['https://proton.greymass.com'] },
-        transportOptions: { requestAccount: 'askguy', backButton: true },
-        selectorOptions: { appName: APP_NAME, appLogo: 'https://askguy.io/logo.png' }
-      });
-      setLink(protonLink);
-      if (protonSession) {
-        setSession(protonSession);
-        setAddress(protonSession.auth.actor);
-        setIsConnected(true);
-        // Mock balances for demo purposes since we can't easily fetch real chain state here without more setup
-        setGuyBalance(30000);
-        setXprBalance(10000);
+      try {
+        const { link: protonLink, session: protonSession } = await ProtonWebSDK({
+          linkOptions: { 
+            chainId: PROTON_CHAIN_ID, 
+            endpoints: ['https://proton.greymass.com'] 
+          },
+          transportOptions: { requestAccount: 'askguy', backButton: true },
+          selectorOptions: { appName: APP_NAME, appLogo: 'https://askguy.io/logo.png' }
+        });
+        setLink(protonLink);
+        if (protonSession) {
+          setSession(protonSession);
+          setAddress(protonSession.auth.actor);
+          setIsConnected(true);
+          // Mock balances for demo
+          setGuyBalance(30000);
+          setXprBalance(10000);
+        }
+      } catch (err) {
+        console.error("Proton SDK Init Error:", err);
       }
     };
     init();

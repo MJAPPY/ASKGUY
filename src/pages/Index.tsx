@@ -12,6 +12,7 @@ import CommunityStats from '@/components/CommunityStats';
 import ActivityFeed from '@/components/ActivityFeed';
 import SuccessStories from '@/components/SuccessStories';
 import CTASection from '@/components/CTASection';
+import LiveTicker from '@/components/LiveTicker';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -173,6 +174,8 @@ const Index = () => {
       </div>
 
       <Navbar />
+      <LiveTicker />
+      
       <main className="flex-1 container mx-auto px-4 py-8 relative z-10">
         <CommunityStats />
         

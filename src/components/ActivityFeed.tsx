@@ -4,7 +4,7 @@ import React, { useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Activity, Heart, PlusCircle, CheckCircle2, Zap } from 'lucide-react';
 import { useRequests } from '@/hooks/use-requests';
-import{ formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 
 const ActivityFeed = () => {
   const { requests } = useRequests();

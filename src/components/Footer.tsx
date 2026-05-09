@@ -42,9 +42,9 @@ const Footer = () => {
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-primary transition-colors">
+                <Link to="/guidelines" className="hover:text-primary transition-colors">
                   Community Guidelines
-                </a>
+                </Link>
               </li>
             </ul>
           </div>

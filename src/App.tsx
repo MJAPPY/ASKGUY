@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Profile from "./pages/Profile";
 import LeaderboardPage from "./pages/LeaderboardPage";
+import Guidelines from "./pages/Guidelines";
 import NotFound from "./pages/NotFound";
 import { WalletProvider } from "./hooks/use-wallet";
 import { RequestsProvider } from "./hooks/use-requests";
@@ -24,6 +25,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/leaderboard" element={<LeaderboardPage />} />
+              <Route path="/guidelines" element={<Guidelines />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

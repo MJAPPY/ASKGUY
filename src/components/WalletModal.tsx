@@ -15,8 +15,6 @@ const WalletModal: React.FC<WalletModalProps> = ({ trigger }) => {
   const [open, setOpen] = React.useState(false);
 
   const handleConnect = async () => {
-    // We use the standard login which shows the Proton selector
-    // But we've styled our trigger to look like the screenshot
     await connect();
     setOpen(false);
   };
@@ -32,6 +30,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ trigger }) => {
       </DialogTrigger>
       <DialogContent className="bg-[#0a0a0c] border-white/10 max-w-[400px] w-[95vw] p-0 overflow-hidden rounded-[24px] shadow-2xl">
         <div className="p-6 space-y-6">
+          {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
@@ -46,8 +45,8 @@ const WalletModal: React.FC<WalletModalProps> = ({ trigger }) => {
             </DialogClose>
           </div>
 
+          {/* Connection Options */}
           <div className="space-y-3">
-            {/* Mobile App Option */}
             <button 
               onClick={handleConnect}
               className="w-full flex items-center gap-4 p-4 rounded-[16px] bg-white/[0.03] border border-white/10 hover:bg-white/[0.06] hover:border-white/20 transition-all text-left group"
@@ -61,7 +60,6 @@ const WalletModal: React.FC<WalletModalProps> = ({ trigger }) => {
               </div>
             </button>
 
-            {/* Browser Wallet Option */}
             <button 
               onClick={handleConnect}
               className="w-full flex items-center gap-4 p-4 rounded-[16px] bg-white/[0.03] border border-white/10 hover:bg-white/[0.06] hover:border-white/20 transition-all text-left group"
@@ -76,6 +74,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ trigger }) => {
             </button>
           </div>
 
+          {/* Get WebAuth Button with Gradient Border */}
           <div className="pt-2">
             <Button 
               asChild
@@ -96,6 +95,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ trigger }) => {
             </Button>
           </div>
 
+          {/* Footer Links */}
           <div className="space-y-6 pt-2">
             <button className="w-full text-center text-[11px] font-bold text-white/40 hover:text-white transition-colors flex items-center justify-center gap-1 group">
               Connect with other wallets 
@@ -108,6 +108,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ trigger }) => {
           </div>
         </div>
 
+        {/* Loading Overlay */}
         {isConnecting && (
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center z-50">
             <Loader2 className="text-white animate-spin mb-4" size={32} />

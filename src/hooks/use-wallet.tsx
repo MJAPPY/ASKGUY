@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { showSuccess, showError } from '@/utils/toast';
+import ProtonWebSDK from '@proton/web-sdk';
 
 interface WalletContextType {
   isConnected: boolean;
@@ -10,8 +11,8 @@ interface WalletContextType {
   xprBalance: number;
   isMember: boolean;
   membershipExpiry: number | null;
-  connect: () => void;
-  disconnect: () => void;
+  connect: () => Promise<void>;
+  disconnect: () => Promise<void>;
   payMembership: () => void;
 }
 
@@ -24,21 +25,52 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [xprBalance, setXprBalance] = useState(0);
   const [isMember, setIsMember] = useState(false);
   const [membershipExpiry, setMembershipExpiry] = useState<number | null>(null);
+  const [session, setSession] = useState<any>(null);
 
-  const connect = () => {
-    // Mock connection
-    setIsConnected(true);
-    setAddress("guy_user.xpr");
-    setGuyBalance(30000); // Mocking > 25k GUY
-    setXprBalance(10000); // Mock balance
-    showSuccess("WebAuth Wallet Connected");
+  const connect = async () => {
+    try {
+      const { session: newSession } = await ProtonWebSDK({
+        linkOptions: {
+          endpoints: ['https://proton.greymass.com'],
+          chainId: '73647602408292359010322569958595935', // Proton Mainnet
+        },
+        transportOptions: {
+          requestAccount: 'askguy',
+          backButton: true,
+        },
+        selectorOptions: {
+          appName: 'AskGuy',
+          appLogo: 'https://askguy.io/logo.jpg',
+        }
+      });
+
+      if (newSession) {
+        setSession(newSession);
+        setAddress(newSession.auth.actor);
+        setIsConnected(true);
+        
+        // Mocking balances for demo purposes as real chain calls require more setup
+        setGuyBalance(30000);
+        setXprBalance(10000);
+        
+        showSuccess(`Connected as ${newSession.auth.actor}`);
+      }
+    } catch (err) {
+      console.error(err);
+      showError("Failed to connect wallet");
+    }
   };
 
-  const disconnect = () => {
+  const disconnect = async () => {
+    if (session) {
+      await session.link.removeSession('askguy', session.auth, 'proton');
+    }
     setIsConnected(false);
     setAddress(null);
     setGuyBalance(0);
     setXprBalance(0);
+    setSession(null);
+    showSuccess("Disconnected");
   };
 
   const payMembership = () => {
@@ -51,13 +83,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setXprBalance(prev => prev - FEE);
     setIsMember(true);
     
-    // Set or extend expiry by 1 year (365 days)
     const oneYearInMs = 365 * 24 * 60 * 60 * 1000;
     const currentExpiry = membershipExpiry || Date.now();
     const newExpiry = (currentExpiry > Date.now() ? currentExpiry : Date.now()) + oneYearInMs;
     
     setMembershipExpiry(newExpiry);
-    showSuccess(`Membership Activated! You can now post requests. Sent ${FEE} XPR to @tripseven`);
+    showSuccess(`Membership Activated! Sent ${FEE} XPR to @tripseven`);
   };
 
   return (

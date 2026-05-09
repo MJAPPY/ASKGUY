@@ -7,6 +7,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import RequestCard from '@/components/RequestCard';
 import TransactionHistory from '@/components/TransactionHistory';
+import WalletModal from '@/components/WalletModal';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Heart, Send, Receipt, Award, ArrowLeft, Calendar, MessageSquare, Quote, Wallet, Loader2 } from 'lucide-react';
@@ -15,7 +16,7 @@ import { Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const Profile = () => {
-  const { address, isConnected, isConnecting, guyBalance, isMember, membershipExpiry, payMembership, connect } = useWallet();
+  const { address, isConnected, isConnecting, guyBalance, isMember, membershipExpiry, payMembership } = useWallet();
   const { requests } = useRequests();
 
   const stats = useMemo(() => {
@@ -77,23 +78,26 @@ const Profile = () => {
                 Please connect your XPR Network wallet to view your profile, track your contributions, and manage your requests.
               </p>
             </div>
-            <Button 
-              onClick={connect} 
-              disabled={isConnecting}
-              className="w-full h-14 bg-primary hover:bg-primary/90 text-black font-black rounded-xl gold-glow btn-premium text-base gap-3"
-            >
-              {isConnecting ? (
-                <>
-                  <Loader2 size={20} className="animate-spin" />
-                  Connecting...
-                </>
-              ) : (
-                <>
-                  <Wallet size={20} />
-                  Connect WebAuth
-                </>
-              )}
-            </Button>
+            <WalletModal 
+              trigger={
+                <Button 
+                  disabled={isConnecting}
+                  className="w-full h-14 bg-primary hover:bg-primary/90 text-black font-black rounded-xl gold-glow btn-premium text-base gap-3"
+                >
+                  {isConnecting ? (
+                    <>
+                      <Loader2 size={20} className="animate-spin" />
+                      Connecting...
+                    </>
+                  ) : (
+                    <>
+                      <Wallet size={20} />
+                      Connect WebAuth
+                    </>
+                  )}
+                </Button>
+              }
+            />
             <Button variant="ghost" asChild className="text-muted-foreground hover:text-white">
               <Link to="/" className="flex items-center gap-2">
                 <ArrowLeft size={16} /> Back to Home

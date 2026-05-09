@@ -14,6 +14,7 @@ import SuccessStories from '@/components/SuccessStories';
 import CTASection from '@/components/CTASection';
 import LiveTicker from '@/components/LiveTicker';
 import Footer from '@/components/Footer';
+import WalletModal from '@/components/WalletModal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { AlertCircle, ShieldAlert, Search, User, ExternalLink, Heart, ArrowRight, ShieldCheck, Calendar, LayoutGrid, Zap, CheckCircle2, ArrowUpDown, List, Lock } from 'lucide-react';
@@ -28,7 +29,7 @@ type SortType = 'newest' | 'oldest';
 type ViewMode = 'grid' | 'list';
 
 const Index = () => {
-  const { isConnected, guyBalance, isMember, membershipExpiry, payMembership, address, connect } = useWallet();
+  const { isConnected, guyBalance, isMember, membershipExpiry, payMembership, address } = useWallet();
   const { requests } = useRequests();
   const [filter, setFilter] = useState<FilterType>('active');
   const [sortBy, setSortBy] = useState<SortType>('oldest');
@@ -89,15 +90,18 @@ const Index = () => {
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Button 
-                    onClick={connect} 
-                    size="lg" 
-                    className="h-14 px-8 text-lg font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl flex gap-2 group transition-all shadow-[0_0_30px_rgba(16,185,129,0.2)] btn-premium"
-                  >
-                    <Heart size={20} className="fill-white" />
-                    Connect & Join
-                    <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                  </Button>
+                  <WalletModal 
+                    trigger={
+                      <Button 
+                        size="lg" 
+                        className="h-14 px-8 text-lg font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl flex gap-2 group transition-all shadow-[0_0_30px_rgba(16,185,129,0.2)] btn-premium"
+                      >
+                        <Heart size={20} className="fill-white" />
+                        Connect & Join
+                        <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                      </Button>
+                    }
+                  />
                   
                   <Button 
                     size="lg" 

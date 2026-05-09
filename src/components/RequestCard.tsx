@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Heart, Share2, CheckCircle2, Coins, Eye, MessageSquare, ShieldCheck, X, Calendar, User, MessageCircle, Gift, Sparkles, Clock, Target } from 'lucide-react';
+import { Heart, Share2, CheckCircle2, Coins, Eye, MessageSquare, ShieldCheck, X, Calendar, User, MessageCircle, Gift, Sparkles, Clock, Target, Send } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useRequests, AidRequest, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
@@ -271,7 +271,7 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
             <CheckCircle2 size={16} /> Mark Completed
           </Button>
         ) : isContributing ? (
-          <div className="space-y-2 w-full pt-1 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <div className="space-y-3 w-full pt-1 animate-in fade-in slide-in-from-bottom-2 duration-300">
             <div className="flex gap-2">
               <Input 
                 type="number" 
@@ -289,9 +289,20 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
                 </SelectContent>
               </Select>
             </div>
+            
+            <div className="relative">
+              <MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
+              <Input 
+                placeholder="Add a support message..." 
+                className="h-11 pl-9 bg-white/5 border-white/10 text-xs font-medium focus:border-emerald-500/50"
+                value={contributionMessage}
+                onChange={(e) => setContributionMessage(e.target.value)}
+              />
+            </div>
+
             <div className="flex gap-2">
-              <Button onClick={handleContribute} className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white h-11 font-black text-[11px] tracking-widest uppercase">
-                Send Help
+              <Button onClick={handleContribute} className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white h-11 font-black text-[11px] tracking-widest uppercase gap-2">
+                <Send size={14} /> Send Help
               </Button>
               <Button variant="ghost" onClick={() => setIsContributing(false)} className="h-11 w-11 hover:bg-white/10">
                 <X size={18} />

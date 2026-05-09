@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Upload, Send, X, AlertCircle, ShieldCheck } from 'lucide-react';
+import { Upload, Send, X, AlertCircle, ShieldCheck, Sparkles } from 'lucide-react';
 import { showSuccess } from '@/utils/toast';
 import { useRequests, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
@@ -100,20 +100,21 @@ const RequestForm = () => {
   ];
 
   return (
-    <Card className="glass-card border-emerald-500/20 shadow-emerald-500/5">
+    <Card className="glass-card border-emerald-500/20 shadow-emerald-500/5 overflow-hidden">
+      <div className="h-1 bg-gradient-to-r from-emerald-500/50 via-emerald-400 to-emerald-500/50" />
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-              <Send className="text-emerald-400" size={18} />
+              <Sparkles className="text-emerald-400" size={18} />
             </div>
-            <CardTitle className="text-emerald-400 text-xl">Post New Request</CardTitle>
+            <CardTitle className="text-emerald-400 text-xl font-black tracking-tight">Post New Request</CardTitle>
           </div>
-          <div className={`text-[10px] font-bold px-2 py-1 rounded-full border ${isLimitReached ? 'bg-red-500/10 border-red-500/30 text-red-400' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'}`}>
+          <div className={`text-[10px] font-black px-2.5 py-1 rounded-full border uppercase tracking-widest ${isLimitReached ? 'bg-red-500/10 border-red-500/30 text-red-400' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'}`}>
             {activeRequestsCount}/3 Active
           </div>
         </div>
-        <CardDescription className="text-muted-foreground/80">
+        <CardDescription className="text-muted-foreground/80 font-medium">
           Share your situation with the community.
         </CardDescription>
       </CardHeader>
@@ -121,10 +122,10 @@ const RequestForm = () => {
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-5">
           {isLimitReached && (
-            <div className="flex items-start gap-3 p-3.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-100 text-xs font-semibold leading-normal animate-in fade-in slide-in-from-top-2">
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-100 text-xs font-semibold leading-normal animate-in fade-in slide-in-from-top-2">
               <AlertCircle size={18} className="shrink-0 text-red-400 mt-0.5" />
               <p>
-                <span className="text-red-400 font-bold uppercase tracking-tight mr-1">Limit Reached:</span> 
+                <span className="text-red-400 font-black uppercase tracking-widest mr-1">Limit Reached:</span> 
                 You have 3 active requests. Please complete an existing one before posting again.
               </p>
             </div>
@@ -132,25 +133,25 @@ const RequestForm = () => {
 
           <div className={`space-y-4 ${isLimitReached ? 'opacity-50 pointer-events-none' : ''}`}>
             <div className="space-y-2">
-              <Label htmlFor="title" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Request Title</Label>
+              <Label htmlFor="title" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Request Title</Label>
               <Input 
                 id="title"
                 placeholder="Briefly summarize your need..." 
                 required 
                 value={formData.title}
                 onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                className="bg-white/5 border-white/10 focus:border-emerald-500/50 h-11"
+                className="bg-white/5 border-white/10 focus:border-emerald-500/50 h-11 font-medium"
               />
             </div>
 
             <div className="grid grid-cols-1 gap-4">
               <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Category</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Category</Label>
                 <Select 
                   value={formData.category} 
                   onValueChange={(v) => setFormData(prev => ({ ...prev, category: v }))}
                 >
-                  <SelectTrigger className="bg-white/5 border-white/10 h-11">
+                  <SelectTrigger className="bg-white/5 border-white/10 h-11 font-medium">
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent className="glass-card">
@@ -163,35 +164,35 @@ const RequestForm = () => {
 
               {formData.category === 'Other' && (
                 <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Custom Category</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Custom Category</Label>
                   <Input 
                     placeholder="e.g. Education, Pet Care..." 
                     required 
                     value={formData.customCategory}
                     onChange={(e) => setFormData(prev => ({ ...prev, customCategory: e.target.value }))}
-                    className="bg-white/5 border-white/10 focus:border-emerald-500/50 h-11"
+                    className="bg-white/5 border-white/10 focus:border-emerald-500/50 h-11 font-medium"
                   />
                 </div>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Amount Requested (XPR)</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Amount Requested (XPR)</Label>
               <Input 
                 type="number" 
                 placeholder="0.00" 
                 required 
                 value={formData.amount}
                 onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
-                className="bg-white/5 border-white/10 focus:border-emerald-500/50 h-11"
+                className="bg-white/5 border-white/10 focus:border-emerald-500/50 h-11 font-black"
               />
             </div>
             
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Brief Situation</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Brief Situation</Label>
               <Textarea 
                 placeholder="Explain your situation..." 
-                className="min-h-[120px] bg-white/5 border-white/10 focus:border-emerald-500/50 leading-relaxed" 
+                className="min-h-[120px] bg-white/5 border-white/10 focus:border-emerald-500/50 leading-relaxed font-medium" 
                 required 
                 value={formData.description}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
@@ -199,13 +200,13 @@ const RequestForm = () => {
             </div>
 
             <div className="space-y-4 pt-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Proof of Need (Recommended)</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Proof of Need (Recommended)</Label>
               
-              <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 space-y-4">
+              <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 space-y-4">
                 <div className="flex gap-3">
                   <ShieldCheck className="text-emerald-400 shrink-0 mt-0.5" size={16} />
-                  <p className="text-[11px] leading-relaxed text-emerald-100/70">
-                    Upload a photo of your bill with your <span className="text-emerald-400 font-bold">@{address}</span> handwritten next to it to build trust.
+                  <p className="text-[11px] leading-relaxed text-emerald-100/70 font-medium">
+                    Upload a photo of your bill with your <span className="text-emerald-400 font-black">@{address}</span> handwritten next to it to build trust.
                   </p>
                 </div>
 
@@ -220,21 +221,21 @@ const RequestForm = () => {
                 {!preview ? (
                   <div 
                     onClick={() => fileInputRef.current?.click()}
-                    className={`border-2 border-dashed rounded-xl p-6 text-center transition-all cursor-pointer group ${skipProof ? 'opacity-40 border-white/10 pointer-events-none' : 'border-emerald-500/20 hover:border-emerald-500/50 hover:bg-emerald-500/5'}`}
+                    className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer group ${skipProof ? 'opacity-40 border-white/10 pointer-events-none' : 'border-emerald-500/20 hover:border-emerald-500/50 hover:bg-emerald-500/5'}`}
                   >
                     <Upload className={`mx-auto mb-2 transition-colors ${skipProof ? 'text-muted-foreground' : 'text-emerald-400 group-hover:scale-110'}`} size={24} />
-                    <p className="text-sm font-medium">Click to upload photo proof</p>
-                    <p className="text-[10px] text-muted-foreground mt-1">JPG or PNG</p>
+                    <p className="text-sm font-black tracking-tight">Click to upload photo proof</p>
+                    <p className="text-[10px] text-muted-foreground mt-1 font-bold uppercase tracking-widest">JPG or PNG</p>
                   </div>
                 ) : (
-                  <div className="relative rounded-xl overflow-hidden border border-emerald-500/30 aspect-video bg-black/40 group">
+                  <div className="relative rounded-2xl overflow-hidden border border-emerald-500/30 aspect-video bg-black/40 group">
                     <img src={preview} alt="Preview" className="w-full h-full object-contain" />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                        <Button 
                         type="button" 
                         variant="destructive"
                         size="sm"
-                        className="h-8 gap-2"
+                        className="h-9 gap-2 font-black text-[10px] uppercase tracking-widest"
                         onClick={removePreview}
                       >
                         <X size={14} /> Remove Photo
@@ -254,7 +255,7 @@ const RequestForm = () => {
                   />
                   <label 
                     htmlFor="skip" 
-                    className="text-[11px] font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-muted-foreground cursor-pointer"
+                    className="text-[11px] font-bold leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-muted-foreground cursor-pointer uppercase tracking-tight"
                   >
                     I prefer not to upload proof at this time
                   </label>
@@ -267,7 +268,7 @@ const RequestForm = () => {
         <CardFooter className="pt-2">
           <Button 
             type="submit" 
-            className="w-full gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold h-12 rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)]" 
+            className="w-full gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black h-12 rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] uppercase tracking-widest text-[11px]" 
             disabled={loading || isLimitReached}
           >
             {loading ? "Posting..." : isLimitReached ? "Limit Reached" : "Submit Request"}

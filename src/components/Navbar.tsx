@@ -3,6 +3,7 @@
 import React from 'react';
 import { useWallet } from '@/hooks/use-wallet';
 import { Button } from '@/components/ui/button';
+import WalletModal from './WalletModal';
 import { 
   LayoutGrid, 
   Trophy, 
@@ -26,7 +27,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import logo from '@/assets/logo.jpg';
 
 const Navbar = () => {
-  const { isConnected, isConnecting, address, guyBalance, xprBalance, connect, disconnect } = useWallet();
+  const { isConnected, isConnecting, address, guyBalance, xprBalance, disconnect } = useWallet();
   const location = useLocation();
 
   const navItems = [
@@ -158,20 +159,7 @@ const Navbar = () => {
               </DropdownMenu>
             </>
           ) : (
-            <Button 
-              onClick={connect} 
-              disabled={isConnecting}
-              className="gap-2 bg-primary hover:bg-primary/90 text-black font-bold rounded-full px-6 h-11 gold-glow btn-premium"
-            >
-              {isConnecting ? (
-                <>
-                  <Loader2 size={16} className="animate-spin" />
-                  Connecting...
-                </>
-              ) : (
-                "Connect Wallet"
-              )}
-            </Button>
+            <WalletModal />
           )}
         </div>
       </div>

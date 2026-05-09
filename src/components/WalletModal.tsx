@@ -1,10 +1,10 @@
 "use client";
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useWallet } from '@/hooks/use-wallet';
-import { QrCode, Monitor, ArrowRight, X, Loader2 } from 'lucide-react';
+import { Fingerprint, QrCode, ShieldCheck, Smartphone, Loader2, ArrowRight } from 'lucide-react';
 
 interface WalletModalProps {
   trigger?: React.ReactNode;
@@ -14,10 +14,8 @@ const WalletModal: React.FC<WalletModalProps> = ({ trigger }) => {
   const { connect, isConnecting } = useWallet();
   const [open, setOpen] = React.useState(false);
 
-  const handleConnect = async () => {
-    // We use the standard login which shows the Proton selector
-    // But we've styled our trigger to look like the screenshot
-    await connect();
+  const handleConnect = async (method: 'passkey' | 'qr') => {
+    await connect(method);
     setOpen(false);
   };
 
@@ -30,88 +28,69 @@ const WalletModal: React.FC<WalletModalProps> = ({ trigger }) => {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="bg-[#0a0a0c] border-white/10 max-w-[400px] w-[95vw] p-0 overflow-hidden rounded-[24px] shadow-2xl">
-        <div className="p-6 space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
-                <svg viewBox="0 0 24 24" className="w-4 h-4 text-black fill-current">
-                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                </svg>
-              </div>
-              <span className="text-sm font-bold text-white">Connect WebAuth</span>
+      <DialogContent className="glass-card border-white/10 max-w-md w-[95vw] p-0 overflow-hidden bg-[#0a0a0c]">
+        <div className="h-1.5 bg-gradient-to-r from-emerald-500 via-primary to-emerald-500 animate-pulse" />
+        
+        <div className="p-8 space-y-8">
+          <DialogHeader className="space-y-3 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto border border-primary/20 mb-2">
+              <ShieldCheck className="text-primary" size={32} />
             </div>
-            <DialogClose className="text-white/40 hover:text-white transition-colors">
-              <X size={20} />
-            </DialogClose>
-          </div>
+            <DialogTitle className="text-3xl font-black tracking-tight">Connect WebAuth</DialogTitle>
+            <DialogDescription className="text-muted-foreground font-medium">
+              Choose your preferred way to securely sign in to the XPR Network.
+            </DialogDescription>
+          </DialogHeader>
 
-          <div className="space-y-3">
-            {/* Mobile App Option */}
+          <div className="space-y-4">
+            {/* Passkey Option */}
             <button 
-              onClick={handleConnect}
-              className="w-full flex items-center gap-4 p-4 rounded-[16px] bg-white/[0.03] border border-white/10 hover:bg-white/[0.06] hover:border-white/20 transition-all text-left group"
+              onClick={() => handleConnect('passkey')}
+              disabled={isConnecting}
+              className="w-full group relative flex items-center gap-4 p-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 hover:bg-emerald-500/10 hover:border-emerald-500/40 transition-all duration-300 text-left overflow-hidden"
             >
-              <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center shrink-0 border border-white/5">
-                <QrCode className="text-white" size={20} />
+              <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                <Fingerprint size={80} />
               </div>
-              <div>
-                <h3 className="font-bold text-white text-sm">Mobile App</h3>
-                <p className="text-[11px] text-white/40">Scan QR Code</p>
+              <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0 border border-emerald-500/30 group-hover:scale-110 transition-transform">
+                <Fingerprint className="text-emerald-400" size={24} />
               </div>
+              <div className="flex-1">
+                <h3 className="font-black text-emerald-400 text-lg leading-tight">Passkey</h3>
+                <p className="text-xs text-muted-foreground font-medium">Fastest & most secure login</p>
+              </div>
+              <ArrowRight size={18} className="text-emerald-500/50 group-hover:translate-x-1 transition-transform" />
             </button>
 
-            {/* Browser Wallet Option */}
+            {/* QR Code Option */}
             <button 
-              onClick={handleConnect}
-              className="w-full flex items-center gap-4 p-4 rounded-[16px] bg-white/[0.03] border border-white/10 hover:bg-white/[0.06] hover:border-white/20 transition-all text-left group"
+              onClick={() => handleConnect('qr')}
+              disabled={isConnecting}
+              className="w-full group relative flex items-center gap-4 p-5 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-primary/30 transition-all duration-300 text-left"
             >
-              <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center shrink-0 border border-white/5">
-                <Monitor className="text-white" size={20} />
+              <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center shrink-0 border border-white/10 group-hover:scale-110 transition-transform">
+                <QrCode className="text-primary" size={24} />
               </div>
-              <div>
-                <h3 className="font-bold text-white text-sm">Browser wallet</h3>
-                <p className="text-[11px] text-white/40">Authorize device</p>
+              <div className="flex-1">
+                <h3 className="font-black text-white text-lg leading-tight">Mobile App</h3>
+                <p className="text-xs text-muted-foreground font-medium">Scan QR with WebAuth Wallet</p>
               </div>
+              <ArrowRight size={18} className="text-white/20 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
 
-          <div className="pt-2">
-            <Button 
-              asChild
-              className="w-full h-12 rounded-full bg-transparent border-[1.5px] border-transparent relative group overflow-hidden"
-            >
-              <a href="https://www.webauth.com/" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
-                {/* Gradient Border Effect */}
-                <div className="absolute inset-0 p-[1.5px] rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-orange-500 -z-10" />
-                <div className="absolute inset-0 rounded-full bg-[#0a0a0c] -z-10" />
-                
-                <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
-                  <svg viewBox="0 0 24 24" className="w-3 h-3 text-black fill-current">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                  </svg>
-                </div>
-                <span className="font-bold text-sm text-white">Get WebAuth</span>
-              </a>
-            </Button>
-          </div>
-
-          <div className="space-y-6 pt-2">
-            <button className="w-full text-center text-[11px] font-bold text-white/40 hover:text-white transition-colors flex items-center justify-center gap-1 group">
-              Connect with other wallets 
-              <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
-            </button>
-
-            <p className="text-[9px] text-center text-white/30 leading-relaxed px-4">
-              By connecting, I accept XPR Network's <a href="#" className="underline hover:text-white">Terms of Service</a>
-            </p>
+          <div className="pt-4 border-t border-white/5">
+            <div className="flex items-center justify-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+              <Smartphone size={12} />
+              <span>Securely powered by Proton WebAuth</span>
+            </div>
           </div>
         </div>
 
         {isConnecting && (
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center z-50">
-            <Loader2 className="text-white animate-spin mb-4" size={32} />
-            <p className="font-bold text-white text-xs tracking-widest uppercase">Connecting...</p>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center z-50 animate-in fade-in duration-300">
+            <Loader2 className="text-primary animate-spin mb-4" size={48} />
+            <p className="font-black text-white tracking-widest uppercase text-sm">Waiting for Wallet...</p>
           </div>
         )}
       </DialogContent>

@@ -2,10 +2,12 @@
 
 import React, { createContext, useContext, useState } from 'react';
 import { showSuccess, showError } from '@/utils/toast';
+import WalletModal from '@/components/WalletModal';
 
 interface WalletContextType {
   isConnected: boolean;
   isConnecting: boolean;
+  isModalOpen: boolean;
   address: string | null;
   guyBalance: number;
   xprBalance: number;
@@ -14,6 +16,7 @@ interface WalletContextType {
   connect: () => void;
   disconnect: () => void;
   payMembership: () => void;
+  closeModal: () => void;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
@@ -21,6 +24,7 @@ const WalletContext = createContext<WalletContextType | undefined>(undefined);
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [address, setAddress] = useState<string | null>(null);
   const [guyBalance, setGuyBalance] = useState(0);
   const [xprBalance, setXprBalance] = useState(0);
@@ -28,6 +32,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [membershipExpiry, setMembershipExpiry] = useState<number | null>(null);
 
   const connect = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleActualConnect = () => {
+    setIsModalOpen(false);
     setIsConnecting(true);
     // Simulate WebAuth connection delay
     setTimeout(() => {
@@ -37,7 +46,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setGuyBalance(30000); 
       setXprBalance(10000);
       showSuccess("WebAuth Wallet Connected");
-    }, 800);
+    }, 1200);
   };
 
   const disconnect = () => {
@@ -70,6 +79,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     <WalletContext.Provider value={{ 
       isConnected, 
       isConnecting,
+      isModalOpen,
       address, 
       guyBalance, 
       xprBalance, 
@@ -77,9 +87,15 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       membershipExpiry,
       connect, 
       disconnect,
-      payMembership
+      payMembership,
+      closeModal: () => setIsModalOpen(false)
     }}>
       {children}
+      <WalletModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onConnect={handleActualConnect} 
+      />
     </WalletContext.Provider>
   );
 };

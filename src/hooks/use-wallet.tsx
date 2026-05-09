@@ -1,10 +1,11 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { showSuccess, showError } from '@/utils/toast';
 
 interface WalletContextType {
   isConnected: boolean;
+  isConnecting: boolean;
   address: string | null;
   guyBalance: number;
   xprBalance: number;
@@ -19,6 +20,7 @@ const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   const [address, setAddress] = useState<string | null>(null);
   const [guyBalance, setGuyBalance] = useState(0);
   const [xprBalance, setXprBalance] = useState(0);
@@ -26,12 +28,16 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [membershipExpiry, setMembershipExpiry] = useState<number | null>(null);
 
   const connect = () => {
-    // Mock connection
-    setIsConnected(true);
-    setAddress("guy_user.xpr");
-    setGuyBalance(30000); // Mocking > 25k GUY
-    setXprBalance(10000); // Mock balance
-    showSuccess("WebAuth Wallet Connected");
+    setIsConnecting(true);
+    // Simulate WebAuth connection delay
+    setTimeout(() => {
+      setIsConnected(true);
+      setIsConnecting(false);
+      setAddress("guy_user.xpr");
+      setGuyBalance(30000); 
+      setXprBalance(10000);
+      showSuccess("WebAuth Wallet Connected");
+    }, 800);
   };
 
   const disconnect = () => {
@@ -39,6 +45,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setAddress(null);
     setGuyBalance(0);
     setXprBalance(0);
+    showSuccess("Wallet Disconnected");
   };
 
   const payMembership = () => {
@@ -51,7 +58,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setXprBalance(prev => prev - FEE);
     setIsMember(true);
     
-    // Set or extend expiry by 1 year (365 days)
     const oneYearInMs = 365 * 24 * 60 * 60 * 1000;
     const currentExpiry = membershipExpiry || Date.now();
     const newExpiry = (currentExpiry > Date.now() ? currentExpiry : Date.now()) + oneYearInMs;
@@ -63,6 +69,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   return (
     <WalletContext.Provider value={{ 
       isConnected, 
+      isConnecting,
       address, 
       guyBalance, 
       xprBalance, 

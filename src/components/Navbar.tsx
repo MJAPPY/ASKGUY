@@ -11,7 +11,8 @@ import {
   RefreshCw, 
   ChevronDown,
   ExternalLink,
-  AlertCircle
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -25,7 +26,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import logo from '@/assets/logo.jpg';
 
 const Navbar = () => {
-  const { isConnected, address, guyBalance, xprBalance, connect, disconnect } = useWallet();
+  const { isConnected, isConnecting, address, guyBalance, xprBalance, connect, disconnect } = useWallet();
   const location = useLocation();
 
   const navItems = [
@@ -37,13 +38,11 @@ const Navbar = () => {
     return location.pathname === path;
   };
 
-  // Filter items based on connection status
   const visibleNavItems = navItems.filter(item => !item.private || isConnected);
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-white/5 bg-[#0a0a0c]/80 backdrop-blur-md">
       <div className="container mx-auto px-4 h-20 flex items-center justify-between">
-        {/* Left Side: Logo & Nav Links */}
         <div className="flex items-center gap-10">
           <Link to="/" className="flex items-center gap-3 group">
             <div className="w-12 h-12 rounded-xl overflow-hidden border border-white/10 shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:border-primary/50">
@@ -75,11 +74,9 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Right Side: Balances & Profile */}
         <div className="flex items-center gap-3">
           {isConnected ? (
             <>
-              {/* Balance Pills */}
               <div className="hidden md:flex items-center gap-2">
                 <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-[11px] font-bold hover:bg-white/10 transition-colors cursor-default">
                   <span className="text-muted-foreground">{xprBalance.toFixed(4)}</span>
@@ -93,7 +90,6 @@ const Navbar = () => {
                 </div>
               </div>
 
-              {/* Profile Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="h-12 gap-3 px-2 hover:bg-white/5 rounded-xl group transition-all duration-300">
@@ -162,8 +158,19 @@ const Navbar = () => {
               </DropdownMenu>
             </>
           ) : (
-            <Button onClick={connect} className="gap-2 bg-primary hover:bg-primary/90 text-black font-bold rounded-full px-6 h-11 gold-glow btn-premium">
-              Connect Wallet
+            <Button 
+              onClick={connect} 
+              disabled={isConnecting}
+              className="gap-2 bg-primary hover:bg-primary/90 text-black font-bold rounded-full px-6 h-11 gold-glow btn-premium"
+            >
+              {isConnecting ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  Connecting...
+                </>
+              ) : (
+                "Connect Wallet"
+              )}
             </Button>
           )}
         </div>

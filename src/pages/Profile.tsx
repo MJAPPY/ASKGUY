@@ -107,167 +107,9 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Navbar />
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <Button variant="ghost" asChild className="mb-4 -ml-2 text-muted-foreground hover:text-primary">
-            <Link to="/" className="flex items-center gap-2">
-              <ArrowLeft size={16} /> Back to Dashboard
-            </Link>
-          </Button>
-          
-          <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center border border-primary/30">
-                <Award className="text-primary" size={32} />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold">{address}</h1>
-                <div className="flex gap-2 mt-1">
-                  <Badge variant="outline" className="border-primary text-primary">
-                    {guyBalance.toLocaleString()} GUY
-                  </Badge>
-                  {isMember && (
-                    <Badge className="bg-primary text-background">Verified Member</Badge>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {isMember && (
-              <div className="p-4 glass-card rounded-xl border-primary/20 flex items-center gap-6">
-                <div>
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-1">Membership Expiry</p>
-                  <p className="text-sm font-bold flex items-center gap-2">
-                    <Calendar size={14} className="text-primary" />
-                    {new Date(membershipExpiry!).toLocaleDateString()}
-                  </p>
-                </div>
-                <Button size="sm" variant="secondary" onClick={payMembership} className="h-9 px-4 font-bold border-white/10">
-                  Renew
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
-          <div className="lg:col-span-2 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="glass-card border-white/<dyad-write path="src/pages/Profile.tsx" description="Completing the Profile page with stats and tabs.">
-"use client";
-
-import React, { useMemo } from 'react';
-import { useWallet } from '@/hooks/use-wallet';
-import { useRequests } from '@/hooks/use-requests';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import RequestCard from '@/components/RequestCard';
-import TransactionHistory from '@/components/TransactionHistory';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Heart, Send, Receipt, Award, ArrowLeft, Calendar, MessageSquare, Quote, Wallet, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-const Profile = () => {
-  const { address, isConnected, isConnecting, guyBalance, isMember, membershipExpiry, payMembership, connect } = useWallet();
-  const { requests } = useRequests();
-
-  const stats = useMemo(() => {
-    if (!address) return { given: 0, received: 0, count: 0 };
-    
-    let given = 0;
-    let received = 0;
-    let count = 0;
-
-    requests.forEach(req => {
-      if (req.user === address) {
-        received += req.raised;
-      }
-      req.contributions.forEach(c => {
-        if (c.user === address) {
-          given += c.amount;
-          count++;
-        }
-      });
-    });
-
-    return { given, received, count };
-  }, [requests, address]);
-
-  const myRequests = requests.filter(req => req.user === address);
-  const myContributions = requests.filter(req => 
-    req.contributions.some(c => c.user === address)
-  );
-
-  const receivedMessages = useMemo(() => {
-    const messages: { user: string, message: string, timestamp: number, requestTitle: string }[] = [];
-    myRequests.forEach(req => {
-      req.contributions.forEach(c => {
-        if (c.message) {
-          messages.push({
-            user: c.user,
-            message: c.message,
-            timestamp: c.timestamp,
-            requestTitle: req.title
-          });
-        }
-      });
-    });
-    return messages.sort((a, b) => b.timestamp - a.timestamp);
-  }, [myRequests]);
-
-  if (!isConnected) {
-    return (
-      <div className="min-h-screen bg-background text-foreground flex flex-col">
-        <Navbar />
-        <main className="flex-1 flex items-center justify-center p-4">
-          <div className="max-w-md w-full glass-card rounded-3xl p-10 text-center space-y-8 border-white/5">
-            <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto border border-primary/20">
-              <Wallet className="text-primary" size={40} />
-            </div>
-            <div className="space-y-2">
-              <h1 className="text-2xl font-black tracking-tight">Connect Your Wallet</h1>
-              <p className="text-muted-foreground text-sm leading-relaxed">
-                Please connect your XPR Network wallet to view your profile, track your contributions, and manage your requests.
-              </p>
-            </div>
-            <Button 
-              onClick={connect} 
-              disabled={isConnecting}
-              className="w-full h-14 bg-primary hover:bg-primary/90 text-black font-black rounded-xl gold-glow btn-premium text-base gap-3"
-            >
-              {isConnecting ? (
-                <>
-                  <Loader2 size={20} className="animate-spin" />
-                  Connecting...
-                </>
-              ) : (
-                <>
-                  <Wallet size={20} />
-                  Connect WebAuth
-                </>
-              )}
-            </Button>
-            <Button variant="ghost" asChild className="text-muted-foreground hover:text-white">
-              <Link to="/" className="flex items-center gap-2">
-                <ArrowLeft size={16} /> Back to Home
-              </Link>
-            </Button>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-background text-foreground">
-      <Navbar />
-      <div className="container mx-auto px-4 py-8">
+      <main className="flex-1 container mx-auto px-4 py-8">
         <div className="mb-8">
           <Button variant="ghost" asChild className="mb-4 -ml-2 text-muted-foreground hover:text-primary">
             <Link to="/" className="flex items-center gap-2">
@@ -425,7 +267,7 @@ const Profile = () => {
             <TransactionHistory />
           </div>
         </div>
-      </div>
+      </main>
       <Footer />
     </div>
   );

@@ -26,10 +26,26 @@ const Footer = () => {
           <div>
             <h4 className="font-bold mb-4">Resources</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="#" className="hover:text-primary transition-colors">XPR Network Explorer</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">GUY Token Info</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">WebAuth Wallet</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Community Guidelines</a></li>
+              <li>
+                <a href="https://explorer.xprnetwork.org/" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                  XPR Network Explorer
+                </a>
+              </li>
+              <li>
+                <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                  GUY Token Info
+                </a>
+              </li>
+              <li>
+                <a href="https://www.webauth.com/" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                  WebAuth Wallet
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-primary transition-colors">
+                  Community Guidelines
+                </a>
+              </li>
             </ul>
           </div>
 

@@ -20,7 +20,6 @@ interface WalletContextType {
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
 const APP_NAME = 'AskGuy';
-// Correct Proton Mainnet Chain ID (64 characters / 32 bytes)
 const PROTON_CHAIN_ID = '3848101010101010101010101010101010101010101010101010101010101010';
 
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -34,24 +33,35 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [link, setLink] = useState<any>(null);
   const [session, setSession] = useState<any>(null);
 
-  // Initialize SDK on mount
+  // Initialize SDK on mount - SILENTLY
   useEffect(() => {
     const init = async () => {
       try {
         const { link: protonLink, session: protonSession } = await ProtonWebSDK({
           linkOptions: { 
             chainId: PROTON_CHAIN_ID, 
-            endpoints: ['https://proton.greymass.com'] 
+            endpoints: ['https://proton.greymass.com'],
+            restoreSession: true // Try to restore without UI
           },
           transportOptions: { requestAccount: 'askguy', backButton: true },
-          selectorOptions: { appName: APP_NAME, appLogo: 'https://askguy.io/logo.png' }
+          // We pass selectorOptions but we won't trigger login() here
+          selectorOptions: { 
+            appName: APP_NAME, 
+            appLogo: 'https://askguy.io/logo.png',
+            customStyleOptions: {
+              modalBackgroundColor: '#0a0a0c',
+              logoBackgroundColor: '#0a0a0c',
+              isDark: true
+            }
+          }
         });
+        
         setLink(protonLink);
+        
         if (protonSession) {
           setSession(protonSession);
           setAddress(protonSession.auth.actor);
           setIsConnected(true);
-          // Mock balances for demo
           setGuyBalance(30000);
           setXprBalance(10000);
         }
@@ -66,6 +76,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!link) return;
     setIsConnecting(true);
     try {
+      // This triggers the selector UI only when the user clicks Connect
       const { session: newSession } = await link.login(APP_NAME);
       setSession(newSession);
       setAddress(newSession.auth.actor);
@@ -75,7 +86,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       showSuccess(`Connected as ${newSession.auth.actor}`);
     } catch (err) {
       console.error(err);
-      showError("Failed to connect wallet");
+      // Don't show error if user just closed the modal
+      if (err !== 'Closed Modal') {
+        showError("Failed to connect wallet");
+      }
     } finally {
       setIsConnecting(false);
     }

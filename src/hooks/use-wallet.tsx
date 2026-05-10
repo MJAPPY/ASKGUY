@@ -26,7 +26,7 @@ const PROTON_CHAIN_ID = '3848101010101010101010101010101010101010101010101010101
 const ENDPOINTS = [
   'https://proton.greymass.com',
   'https://mainnet.protonchain.com',
-  'https://proton.api.atomicassets.io'
+  'https://rpc.protonchain.com'
 ];
 
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -43,54 +43,34 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   
   const initializingRef = useRef(false);
 
-  const fetchBalances = useCallback(async (account: string) => {
-    if (!account) return;
+  const fetchBalances = useCallback(async (account: string, rpc: any) => {
+    if (!account || !rpc) return;
     setIsFetchingBalances(true);
     
-    let fetchedXpr = 0;
-    let fetchedGuy = 0;
-
-    // Try endpoints until success
-    for (const endpoint of ENDPOINTS) {
-      try {
-        // Fetch XPR Balance
-        const xprRes = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code: 'eosio.token', account, symbol: 'XPR' })
-        });
-        
-        if (xprRes.ok) {
-          const xprData = await xprRes.json();
-          if (Array.isArray(xprData) && xprData[0]) {
-            fetchedXpr = parseFloat(xprData[0].split(' ')[0]);
-          }
-        }
-
-        // Fetch GUY Balance
-        const guyRes = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code: 'guytokenxpr1', account, symbol: 'GUY' })
-        });
-
-        if (guyRes.ok) {
-          const guyData = await guyRes.json();
-          if (Array.isArray(guyData) && guyData[0]) {
-            fetchedGuy = parseFloat(guyData[0].split(' ')[0]);
-          }
-          
-          // If we reached here and got a response for GUY, we can stop trying endpoints
-          setXprBalance(fetchedXpr);
-          setGuyBalance(fetchedGuy);
-          break; 
-        }
-      } catch (err) {
-        console.warn(`Failed to fetch from ${endpoint}, trying next...`);
+    try {
+      // Fetch XPR Balance using the SDK RPC client
+      const xprRes = await rpc.get_currency_balance('eosio.token', account, 'XPR');
+      if (Array.isArray(xprRes) && xprRes.length > 0) {
+        const val = parseFloat(xprRes[0].split(' ')[0]);
+        setXprBalance(val);
+      } else {
+        setXprBalance(0);
       }
+
+      // Fetch GUY Balance using the SDK RPC client
+      const guyRes = await rpc.get_currency_balance('guytokenxpr1', account, 'GUY');
+      if (Array.isArray(guyRes) && guyRes.length > 0) {
+        const val = parseFloat(guyRes[0].split(' ')[0]);
+        setGuyBalance(val);
+      } else {
+        setGuyBalance(0);
+      }
+    } catch (err) {
+      console.error("RPC balance fetch failed:", err);
+      // Fallback to 0 only if it's a definitive error
+    } finally {
+      setIsFetchingBalances(false);
     }
-    
-    setIsFetchingBalances(false);
   }, []);
 
   const initSDK = useCallback(async (restore = true) => {
@@ -126,7 +106,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const actor = result.session.auth.actor.toString();
         setAddress(actor);
         setIsConnected(true);
-        fetchBalances(actor);
+        // Use the rpc provided by the link object
+        fetchBalances(actor, result.link.rpc);
       }
       
       initializingRef.current = false;
@@ -147,25 +128,18 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     
     setIsConnecting(true);
     try {
-      let currentLink = link;
-      if (!currentLink) {
-        const result = await initSDK(false);
-        if (result) currentLink = result.link;
-      }
-
-      if (!currentLink) {
-        throw new Error("SDK_NOT_INIT");
+      let currentResult = await initSDK(false);
+      if (!currentResult) {
+        throw new Error("SDK_INIT_FAILED");
       }
       
-      const { session: newSession } = await currentLink.login(APP_NAME);
-      
+      const { session: newSession, link: newLink } = currentResult;
       setSession(newSession);
       const actor = newSession.auth.actor.toString();
       setAddress(actor);
       setIsConnected(true);
       
-      // Immediate fetch attempt
-      await fetchBalances(actor);
+      await fetchBalances(actor, newLink.rpc);
       showSuccess(`Connected as ${actor}`);
       setIsConnecting(false);
       
@@ -210,8 +184,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const refreshBalances = async () => {
-    if (address) {
-      await fetchBalances(address);
+    if (address && link?.rpc) {
+      await fetchBalances(address, link.rpc);
       showSuccess("Balances refreshed");
     }
   };

@@ -12,7 +12,7 @@ interface WalletContextType {
   xprBalance: number;
   isMember: boolean;
   membershipExpiry: number | null;
-  connect: (method?: 'passkey' | 'qr') => Promise<void>;
+  connect: () => Promise<void>;
   disconnect: () => void;
   payMembership: () => void;
   refreshBalances: () => Promise<void>;
@@ -57,7 +57,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, []);
 
-  // Initialize SDK silently
   useEffect(() => {
     const init = async () => {
       try {
@@ -65,7 +64,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           linkOptions: { 
             chainId: PROTON_CHAIN_ID, 
             endpoints: [ENDPOINT],
-            restoreSession: true // Only restores if a valid session exists in storage
+            restoreSession: true 
           },
           transportOptions: { 
             requestAccount: 'askguy', 
@@ -74,7 +73,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           selectorOptions: { 
             appName: APP_NAME, 
             appLogo: 'https://askguy.io/logo.png',
-            showContextFree: false // Helps prevent unnecessary popups
+            showContextFree: false
           }
         });
         
@@ -87,22 +86,20 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           fetchBalances(protonSession.auth.actor);
         }
       } catch (err) {
-        // Silently fail on init to avoid disrupting the user experience
-        console.debug("Proton SDK Silently skipped restoration:", err);
+        console.debug("Proton SDK initialization:", err);
       }
     };
     init();
   }, [fetchBalances]);
 
-  const connect = async (method?: 'passkey' | 'qr') => {
+  const connect = async () => {
     if (!link) {
-      showError("Wallet system is still initializing. Please try again in a moment.");
+      showError("Wallet system is still initializing. Please try again.");
       return;
     }
     
     setIsConnecting(true);
     try {
-      // link.login is the only manual trigger for the auth modal
       const { session: newSession } = await link.login(APP_NAME);
       setSession(newSession);
       setAddress(newSession.auth.actor);
@@ -110,7 +107,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       await fetchBalances(newSession.auth.actor);
       showSuccess(`Connected as ${newSession.auth.actor}`);
     } catch (err) {
-      console.error(err);
       const msg = (err as any).message || "";
       if (msg !== 'Closed by user' && msg !== 'User cancelled login') {
         showError("Failed to connect wallet");
@@ -139,7 +135,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const payMembership = () => {
     const FEE = 2500;
     if (xprBalance < FEE) {
-      showError(`Insufficient XPR balance. Need ${FEE} XPR to unlock posting rights.`);
+      showError(`Insufficient XPR balance. Need ${FEE} XPR.`);
       return;
     }
     setXprBalance(prev => prev - FEE);
@@ -148,7 +144,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const currentExpiry = membershipExpiry || Date.now();
     const newExpiry = (currentExpiry > Date.now() ? currentExpiry : Date.now()) + oneYearInMs;
     setMembershipExpiry(newExpiry);
-    showSuccess(`Membership Activated! Sent ${FEE} XPR to @tripseven`);
+    showSuccess(`Membership Activated!`);
   };
 
   const refreshBalances = async () => {

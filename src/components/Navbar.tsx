@@ -3,7 +3,6 @@
 import React from 'react';
 import { useWallet } from '@/hooks/use-wallet';
 import { Button } from '@/components/ui/button';
-import WalletModal from './WalletModal';
 import { 
   LayoutGrid, 
   Trophy, 
@@ -12,7 +11,8 @@ import {
   RefreshCw, 
   ChevronDown,
   ExternalLink,
-  AlertCircle
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -26,7 +26,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import logo from '@/assets/logo.jpg';
 
 const Navbar = () => {
-  const { isConnected, address, guyBalance, xprBalance, disconnect, refreshBalances } = useWallet();
+  const { isConnected, isConnecting, address, guyBalance, xprBalance, disconnect, refreshBalances, connect } = useWallet();
   const location = useLocation();
 
   const navItems = [
@@ -158,7 +158,13 @@ const Navbar = () => {
               </DropdownMenu>
             </>
           ) : (
-            <WalletModal />
+            <Button 
+              onClick={connect} 
+              disabled={isConnecting}
+              className="bg-primary hover:bg-primary/90 text-black font-bold rounded-full px-6 h-11 gold-glow btn-premium"
+            >
+              {isConnecting ? <Loader2 className="animate-spin" size={18} /> : "Connect Wallet"}
+            </Button>
           )}
         </div>
       </div>

@@ -64,7 +64,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     initializingRef.current = true;
 
     try {
-      // Using default import for ProtonWebSDK
       const result = await ProtonWebSDK({
         linkOptions: { 
           chainId: PROTON_CHAIN_ID, 
@@ -78,7 +77,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         selectorOptions: { 
           appName: APP_NAME, 
           appLogo: 'https://askguy.io/logo.png',
-          showContextFree: false
+          customStyleOptions: {
+            modalBackgroundColor: '#0A1428',
+            logoBackgroundColor: '#0A1428',
+            isDark: true
+          }
         }
       });
       
@@ -105,6 +108,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [initSDK]);
 
   const connect = async () => {
+    if (isConnected || isConnecting) return;
+    
     setIsConnecting(true);
     try {
       let currentLink = link;
@@ -114,22 +119,26 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
 
       if (!currentLink) {
-        showError("Wallet system could not be initialized. Please refresh the page.");
-        return;
+        throw new Error("SDK_NOT_INIT");
       }
       
       const { session: newSession } = await currentLink.login(APP_NAME);
-      setSession(newSession);
-      setAddress(newSession.auth.actor);
-      setIsConnected(true);
-      await fetchBalances(newSession.auth.actor);
-      showSuccess(`Connected as ${newSession.auth.actor}`);
+      
+      // Use a small delay to let the SDK close its modal before updating UI state
+      setTimeout(async () => {
+        setSession(newSession);
+        setAddress(newSession.auth.actor);
+        setIsConnected(true);
+        await fetchBalances(newSession.auth.actor);
+        showSuccess(`Connected as ${newSession.auth.actor}`);
+        setIsConnecting(false);
+      }, 100);
+      
     } catch (err) {
       const msg = (err as any).message || "";
       if (msg !== 'Closed by user' && msg !== 'User cancelled login') {
         showError("Failed to connect wallet");
       }
-    } finally {
       setIsConnecting(false);
     }
   };

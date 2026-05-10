@@ -36,7 +36,8 @@ const ENDPOINTS = [
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [isFetchingBalances, setIsFetchingBalances] = useState(false);
+  // Start as true so we don't flash "Access Denied" while restoring session
+  const [isFetchingBalances, setIsFetchingBalances] = useState(true);
   const [address, setAddress] = useState<string | null>(null);
   const [guyBalance, setGuyBalance] = useState(0);
   const [xprBalance, setXprBalance] = useState(0);
@@ -47,38 +48,29 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   
   const initializingRef = useRef(false);
 
-  const getBalanceFromTable = async (rpc: any, code: string, account: string, symbol: string) => {
-    try {
-      const result = await rpc.get_table_rows({
-        json: true,
-        code: code,
-        scope: account,
-        table: 'accounts',
-        limit: 10
-      });
-
-      if (result && result.rows && Array.isArray(result.rows)) {
-        const row = result.rows.find((r: any) => r.balance && r.balance.includes(symbol));
-        if (row) {
-          return parseFloat(row.balance.split(' ')[0]);
-        }
-      }
-      return 0;
-    } catch (e) {
-      return 0;
-    }
-  };
-
   const fetchBalances = useCallback(async (account: string, rpc: any) => {
-    if (!account || !rpc) return;
+    if (!account || !rpc) {
+      setIsFetchingBalances(false);
+      return;
+    }
+    
     setIsFetchingBalances(true);
     
     try {
-      const xprVal = await getBalanceFromTable(rpc, 'eosio.token', account, 'XPR');
-      setXprBalance(xprVal);
+      // Use standard currency balance RPC calls which are more reliable than table rows
+      const xprRes = await rpc.get_currency_balance('eosio.token', account, 'XPR');
+      if (xprRes && xprRes.length > 0) {
+        setXprBalance(parseFloat(xprRes[0].split(' ')[0]));
+      } else {
+        setXprBalance(0);
+      }
 
-      const guyVal = await getBalanceFromTable(rpc, 'guytokenxpr1', account, 'GUY');
-      setGuyBalance(guyVal);
+      const guyRes = await rpc.get_currency_balance('guytokenxpr1', account, 'GUY');
+      if (guyRes && guyRes.length > 0) {
+        setGuyBalance(parseFloat(guyRes[0].split(' ')[0]));
+      } else {
+        setGuyBalance(0);
+      }
     } catch (err) {
       console.error("Balance fetch failed:", err);
     } finally {
@@ -126,13 +118,16 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const actor = result.session.auth.actor.toString();
         setAddress(actor);
         setIsConnected(true);
-        fetchBalances(actor, result.link.rpc);
+        await fetchBalances(actor, result.link.rpc);
+      } else {
+        setIsFetchingBalances(false);
       }
       
       initializingRef.current = false;
       return result;
     } catch (err) {
       initializingRef.current = false;
+      setIsFetchingBalances(false);
       return null;
     }
   }, [fetchBalances]);
@@ -145,6 +140,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (isConnected || isConnecting) return;
     
     setIsConnecting(true);
+    setIsFetchingBalances(true);
     try {
       let currentResult = await initSDK(false);
       if (!currentResult) {
@@ -167,6 +163,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         showError("Failed to connect wallet");
       }
       setIsConnecting(false);
+      setIsFetchingBalances(false);
     }
   };
 

@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { showSuccess, showError } from '@/utils/toast';
-import { ProtonWebSDK } from '@proton/web-sdk';
+import ProtonWebSDK from '@proton/web-sdk';
 
 interface WalletContextType {
   isConnected: boolean;
@@ -64,6 +64,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     initializingRef.current = true;
 
     try {
+      // Using default import for ProtonWebSDK
       const result = await ProtonWebSDK({
         linkOptions: { 
           chainId: PROTON_CHAIN_ID, 
@@ -106,7 +107,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const connect = async () => {
     setIsConnecting(true);
     try {
-      // Re-initialize if link is missing
       let currentLink = link;
       if (!currentLink) {
         const result = await initSDK(false);

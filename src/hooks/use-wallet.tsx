@@ -21,7 +21,8 @@ interface WalletContextType {
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
-const APP_NAME = 'AskGuy XPR';
+const APP_NAME = 'AskGuy'; // Consistent simple name
+const REQUEST_ACCOUNT = 'askguy'; // The on-chain account identifying the app
 const PROTON_CHAIN_ID = '3848101010101010101010101010101010101010101010101010101010101010';
 const ENDPOINTS = [
   'https://proton.greymass.com',
@@ -53,8 +54,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         limit: 10
       });
 
-      if (result && result.rows) {
-        const row = result.rows.find((r: any) => r.balance.includes(symbol));
+      if (result && result.rows && Array.isArray(result.rows)) {
+        const row = result.rows.find((r: any) => r.balance && r.balance.includes(symbol));
         if (row) {
           return parseFloat(row.balance.split(' ')[0]);
         }
@@ -94,11 +95,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           restoreSession: restore 
         },
         transportOptions: { 
+          requestAccount: REQUEST_ACCOUNT,
           backButton: true 
         },
         selectorOptions: { 
           appName: APP_NAME, 
-          appLogo: 'https://askguy.io/logo.png', // Ideally a verified public URL
+          appLogo: 'https://askguy.io/logo.png',
           customStyleOptions: {
             modalBackgroundColor: '#0A1428',
             logoBackgroundColor: '#0A1428',

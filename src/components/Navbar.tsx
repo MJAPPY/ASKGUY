@@ -26,7 +26,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import logo from '@/assets/logo.jpg';
 
 const Navbar = () => {
-  const { isConnected, isConnecting, address, guyBalance, xprBalance, disconnect, refreshBalances, connect } = useWallet();
+  const { isConnected, isConnecting, isFetchingBalances, address, guyBalance, xprBalance, disconnect, refreshBalances, connect } = useWallet();
   const location = useLocation();
 
   const navItems = [
@@ -81,15 +81,27 @@ const Navbar = () => {
           {isConnected ? (
             <>
               <div className="hidden md:flex items-center gap-2">
-                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-[11px] font-bold hover:bg-white/10 transition-colors cursor-default">
-                  <span className="text-muted-foreground font-black">{xprBalance.toLocaleString(undefined, { minimumFractionDigits: 3 })}</span>
-                  <span className="text-white/60">XPR</span>
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-[11px] font-bold hover:bg-white/10 transition-colors cursor-default min-w-[100px] justify-center">
+                  {isFetchingBalances ? (
+                    <Loader2 size={12} className="animate-spin text-muted-foreground" />
+                  ) : (
+                    <>
+                      <span className="text-muted-foreground font-black">{xprBalance.toLocaleString(undefined, { minimumFractionDigits: 3 })}</span>
+                      <span className="text-white/60">XPR</span>
+                    </>
+                  )}
                 </div>
-                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-[11px] font-bold hover:bg-white/10 transition-colors cursor-default">
-                  <span className={`font-black ${guyBalance < 7770 ? "text-red-400" : "text-primary"}`}>
-                    {guyBalance.toLocaleString()}
-                  </span>
-                  <span className="text-white/60">GUY</span>
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-[11px] font-bold hover:bg-white/10 transition-colors cursor-default min-w-[100px] justify-center">
+                  {isFetchingBalances ? (
+                    <Loader2 size={12} className="animate-spin text-primary" />
+                  ) : (
+                    <>
+                      <span className={`font-black ${guyBalance < 7770 ? "text-red-400" : "text-primary"}`}>
+                        {guyBalance.toLocaleString()}
+                      </span>
+                      <span className="text-white/60">GUY</span>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -110,17 +122,26 @@ const Navbar = () => {
                   <div className="p-3 space-y-3">
                     <div className="space-y-1">
                       <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Balances</p>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-black">{xprBalance.toLocaleString(undefined, { minimumFractionDigits: 3 })} XPR</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className={`text-sm font-black ${guyBalance < 7770 ? 'text-red-400' : 'text-primary'}`}>
-                          {guyBalance.toLocaleString()} GUY
-                        </span>
-                      </div>
+                      {isFetchingBalances ? (
+                        <div className="flex flex-col gap-1">
+                          <div className="h-4 w-24 bg-white/5 animate-pulse rounded" />
+                          <div className="h-4 w-32 bg-white/5 animate-pulse rounded" />
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-black">{xprBalance.toLocaleString(undefined, { minimumFractionDigits: 3 })} XPR</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className={`text-sm font-black ${guyBalance < 7770 ? 'text-red-400' : 'text-primary'}`}>
+                              {guyBalance.toLocaleString()} GUY
+                            </span>
+                          </div>
+                        </>
+                      )}
                     </div>
 
-                    {guyBalance < 7770 && (
+                    {!isFetchingBalances && guyBalance < 7770 && (
                       <div className="p-2 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center gap-2">
                         <AlertCircle size={14} className="text-red-400 shrink-0" />
                         <p className="text-[10px] font-bold text-red-400">Below 7,770 GUY minimum</p>
@@ -144,7 +165,7 @@ const Navbar = () => {
                   </DropdownMenuItem>
                   
                   <DropdownMenuItem onClick={refreshBalances} className="cursor-pointer focus:bg-white/10 rounded-lg flex items-center gap-2 py-2 transition-colors">
-                    <RefreshCw size={16} className="text-muted-foreground" />
+                    <RefreshCw size={16} className={`text-muted-foreground ${isFetchingBalances ? 'animate-spin' : ''}`} />
                     <span className="text-sm font-medium">Refresh Balances</span>
                   </DropdownMenuItem>
 

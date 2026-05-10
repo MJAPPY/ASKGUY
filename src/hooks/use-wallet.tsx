@@ -40,23 +40,32 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const initializingRef = useRef(false);
 
   const fetchBalances = useCallback(async (account: string) => {
+    if (!account) return;
     setIsFetchingBalances(true);
     try {
+      // Fetch XPR Balance
       const xprRes = await fetch(`${ENDPOINT}/v1/chain/get_currency_balance`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code: 'eosio.token', account, symbol: 'XPR' })
       });
       const xprData = await xprRes.json();
-      const xprVal = xprData[0] ? parseFloat(xprData[0].split(' ')[0]) : 0;
-      setXprBalance(xprVal);
+      if (Array.isArray(xprData)) {
+        const xprVal = xprData[0] ? parseFloat(xprData[0].split(' ')[0]) : 0;
+        setXprBalance(xprVal);
+      }
 
+      // Fetch GUY Balance
       const guyRes = await fetch(`${ENDPOINT}/v1/chain/get_currency_balance`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code: 'guytokenxpr1', account, symbol: 'GUY' })
       });
       const guyData = await guyRes.json();
-      const guyVal = guyData[0] ? parseFloat(guyData[0].split(' ')[0]) : 0;
-      setGuyBalance(guyVal);
+      if (Array.isArray(guyData)) {
+        const guyVal = guyData[0] ? parseFloat(guyData[0].split(' ')[0]) : 0;
+        setGuyBalance(guyVal);
+      }
     } catch (err) {
       console.error("Error fetching balances:", err);
     } finally {
@@ -130,15 +139,17 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       
       const { session: newSession } = await currentLink.login(APP_NAME);
       
-      setTimeout(async () => {
-        setSession(newSession);
-        const actor = newSession.auth.actor.toString();
-        setAddress(actor);
-        setIsConnected(true);
-        await fetchBalances(actor);
+      setSession(newSession);
+      const actor = newSession.auth.actor.toString();
+      setAddress(actor);
+      setIsConnected(true);
+      
+      // Delay balance fetch slightly to ensure node is ready
+      setTimeout(() => {
+        fetchBalances(actor);
         showSuccess(`Connected as ${actor}`);
         setIsConnecting(false);
-      }, 100);
+      }, 500);
       
     } catch (err) {
       const msg = (err as any).message || "";

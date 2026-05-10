@@ -1,8 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { showSuccess, showError } from '@/utils/toast';
-import ProtonWebSDK from '@proton/web-sdk';
+import { ProtonWebSDK } from '@proton/web-sdk';
 
 interface WalletContextType {
   isConnected: boolean;
@@ -34,6 +34,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [membershipExpiry, setMembershipExpiry] = useState<number | null>(null);
   const [link, setLink] = useState<any>(null);
   const [session, setSession] = useState<any>(null);
+  
+  const initializingRef = useRef(false);
 
   const fetchBalances = useCallback(async (account: string) => {
     try {
@@ -57,50 +59,66 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, []);
 
-  useEffect(() => {
-    const init = async () => {
-      try {
-        const { link: protonLink, session: protonSession } = await ProtonWebSDK({
-          linkOptions: { 
-            chainId: PROTON_CHAIN_ID, 
-            endpoints: [ENDPOINT],
-            restoreSession: true 
-          },
-          transportOptions: { 
-            requestAccount: 'askguy', 
-            backButton: true 
-          },
-          selectorOptions: { 
-            appName: APP_NAME, 
-            appLogo: 'https://askguy.io/logo.png',
-            showContextFree: false
-          }
-        });
-        
-        setLink(protonLink);
-        
-        if (protonSession) {
-          setSession(protonSession);
-          setAddress(protonSession.auth.actor);
-          setIsConnected(true);
-          fetchBalances(protonSession.auth.actor);
+  const initSDK = useCallback(async (restore = true) => {
+    if (initializingRef.current && restore) return null;
+    initializingRef.current = true;
+
+    try {
+      const result = await ProtonWebSDK({
+        linkOptions: { 
+          chainId: PROTON_CHAIN_ID, 
+          endpoints: [ENDPOINT],
+          restoreSession: restore 
+        },
+        transportOptions: { 
+          requestAccount: 'askguy', 
+          backButton: true 
+        },
+        selectorOptions: { 
+          appName: APP_NAME, 
+          appLogo: 'https://askguy.io/logo.png',
+          showContextFree: false
         }
-      } catch (err) {
-        console.debug("Proton SDK initialization:", err);
+      });
+      
+      setLink(result.link);
+      
+      if (result.session) {
+        setSession(result.session);
+        setAddress(result.session.auth.actor);
+        setIsConnected(true);
+        fetchBalances(result.session.auth.actor);
       }
-    };
-    init();
+      
+      initializingRef.current = false;
+      return result;
+    } catch (err) {
+      console.debug("Proton SDK initialization error:", err);
+      initializingRef.current = false;
+      return null;
+    }
   }, [fetchBalances]);
 
+  useEffect(() => {
+    initSDK(true);
+  }, [initSDK]);
+
   const connect = async () => {
-    if (!link) {
-      showError("Wallet system is still initializing. Please try again.");
-      return;
-    }
-    
     setIsConnecting(true);
     try {
-      const { session: newSession } = await link.login(APP_NAME);
+      // Re-initialize if link is missing
+      let currentLink = link;
+      if (!currentLink) {
+        const result = await initSDK(false);
+        if (result) currentLink = result.link;
+      }
+
+      if (!currentLink) {
+        showError("Wallet system could not be initialized. Please refresh the page.");
+        return;
+      }
+      
+      const { session: newSession } = await currentLink.login(APP_NAME);
       setSession(newSession);
       setAddress(newSession.auth.actor);
       setIsConnected(true);

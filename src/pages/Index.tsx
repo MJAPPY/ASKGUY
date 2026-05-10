@@ -13,6 +13,7 @@ import ActivityFeed from '@/components/ActivityFeed';
 import SuccessStories from '@/components/SuccessStories';
 import CTASection from '@/components/CTASection';
 import LiveTicker from '@/components/LiveTicker';
+import AccessDenied from '@/components/AccessDenied';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -162,6 +163,11 @@ const Index = () => {
 
   const hasGuyBalance = guyBalance >= 7770;
 
+  // Show access denied screen if connected but balance is low
+  if (!isFetchingBalances && !hasGuyBalance) {
+    return <AccessDenied />;
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col animate-in fade-in duration-500 relative overflow-hidden">
       {/* Dynamic Background Element */}
@@ -187,23 +193,6 @@ const Index = () => {
                   <Loader2 className="animate-spin text-primary" size={32} />
                   <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Verifying Balance...</p>
                 </div>
-              </Card>
-            ) : !hasGuyBalance ? (
-              <Card className="border-destructive/50 bg-destructive/5 glass-card">
-                <CardContent className="p-6 space-y-4">
-                  <div className="flex gap-4">
-                    <AlertCircle className="text-destructive shrink-0" />
-                    <div className="space-y-1">
-                      <p className="font-bold text-destructive">Insufficient GUY Balance</p>
-                      <p className="text-sm text-muted-foreground">You need at least 7,770 GUY tokens to participate. Current: {guyBalance.toLocaleString()}</p>
-                    </div>
-                  </div>
-                  <Button variant="secondary" asChild className="w-full gap-2 border-white/10 btn-premium">
-                    <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer">
-                      Buy $GUY on Vibrr <ExternalLink size={14} />
-                    </a>
-                  </Button>
-                </CardContent>
               </Card>
             ) : !isMember ? (
               <Card className="border-primary/50 bg-primary/5 overflow-hidden relative glass-card">

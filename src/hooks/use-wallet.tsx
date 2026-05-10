@@ -43,31 +43,45 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   
   const initializingRef = useRef(false);
 
+  const getBalanceFromTable = async (rpc: any, code: string, account: string, symbol: string) => {
+    try {
+      const result = await rpc.get_table_rows({
+        json: true,
+        code: code,
+        scope: account,
+        table: 'accounts',
+        limit: 10
+      });
+
+      if (result && result.rows) {
+        const row = result.rows.find((r: any) => r.balance.includes(symbol));
+        if (row) {
+          return parseFloat(row.balance.split(' ')[0]);
+        }
+      }
+      return 0;
+    } catch (e) {
+      console.error(`Error fetching ${symbol} from table:`, e);
+      return 0;
+    }
+  };
+
   const fetchBalances = useCallback(async (account: string, rpc: any) => {
     if (!account || !rpc) return;
     setIsFetchingBalances(true);
     
     try {
-      // Fetch XPR Balance using the SDK RPC client
-      const xprRes = await rpc.get_currency_balance('eosio.token', account, 'XPR');
-      if (Array.isArray(xprRes) && xprRes.length > 0) {
-        const val = parseFloat(xprRes[0].split(' ')[0]);
-        setXprBalance(val);
-      } else {
-        setXprBalance(0);
-      }
+      // Direct table query for XPR
+      const xprVal = await getBalanceFromTable(rpc, 'eosio.token', account, 'XPR');
+      setXprBalance(xprVal);
 
-      // Fetch GUY Balance using the SDK RPC client
-      const guyRes = await rpc.get_currency_balance('guytokenxpr1', account, 'GUY');
-      if (Array.isArray(guyRes) && guyRes.length > 0) {
-        const val = parseFloat(guyRes[0].split(' ')[0]);
-        setGuyBalance(val);
-      } else {
-        setGuyBalance(0);
-      }
+      // Direct table query for GUY
+      const guyVal = await getBalanceFromTable(rpc, 'guytokenxpr1', account, 'GUY');
+      setGuyBalance(guyVal);
+      
+      console.log(`Fetched balances for ${account}: ${xprVal} XPR, ${guyVal} GUY`);
     } catch (err) {
-      console.error("RPC balance fetch failed:", err);
-      // Fallback to 0 only if it's a definitive error
+      console.error("Balance fetch failed:", err);
     } finally {
       setIsFetchingBalances(false);
     }
@@ -106,7 +120,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const actor = result.session.auth.actor.toString();
         setAddress(actor);
         setIsConnected(true);
-        // Use the rpc provided by the link object
         fetchBalances(actor, result.link.rpc);
       }
       

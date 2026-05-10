@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { showSuccess, showError } from '@/utils/toast';
 import ProtonWebSDK from '@proton/web-sdk';
 
@@ -12,16 +12,17 @@ interface WalletContextType {
   xprBalance: number;
   isMember: boolean;
   membershipExpiry: number | null;
-  connect: (method?: 'passkey' | 'qr') => Promise<void>;
+  connect: () => Promise<void>;
   disconnect: () => void;
   payMembership: () => void;
+  refreshBalances: () => Promise<void>;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
 const APP_NAME = 'AskGuy';
-// Correct Proton Mainnet Chain ID (64 characters / 32 bytes)
 const PROTON_CHAIN_ID = '3848101010101010101010101010101010101010101010101010101010101010';
+const ENDPOINT = 'https://proton.greymass.com';
 
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
@@ -34,48 +35,80 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [link, setLink] = useState<any>(null);
   const [session, setSession] = useState<any>(null);
 
-  // Initialize SDK on mount
+  const fetchBalances = useCallback(async (account: string) => {
+    try {
+      const xprRes = await fetch(`${ENDPOINT}/v1/chain/get_currency_balance`, {
+        method: 'POST',
+        body: JSON.stringify({ code: 'eosio.token', account, symbol: 'XPR' })
+      });
+      const xprData = await xprRes.json();
+      const xprVal = xprData[0] ? parseFloat(xprData[0].split(' ')[0]) : 0;
+      setXprBalance(xprVal);
+
+      const guyRes = await fetch(`${ENDPOINT}/v1/chain/get_currency_balance`, {
+        method: 'POST',
+        body: JSON.stringify({ code: 'guytokenxpr1', account, symbol: 'GUY' })
+      });
+      const guyData = await guyRes.json();
+      const guyVal = guyData[0] ? parseFloat(guyData[0].split(' ')[0]) : 0;
+      setGuyBalance(guyVal);
+    } catch (err) {
+      console.error("Error fetching balances:", err);
+    }
+  }, []);
+
+  // Initialize SDK on mount without triggering login
   useEffect(() => {
     const init = async () => {
       try {
         const { link: protonLink, session: protonSession } = await ProtonWebSDK({
           linkOptions: { 
             chainId: PROTON_CHAIN_ID, 
-            endpoints: ['https://proton.greymass.com'] 
+            endpoints: [ENDPOINT] 
           },
           transportOptions: { requestAccount: 'askguy', backButton: true },
-          selectorOptions: { appName: APP_NAME, appLogo: 'https://askguy.io/logo.png' }
+          selectorOptions: { 
+            appName: APP_NAME, 
+            appLogo: 'https://askguy.io/logo.png',
+            customStyleOptions: {
+              modalBackgroundColor: '#0a0a0c',
+              logoBackgroundColor: '#F4C95D',
+              optionBackgroundColor: '#1E2937',
+              optionTextColor: '#ffffff'
+            }
+          }
         });
         setLink(protonLink);
+        
         if (protonSession) {
           setSession(protonSession);
           setAddress(protonSession.auth.actor);
           setIsConnected(true);
-          // Mock balances for demo
-          setGuyBalance(30000);
-          setXprBalance(10000);
+          fetchBalances(protonSession.auth.actor);
         }
       } catch (err) {
         console.error("Proton SDK Init Error:", err);
       }
     };
     init();
-  }, []);
+  }, [fetchBalances]);
 
-  const connect = async (method?: 'passkey' | 'qr') => {
+  const connect = async () => {
     if (!link) return;
     setIsConnecting(true);
     try {
+      // link.login is what triggers the selector modal
       const { session: newSession } = await link.login(APP_NAME);
       setSession(newSession);
       setAddress(newSession.auth.actor);
       setIsConnected(true);
-      setGuyBalance(30000);
-      setXprBalance(10000);
+      await fetchBalances(newSession.auth.actor);
       showSuccess(`Connected as ${newSession.auth.actor}`);
     } catch (err) {
       console.error(err);
-      showError("Failed to connect wallet");
+      if ((err as any).message !== 'Closed by user') {
+        showError("Failed to connect wallet");
+      }
     } finally {
       setIsConnecting(false);
     }
@@ -99,16 +132,20 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       showError(`Insufficient XPR balance. Need ${FEE} XPR to unlock posting rights.`);
       return;
     }
-    
     setXprBalance(prev => prev - FEE);
     setIsMember(true);
-    
     const oneYearInMs = 365 * 24 * 60 * 60 * 1000;
     const currentExpiry = membershipExpiry || Date.now();
     const newExpiry = (currentExpiry > Date.now() ? currentExpiry : Date.now()) + oneYearInMs;
-    
     setMembershipExpiry(newExpiry);
     showSuccess(`Membership Activated! Sent ${FEE} XPR to @tripseven`);
+  };
+
+  const refreshBalances = async () => {
+    if (address) {
+      await fetchBalances(address);
+      showSuccess("Balances refreshed");
+    }
   };
 
   return (
@@ -122,7 +159,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       membershipExpiry,
       connect, 
       disconnect,
-      payMembership
+      payMembership,
+      refreshBalances
     }}>
       {children}
     </WalletContext.Provider>

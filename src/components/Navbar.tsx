@@ -12,8 +12,7 @@ import {
   RefreshCw, 
   ChevronDown,
   ExternalLink,
-  AlertCircle,
-  Loader2
+  AlertCircle
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -23,11 +22,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/avatar";
 import logo from '@/assets/logo.jpg';
 
 const Navbar = () => {
-  const { isConnected, isConnecting, address, guyBalance, xprBalance, disconnect } = useWallet();
+  const { isConnected, address, guyBalance, xprBalance, disconnect, refreshBalances } = useWallet();
   const location = useLocation();
 
   const navItems = [
@@ -80,11 +79,11 @@ const Navbar = () => {
             <>
               <div className="hidden md:flex items-center gap-2">
                 <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-[11px] font-bold hover:bg-white/10 transition-colors cursor-default">
-                  <span className="text-muted-foreground">{xprBalance.toFixed(4)}</span>
+                  <span className="text-muted-foreground font-black">{xprBalance.toLocaleString(undefined, { minimumFractionDigits: 3 })}</span>
                   <span className="text-white/60">XPR</span>
                 </div>
                 <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-[11px] font-bold hover:bg-white/10 transition-colors cursor-default">
-                  <span className={guyBalance < 7770 ? "text-red-400" : "text-primary"}>
+                  <span className={`font-black ${guyBalance < 7770 ? "text-red-400" : "text-primary"}`}>
                     {guyBalance.toLocaleString()}
                   </span>
                   <span className="text-white/60">GUY</span>
@@ -109,10 +108,10 @@ const Navbar = () => {
                     <div className="space-y-1">
                       <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Balances</p>
                       <div className="flex justify-between items-center">
-                        <span className="text-sm font-bold">{xprBalance.toFixed(4)} XPR</span>
+                        <span className="text-sm font-black">{xprBalance.toLocaleString(undefined, { minimumFractionDigits: 3 })} XPR</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className={`text-sm font-bold ${guyBalance < 7770 ? 'text-red-400' : 'text-primary'}`}>
+                        <span className={`text-sm font-black ${guyBalance < 7770 ? 'text-red-400' : 'text-primary'}`}>
                           {guyBalance.toLocaleString()} GUY
                         </span>
                       </div>
@@ -141,7 +140,7 @@ const Navbar = () => {
                     </Link>
                   </DropdownMenuItem>
                   
-                  <DropdownMenuItem className="cursor-pointer focus:bg-white/10 rounded-lg flex items-center gap-2 py-2 transition-colors">
+                  <DropdownMenuItem onClick={refreshBalances} className="cursor-pointer focus:bg-white/10 rounded-lg flex items-center gap-2 py-2 transition-colors">
                     <RefreshCw size={16} className="text-muted-foreground" />
                     <span className="text-sm font-medium">Refresh Balances</span>
                   </DropdownMenuItem>

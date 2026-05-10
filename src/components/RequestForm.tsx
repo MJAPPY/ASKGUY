@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Upload, Send, X, AlertCircle, ShieldCheck, Sparkles } from 'lucide-react';
+import { Upload, Send, X, AlertCircle, ShieldCheck, Sparkles, AlertTriangle } from 'lucide-react';
 import { showSuccess } from '@/utils/toast';
 import { useRequests, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
@@ -207,6 +207,14 @@ const RequestForm = () => {
                   <ShieldCheck className="text-emerald-400 shrink-0 mt-0.5" size={16} />
                   <p className="text-[11px] leading-relaxed text-emerald-100/70 font-medium">
                     Upload a photo of your bill with your <span className="text-emerald-400 font-black">@{address}</span> handwritten next to it to build trust.
+                  </p>
+                </div>
+
+                {/* Privacy Warning */}
+                <div className="flex gap-3 p-3 rounded-xl bg-orange-500/10 border border-orange-500/20">
+                  <AlertTriangle className="text-orange-400 shrink-0 mt-0.5" size={14} />
+                  <p className="text-[10px] leading-tight text-orange-100/70 font-bold uppercase tracking-tight">
+                    Privacy Warning: Please redact or hide sensitive information like your home address, full name, or account numbers before uploading.
                   </p>
                 </div>
 

@@ -15,7 +15,7 @@ interface WalletContextType {
   membershipExpiry: number | null;
   connect: () => Promise<void>;
   disconnect: () => void;
-  payMembership: () => void;
+  payMembership: () => Promise<void>;
   refreshBalances: () => Promise<void>;
 }
 
@@ -24,7 +24,7 @@ const WalletContext = createContext<WalletContextType | undefined>(undefined);
 // Configuration for ASK GUY
 const APP_NAME = 'ASK GUY';
 const REQUEST_ACCOUNT = 'askguy'; 
-const APP_LOGO = 'https://i.ibb.co/L5kRj6X/logo.png'; // Direct link placeholder - ensure this is a direct .png link
+const APP_LOGO = 'https://i.ibb.co/L5kRj6X/logo.png'; 
 
 const PROTON_CHAIN_ID = '3848101010101010101010101010101010101010101010101010101010101010';
 const ENDPOINTS = [
@@ -85,6 +85,13 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setIsFetchingBalances(false);
     }
   }, []);
+
+  const refreshBalances = useCallback(async () => {
+    if (address && link?.rpc) {
+      await fetchBalances(address, link.rpc);
+      showSuccess("Balances refreshed");
+    }
+  }, [address, link, fetchBalances]);
 
   const initSDK = useCallback(async (restore = true) => {
     if (initializingRef.current && restore) return null;
@@ -179,25 +186,49 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     showSuccess("Wallet Disconnected");
   };
 
-  const payMembership = () => {
+  const payMembership = async () => {
     const FEE = 2500;
+    
+    if (!session || !address) {
+      showError("Please connect your wallet first.");
+      return;
+    }
+
     if (xprBalance < FEE) {
       showError(`Insufficient XPR balance. Need ${FEE} XPR.`);
       return;
     }
-    setXprBalance(prev => prev - FEE);
-    setIsMember(true);
-    const oneYearInMs = 365 * 24 * 60 * 60 * 1000;
-    const currentExpiry = membershipExpiry || Date.now();
-    const newExpiry = (currentExpiry > Date.now() ? currentExpiry : Date.now()) + oneYearInMs;
-    setMembershipExpiry(newExpiry);
-    showSuccess(`Membership Activated!`);
-  };
 
-  const refreshBalances = async () => {
-    if (address && link?.rpc) {
-      await fetchBalances(address, link.rpc);
-      showSuccess("Balances refreshed");
+    try {
+      const action = {
+        account: 'eosio.token',
+        name: 'transfer',
+        authorization: [session.auth],
+        data: {
+          from: address,
+          to: 'askguy',
+          quantity: `${FEE.toFixed(4)} XPR`,
+          memo: 'ASK GUY Membership Fee'
+        }
+      };
+
+      const result = await session.transact({ actions: [action] });
+      
+      if (result) {
+        setIsMember(true);
+        const oneYearInMs = 365 * 24 * 60 * 60 * 1000;
+        const currentExpiry = membershipExpiry || Date.now();
+        const newExpiry = (currentExpiry > Date.now() ? currentExpiry : Date.now()) + oneYearInMs;
+        setMembershipExpiry(newExpiry);
+        
+        await fetchBalances(address, link.rpc);
+        showSuccess(`Membership Activated!`);
+      }
+    } catch (err) {
+      const msg = (err as any).message || "Transaction failed";
+      if (msg !== 'Closed by user' && msg !== 'User cancelled login') {
+        showError(msg);
+      }
     }
   };
 

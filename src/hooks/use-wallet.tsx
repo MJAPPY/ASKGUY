@@ -12,7 +12,7 @@ interface WalletContextType {
   xprBalance: number;
   isMember: boolean;
   membershipExpiry: number | null;
-  connect: () => Promise<void>;
+  connect: (method?: 'passkey' | 'qr') => Promise<void>;
   disconnect: () => void;
   payMembership: () => void;
   refreshBalances: () => Promise<void>;
@@ -57,27 +57,27 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, []);
 
-  // Initialize SDK on mount without triggering login
+  // Initialize SDK silently
   useEffect(() => {
     const init = async () => {
       try {
         const { link: protonLink, session: protonSession } = await ProtonWebSDK({
           linkOptions: { 
             chainId: PROTON_CHAIN_ID, 
-            endpoints: [ENDPOINT] 
+            endpoints: [ENDPOINT],
+            restoreSession: true // Only restores if a valid session exists in storage
           },
-          transportOptions: { requestAccount: 'askguy', backButton: true },
+          transportOptions: { 
+            requestAccount: 'askguy', 
+            backButton: true 
+          },
           selectorOptions: { 
             appName: APP_NAME, 
             appLogo: 'https://askguy.io/logo.png',
-            customStyleOptions: {
-              modalBackgroundColor: '#0a0a0c',
-              logoBackgroundColor: '#F4C95D',
-              optionBackgroundColor: '#1E2937',
-              optionTextColor: '#ffffff'
-            }
+            showContextFree: false // Helps prevent unnecessary popups
           }
         });
+        
         setLink(protonLink);
         
         if (protonSession) {
@@ -87,17 +87,22 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           fetchBalances(protonSession.auth.actor);
         }
       } catch (err) {
-        console.error("Proton SDK Init Error:", err);
+        // Silently fail on init to avoid disrupting the user experience
+        console.debug("Proton SDK Silently skipped restoration:", err);
       }
     };
     init();
   }, [fetchBalances]);
 
-  const connect = async () => {
-    if (!link) return;
+  const connect = async (method?: 'passkey' | 'qr') => {
+    if (!link) {
+      showError("Wallet system is still initializing. Please try again in a moment.");
+      return;
+    }
+    
     setIsConnecting(true);
     try {
-      // link.login is what triggers the selector modal
+      // link.login is the only manual trigger for the auth modal
       const { session: newSession } = await link.login(APP_NAME);
       setSession(newSession);
       setAddress(newSession.auth.actor);
@@ -106,7 +111,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       showSuccess(`Connected as ${newSession.auth.actor}`);
     } catch (err) {
       console.error(err);
-      if ((err as any).message !== 'Closed by user') {
+      const msg = (err as any).message || "";
+      if (msg !== 'Closed by user' && msg !== 'User cancelled login') {
         showError("Failed to connect wallet");
       }
     } finally {
@@ -116,7 +122,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const disconnect = async () => {
     if (link && session) {
-      await link.removeSession(APP_NAME, session.auth);
+      try {
+        await link.removeSession(APP_NAME, session.auth);
+      } catch (e) {
+        console.error("Logout error:", e);
+      }
     }
     setIsConnected(false);
     setAddress(null);

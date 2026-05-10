@@ -23,7 +23,11 @@ const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
 const APP_NAME = 'AskGuy';
 const PROTON_CHAIN_ID = '3848101010101010101010101010101010101010101010101010101010101010';
-const ENDPOINT = 'https://proton.greymass.com';
+const ENDPOINTS = [
+  'https://proton.greymass.com',
+  'https://mainnet.protonchain.com',
+  'https://proton.api.atomicassets.io'
+];
 
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
@@ -42,35 +46,51 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const fetchBalances = useCallback(async (account: string) => {
     if (!account) return;
     setIsFetchingBalances(true);
-    try {
-      // Fetch XPR Balance
-      const xprRes = await fetch(`${ENDPOINT}/v1/chain/get_currency_balance`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: 'eosio.token', account, symbol: 'XPR' })
-      });
-      const xprData = await xprRes.json();
-      if (Array.isArray(xprData)) {
-        const xprVal = xprData[0] ? parseFloat(xprData[0].split(' ')[0]) : 0;
-        setXprBalance(xprVal);
-      }
+    
+    let fetchedXpr = 0;
+    let fetchedGuy = 0;
 
-      // Fetch GUY Balance
-      const guyRes = await fetch(`${ENDPOINT}/v1/chain/get_currency_balance`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: 'guytokenxpr1', account, symbol: 'GUY' })
-      });
-      const guyData = await guyRes.json();
-      if (Array.isArray(guyData)) {
-        const guyVal = guyData[0] ? parseFloat(guyData[0].split(' ')[0]) : 0;
-        setGuyBalance(guyVal);
+    // Try endpoints until success
+    for (const endpoint of ENDPOINTS) {
+      try {
+        // Fetch XPR Balance
+        const xprRes = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: 'eosio.token', account, symbol: 'XPR' })
+        });
+        
+        if (xprRes.ok) {
+          const xprData = await xprRes.json();
+          if (Array.isArray(xprData) && xprData[0]) {
+            fetchedXpr = parseFloat(xprData[0].split(' ')[0]);
+          }
+        }
+
+        // Fetch GUY Balance
+        const guyRes = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: 'guytokenxpr1', account, symbol: 'GUY' })
+        });
+
+        if (guyRes.ok) {
+          const guyData = await guyRes.json();
+          if (Array.isArray(guyData) && guyData[0]) {
+            fetchedGuy = parseFloat(guyData[0].split(' ')[0]);
+          }
+          
+          // If we reached here and got a response for GUY, we can stop trying endpoints
+          setXprBalance(fetchedXpr);
+          setGuyBalance(fetchedGuy);
+          break; 
+        }
+      } catch (err) {
+        console.warn(`Failed to fetch from ${endpoint}, trying next...`);
       }
-    } catch (err) {
-      console.error("Error fetching balances:", err);
-    } finally {
-      setIsFetchingBalances(false);
     }
+    
+    setIsFetchingBalances(false);
   }, []);
 
   const initSDK = useCallback(async (restore = true) => {
@@ -81,7 +101,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const result = await ProtonWebSDK({
         linkOptions: { 
           chainId: PROTON_CHAIN_ID, 
-          endpoints: [ENDPOINT],
+          endpoints: ENDPOINTS,
           restoreSession: restore 
         },
         transportOptions: { 
@@ -144,12 +164,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setAddress(actor);
       setIsConnected(true);
       
-      // Delay balance fetch slightly to ensure node is ready
-      setTimeout(() => {
-        fetchBalances(actor);
-        showSuccess(`Connected as ${actor}`);
-        setIsConnecting(false);
-      }, 500);
+      // Immediate fetch attempt
+      await fetchBalances(actor);
+      showSuccess(`Connected as ${actor}`);
+      setIsConnecting(false);
       
     } catch (err) {
       const msg = (err as any).message || "";

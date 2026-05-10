@@ -16,7 +16,7 @@ import LiveTicker from '@/components/LiveTicker';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertCircle, ShieldAlert, Search, User, ExternalLink, Heart, ArrowRight, ShieldCheck, Calendar, LayoutGrid, Zap, CheckCircle2, ArrowUpDown, List, Lock } from 'lucide-react';
+import { AlertCircle, ShieldAlert, Search, User, ExternalLink, Heart, ArrowRight, ShieldCheck, Calendar, LayoutGrid, Zap, CheckCircle2, ArrowUpDown, List, Lock, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -28,7 +28,7 @@ type SortType = 'newest' | 'oldest';
 type ViewMode = 'grid' | 'list';
 
 const Index = () => {
-  const { isConnected, guyBalance, isMember, membershipExpiry, payMembership, address, connect } = useWallet();
+  const { isConnected, guyBalance, isMember, membershipExpiry, payMembership, address, connect, isFetchingBalances } = useWallet();
   const { requests } = useRequests();
   const [filter, setFilter] = useState<FilterType>('active');
   const [sortBy, setSortBy] = useState<SortType>('oldest');
@@ -181,7 +181,14 @@ const Index = () => {
         
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-4 space-y-6">
-            {!hasGuyBalance ? (
+            {isFetchingBalances ? (
+              <Card className="glass-card flex items-center justify-center p-12">
+                <div className="flex flex-col items-center gap-4">
+                  <Loader2 className="animate-spin text-primary" size={32} />
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Verifying Balance...</p>
+                </div>
+              </Card>
+            ) : !hasGuyBalance ? (
               <Card className="border-destructive/50 bg-destructive/5 glass-card">
                 <CardContent className="p-6 space-y-4">
                   <div className="flex gap-4">

@@ -7,6 +7,7 @@ import ProtonWebSDK from '@proton/web-sdk';
 interface WalletContextType {
   isConnected: boolean;
   isConnecting: boolean;
+  isFetchingBalances: boolean;
   address: string | null;
   guyBalance: number;
   xprBalance: number;
@@ -27,6 +28,7 @@ const ENDPOINT = 'https://proton.greymass.com';
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isFetchingBalances, setIsFetchingBalances] = useState(false);
   const [address, setAddress] = useState<string | null>(null);
   const [guyBalance, setGuyBalance] = useState(0);
   const [xprBalance, setXprBalance] = useState(0);
@@ -38,6 +40,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const initializingRef = useRef(false);
 
   const fetchBalances = useCallback(async (account: string) => {
+    setIsFetchingBalances(true);
     try {
       const xprRes = await fetch(`${ENDPOINT}/v1/chain/get_currency_balance`, {
         method: 'POST',
@@ -56,6 +59,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setGuyBalance(guyVal);
     } catch (err) {
       console.error("Error fetching balances:", err);
+    } finally {
+      setIsFetchingBalances(false);
     }
   }, []);
 
@@ -89,9 +94,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       
       if (result.session) {
         setSession(result.session);
-        setAddress(result.session.auth.actor.toString());
+        const actor = result.session.auth.actor.toString();
+        setAddress(actor);
         setIsConnected(true);
-        fetchBalances(result.session.auth.actor.toString());
+        fetchBalances(actor);
       }
       
       initializingRef.current = false;
@@ -126,10 +132,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       
       setTimeout(async () => {
         setSession(newSession);
-        setAddress(newSession.auth.actor.toString());
+        const actor = newSession.auth.actor.toString();
+        setAddress(actor);
         setIsConnected(true);
-        await fetchBalances(newSession.auth.actor.toString());
-        showSuccess(`Connected as ${newSession.auth.actor.toString()}`);
+        await fetchBalances(actor);
+        showSuccess(`Connected as ${actor}`);
         setIsConnecting(false);
       }, 100);
       
@@ -184,6 +191,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     <WalletContext.Provider value={{ 
       isConnected, 
       isConnecting,
+      isFetchingBalances,
       address, 
       guyBalance, 
       xprBalance, 

@@ -89,9 +89,9 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       
       if (result.session) {
         setSession(result.session);
-        setAddress(result.session.auth.actor);
+        setAddress(result.session.auth.actor.toString());
         setIsConnected(true);
-        fetchBalances(result.session.auth.actor);
+        fetchBalances(result.session.auth.actor.toString());
       }
       
       initializingRef.current = false;
@@ -124,13 +124,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       
       const { session: newSession } = await currentLink.login(APP_NAME);
       
-      // Use a small delay to let the SDK close its modal before updating UI state
       setTimeout(async () => {
         setSession(newSession);
-        setAddress(newSession.auth.actor);
+        setAddress(newSession.auth.actor.toString());
         setIsConnected(true);
-        await fetchBalances(newSession.auth.actor);
-        showSuccess(`Connected as ${newSession.auth.actor}`);
+        await fetchBalances(newSession.auth.actor.toString());
+        showSuccess(`Connected as ${newSession.auth.actor.toString()}`);
         setIsConnecting(false);
       }, 100);
       

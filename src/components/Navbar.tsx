@@ -40,6 +40,9 @@ const Navbar = () => {
 
   const visibleNavItems = navItems.filter(item => !item.private || isConnected);
 
+  // Safe helper to get display name
+  const displayAddress = typeof address === 'string' ? address : '';
+
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-white/5 bg-[#0a0a0c]/80 backdrop-blur-md">
       <div className="container mx-auto px-4 h-20 flex items-center justify-between">
@@ -94,12 +97,12 @@ const Navbar = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="h-12 gap-3 px-2 hover:bg-white/5 rounded-xl group transition-all duration-300">
                     <Avatar className="h-8 w-8 border border-white/10 group-hover:border-primary/50 transition-colors">
-                      <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${address}`} />
+                      <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${displayAddress}`} />
                       <AvatarFallback className="bg-primary text-black font-bold text-[10px]">
-                        {address?.substring(0, 2).toUpperCase()}
+                        {displayAddress.substring(0, 2).toUpperCase() || '??'}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="text-sm font-bold hidden sm:inline-block group-hover:text-primary transition-colors">{address}</span>
+                    <span className="text-sm font-bold hidden sm:inline-block group-hover:text-primary transition-colors">{displayAddress}</span>
                     <ChevronDown size={14} className="text-muted-foreground group-data-[state=open]:rotate-180 transition-transform" />
                   </Button>
                 </DropdownMenuTrigger>

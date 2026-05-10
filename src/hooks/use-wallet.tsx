@@ -36,7 +36,6 @@ const ENDPOINTS = [
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  // Start as true so we don't flash "Access Denied" while restoring session
   const [isFetchingBalances, setIsFetchingBalances] = useState(true);
   const [address, setAddress] = useState<string | null>(null);
   const [guyBalance, setGuyBalance] = useState(0);
@@ -57,24 +56,43 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setIsFetchingBalances(true);
     
     try {
-      // Use standard currency balance RPC calls which are more reliable than table rows
-      const xprRes = await rpc.get_currency_balance('eosio.token', account, 'XPR');
-      if (xprRes && xprRes.length > 0) {
-        setXprBalance(parseFloat(xprRes[0].split(' ')[0]));
-      } else {
-        setXprBalance(0);
-      }
+      // 1. Try standard get_currency_balance for XPR
+      try {
+        const xprRes = await rpc.get_currency_balance('eosio.token', account, 'XPR');
+        if (xprRes && xprRes.length > 0) {
+          setXprBalance(parseFloat(xprRes[0].split(' ')[0]));
+        } else {
+          // Fallback to table query if array is empty
+          const xprTable = await rpc.get_table_rows({
+            json: true, code: 'eosio.token', scope: account, table: 'accounts', limit: 1
+          });
+          if (xprTable.rows.length > 0) {
+            setXprBalance(parseFloat(xprTable.rows[0].balance.split(' ')[0]));
+          }
+        }
+      } catch (e) { console.error("XPR fetch error:", e); }
 
-      const guyRes = await rpc.get_currency_balance('guytokenxpr1', account, 'GUY');
-      if (guyRes && guyRes.length > 0) {
-        setGuyBalance(parseFloat(guyRes[0].split(' ')[0]));
-      } else {
-        setGuyBalance(0);
-      }
+      // 2. Try standard get_currency_balance for GUY (guytokenxpr1)
+      try {
+        const guyRes = await rpc.get_currency_balance('guytokenxpr1', account, 'GUY');
+        if (guyRes && guyRes.length > 0) {
+          setGuyBalance(parseFloat(guyRes[0].split(' ')[0]));
+        } else {
+          // Fallback to table query for GUY
+          const guyTable = await rpc.get_table_rows({
+            json: true, code: 'guytokenxpr1', scope: account, table: 'accounts', limit: 1
+          });
+          if (guyTable.rows.length > 0) {
+            setGuyBalance(parseFloat(guyTable.rows[0].balance.split(' ')[0]));
+          }
+        }
+      } catch (e) { console.error("GUY fetch error:", e); }
+
     } catch (err) {
-      console.error("Balance fetch failed:", err);
+      console.error("General balance fetch failed:", err);
     } finally {
-      setIsFetchingBalances(false);
+      // Add a tiny delay to ensure state updates propagate before we stop "loading"
+      setTimeout(() => setIsFetchingBalances(false), 100);
     }
   }, []);
 

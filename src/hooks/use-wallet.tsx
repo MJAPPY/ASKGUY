@@ -21,7 +21,7 @@ interface WalletContextType {
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
-const APP_NAME = 'AskGuy';
+const APP_NAME = 'AskGuy XPR';
 const PROTON_CHAIN_ID = '3848101010101010101010101010101010101010101010101010101010101010';
 const ENDPOINTS = [
   'https://proton.greymass.com',
@@ -61,7 +61,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
       return 0;
     } catch (e) {
-      console.error(`Error fetching ${symbol} from table:`, e);
       return 0;
     }
   };
@@ -71,15 +70,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setIsFetchingBalances(true);
     
     try {
-      // Direct table query for XPR
       const xprVal = await getBalanceFromTable(rpc, 'eosio.token', account, 'XPR');
       setXprBalance(xprVal);
 
-      // Direct table query for GUY
       const guyVal = await getBalanceFromTable(rpc, 'guytokenxpr1', account, 'GUY');
       setGuyBalance(guyVal);
-      
-      console.log(`Fetched balances for ${account}: ${xprVal} XPR, ${guyVal} GUY`);
     } catch (err) {
       console.error("Balance fetch failed:", err);
     } finally {
@@ -99,12 +94,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           restoreSession: restore 
         },
         transportOptions: { 
-          requestAccount: 'askguy', 
           backButton: true 
         },
         selectorOptions: { 
           appName: APP_NAME, 
-          appLogo: 'https://askguy.io/logo.png',
+          appLogo: 'https://askguy.io/logo.png', // Ideally a verified public URL
           customStyleOptions: {
             modalBackgroundColor: '#0A1428',
             logoBackgroundColor: '#0A1428',
@@ -126,7 +120,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       initializingRef.current = false;
       return result;
     } catch (err) {
-      console.debug("Proton SDK initialization error:", err);
       initializingRef.current = false;
       return null;
     }

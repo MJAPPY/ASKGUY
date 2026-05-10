@@ -21,8 +21,11 @@ interface WalletContextType {
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
-const APP_NAME = 'AskGuy'; // Consistent simple name
-const REQUEST_ACCOUNT = 'askguy'; // The on-chain account identifying the app
+// Configuration for ASK GUY
+const APP_NAME = 'ASK GUY';
+const REQUEST_ACCOUNT = 'askguy'; 
+const APP_LOGO = 'https://i.ibb.co/L5kRj6X/logo.png'; // Direct link placeholder - ensure this is a direct .png link
+
 const PROTON_CHAIN_ID = '3848101010101010101010101010101010101010101010101010101010101010';
 const ENDPOINTS = [
   'https://proton.greymass.com',
@@ -100,7 +103,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         },
         selectorOptions: { 
           appName: APP_NAME, 
-          appLogo: 'https://askguy.io/logo.png',
+          appLogo: APP_LOGO,
           customStyleOptions: {
             modalBackgroundColor: '#0A1428',
             logoBackgroundColor: '#0A1428',

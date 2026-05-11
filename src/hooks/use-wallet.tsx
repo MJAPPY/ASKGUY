@@ -56,13 +56,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setIsFetchingBalances(true);
     
     try {
-      // 1. Try standard get_currency_balance for XPR
+      // 1. Fetch XPR Balance (eosio.token)
       try {
         const xprRes = await rpc.get_currency_balance('eosio.token', account, 'XPR');
         if (xprRes && xprRes.length > 0) {
           setXprBalance(parseFloat(xprRes[0].split(' ')[0]));
         } else {
-          // Fallback to table query if array is empty
           const xprTable = await rpc.get_table_rows({
             json: true, code: 'eosio.token', scope: account, table: 'accounts', limit: 1
           });
@@ -72,18 +71,24 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
       } catch (e) { console.error("XPR fetch error:", e); }
 
-      // 2. Try standard get_currency_balance for GUY (guytokenxpr1)
+      // 2. Fetch GUY Balance (vtoken)
+      // Based on explorer: https://explorer.xprnetwork.org/tokens/GUY-proton-vtoken
       try {
-        const guyRes = await rpc.get_currency_balance('guytokenxpr1', account, 'GUY');
+        const guyRes = await rpc.get_currency_balance('vtoken', account, 'GUY');
         if (guyRes && guyRes.length > 0) {
           setGuyBalance(parseFloat(guyRes[0].split(' ')[0]));
         } else {
-          // Fallback to table query for GUY
+          // Fallback to table query for GUY on vtoken contract
           const guyTable = await rpc.get_table_rows({
-            json: true, code: 'guytokenxpr1', scope: account, table: 'accounts', limit: 1
+            json: true, code: 'vtoken', scope: account, table: 'accounts', limit: 1
           });
+          
+          // Find the GUY balance in the accounts table if it's not the first row
           if (guyTable.rows.length > 0) {
-            setGuyBalance(parseFloat(guyTable.rows[0].balance.split(' ')[0]));
+            const guyRow = guyTable.rows.find((r: any) => r.balance.includes('GUY'));
+            if (guyRow) {
+              setGuyBalance(parseFloat(guyRow.balance.split(' ')[0]));
+            }
           }
         }
       } catch (e) { console.error("GUY fetch error:", e); }
@@ -91,8 +96,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } catch (err) {
       console.error("General balance fetch failed:", err);
     } finally {
-      // Add a tiny delay to ensure state updates propagate before we stop "loading"
-      setTimeout(() => setIsFetchingBalances(false), 100);
+      // Ensure we wait a moment for state to settle
+      setTimeout(() => setIsFetchingBalances(false), 200);
     }
   }, []);
 

@@ -228,7 +228,7 @@ const Index = () => {
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
-                  <p className="text-[10px] text-center text-muted-foreground italic">
+                  <p className="text-xs text-center text-muted-foreground italic">
                     You can still browse and contribute to others without a membership.
                   </p>
                 </CardContent>

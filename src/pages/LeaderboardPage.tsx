@@ -4,10 +4,10 @@ import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Leaderboard from '@/components/Leaderboard';
-import { Trophy, Star, ArrowLeft, Heart, ThumbsUp } from 'lucide-react';
+import { Trophy, Star, ArrowLeft, Heart, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { showSuccess } from '@/utils/toast';
+import { showSuccess, showError } from '@/utils/toast';
 
 const LeaderboardPage = () => {
   const [likes, setLikes] = useState(1242);
@@ -18,6 +18,27 @@ const LeaderboardPage = () => {
       setLikes(prev => prev + 1);
       setHasLiked(true);
       showSuccess("Thanks for showing support!");
+    }
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: 'AskGuy Hall of Fame',
+      text: 'Check out the most generous contributors in the AskGuy XPR community! 🚀',
+      url: window.location.href
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`);
+        showSuccess("Link copied to clipboard!");
+      }
+    } catch (err) {
+      if ((err as Error).name !== 'AbortError') {
+        showError("Could not share leaderboard");
+      }
     }
   };
 
@@ -46,25 +67,36 @@ const LeaderboardPage = () => {
                 </p>
               </div>
               
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-3">
                 <div className="text-center px-6 py-3 rounded-2xl bg-white/5 border border-white/10">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Total Given</p>
                   <p className="text-xl font-black text-primary">142,500 XPR</p>
                 </div>
                 
-                <Button 
-                  onClick={handleLike}
-                  variant="outline"
-                  className={`h-auto py-3 px-6 rounded-2xl border-white/10 transition-all gap-3 ${hasLiked ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-white/5 hover:bg-white/10'}`}
-                >
-                  <div className="flex flex-col items-start">
-                    <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5">Show Support</p>
-                    <div className="flex items-center gap-2">
-                      <Heart size={18} className={hasLiked ? 'fill-primary' : ''} />
-                      <span className="text-lg font-black">{likes.toLocaleString()}</span>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={handleLike}
+                    variant="outline"
+                    className={`h-auto py-3 px-6 rounded-2xl border-white/10 transition-all gap-3 ${hasLiked ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-white/5 hover:bg-white/10'}`}
+                  >
+                    <div className="flex flex-col items-start">
+                      <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5">Show Support</p>
+                      <div className="flex items-center gap-2">
+                        <Heart size={18} className={hasLiked ? 'fill-primary' : ''} />
+                        <span className="text-lg font-black">{likes.toLocaleString()}</span>
+                      </div>
                     </div>
-                  </div>
-                </Button>
+                  </Button>
+
+                  <Button 
+                    onClick={handleShare}
+                    variant="outline"
+                    className="h-auto py-3 px-4 rounded-2xl border-white/10 bg-white/5 hover:bg-white/10 transition-all"
+                    title="Share Leaderboard"
+                  >
+                    <Share2 size={20} className="text-muted-foreground" />
+                  </Button>
+                </div>
               </div>
             </div>
           </div>

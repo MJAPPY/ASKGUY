@@ -54,50 +54,64 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
     
     setIsFetchingBalances(true);
+    console.log(`Fetching balances for ${account}...`);
     
+    let foundXpr = 0;
+    let foundGuy = 0;
+
     try {
-      // 1. Fetch XPR Balance (eosio.token)
+      // 1. Fetch XPR Balance
       try {
         const xprRes = await rpc.get_currency_balance('eosio.token', account, 'XPR');
         if (xprRes && xprRes.length > 0) {
-          setXprBalance(parseFloat(xprRes[0].split(' ')[0]));
+          foundXpr = parseFloat(xprRes[0].split(' ')[0]);
         } else {
           const xprTable = await rpc.get_table_rows({
-            json: true, code: 'eosio.token', scope: account, table: 'accounts', limit: 1
+            json: true, code: 'eosio.token', scope: account, table: 'accounts', limit: 10
           });
-          if (xprTable.rows.length > 0) {
-            setXprBalance(parseFloat(xprTable.rows[0].balance.split(' ')[0]));
-          }
+          const xprRow = xprTable.rows.find((r: any) => r.balance.includes('XPR'));
+          if (xprRow) foundXpr = parseFloat(xprRow.balance.split(' ')[0]);
         }
       } catch (e) { console.error("XPR fetch error:", e); }
 
       // 2. Fetch GUY Balance (vtoken)
-      // Based on explorer: https://explorer.xprnetwork.org/tokens/GUY-proton-vtoken
+      // We try multiple methods because some nodes are inconsistent
       try {
+        // Method A: Standard currency balance
         const guyRes = await rpc.get_currency_balance('vtoken', account, 'GUY');
         if (guyRes && guyRes.length > 0) {
-          setGuyBalance(parseFloat(guyRes[0].split(' ')[0]));
-        } else {
-          // Fallback to table query for GUY on vtoken contract
+          foundGuy = parseFloat(guyRes[0].split(' ')[0]);
+        } 
+        
+        // Method B: Direct table query (Fallback or verification)
+        if (foundGuy === 0) {
           const guyTable = await rpc.get_table_rows({
-            json: true, code: 'vtoken', scope: account, table: 'accounts', limit: 1
+            json: true, 
+            code: 'vtoken', 
+            scope: account, 
+            table: 'accounts', 
+            limit: 20 
           });
           
-          // Find the GUY balance in the accounts table if it's not the first row
-          if (guyTable.rows.length > 0) {
-            const guyRow = guyTable.rows.find((r: any) => r.balance.includes('GUY'));
-            if (guyRow) {
-              setGuyBalance(parseFloat(guyRow.balance.split(' ')[0]));
-            }
+          const guyRow = guyTable.rows.find((r: any) => r.balance.includes('GUY'));
+          if (guyRow) {
+            foundGuy = parseFloat(guyRow.balance.split(' ')[0]);
           }
         }
       } catch (e) { console.error("GUY fetch error:", e); }
 
+      console.log(`Balances found: XPR=${foundXpr}, GUY=${foundGuy}`);
+      setXprBalance(foundXpr);
+      setGuyBalance(foundGuy);
+
     } catch (err) {
       console.error("General balance fetch failed:", err);
     } finally {
-      // Ensure we wait a moment for state to settle
-      setTimeout(() => setIsFetchingBalances(false), 200);
+      // We use a small timeout to ensure React has processed the state updates 
+      // before we tell the UI that loading is finished.
+      setTimeout(() => {
+        setIsFetchingBalances(false);
+      }, 300);
     }
   }, []);
 

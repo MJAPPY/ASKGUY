@@ -21,7 +21,6 @@ interface WalletContextType {
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
-// Configuration for ASK GUY
 const APP_NAME = 'ASK GUY';
 const REQUEST_ACCOUNT = 'askguy'; 
 const APP_LOGO = 'https://i.ibb.co/L5kRj6X/logo.png'; 
@@ -30,7 +29,8 @@ const PROTON_CHAIN_ID = '3848101010101010101010101010101010101010101010101010101
 const ENDPOINTS = [
   'https://proton.greymass.com',
   'https://mainnet.protonchain.com',
-  'https://rpc.protonchain.com'
+  'https://rpc.protonchain.com',
+  'https://proton.public.blastapi.io'
 ];
 
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -47,85 +47,90 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   
   const initializingRef = useRef(false);
 
-  const fetchBalances = useCallback(async (account: string, rpc: any) => {
-    if (!account || !rpc) {
+  // High-reliability balance fetcher
+  const fetchBalances = useCallback(async (account: string) => {
+    if (!account) {
       setIsFetchingBalances(false);
       return;
     }
     
     setIsFetchingBalances(true);
-    console.log(`[Wallet] Fetching balances for: ${account}`);
+    console.log(`[Wallet] Starting deep balance check for: ${account}`);
     
-    let foundXpr = 0;
-    let foundGuy = 0;
+    let finalXpr = 0;
+    let finalGuy = 0;
+    let success = false;
 
-    try {
-      // 1. Fetch XPR Balance (eosio.token)
+    // Try multiple endpoints until one succeeds
+    for (const endpoint of ENDPOINTS) {
       try {
-        const xprRes = await rpc.get_currency_balance('eosio.token', account, 'XPR');
-        if (xprRes && xprRes.length > 0) {
-          foundXpr = parseFloat(xprRes[0].split(' ')[0]);
-          console.log(`[Wallet] XPR Balance (Method A): ${foundXpr}`);
-        } else {
-          const xprTable = await rpc.get_table_rows({
-            json: true, code: 'eosio.token', scope: account, table: 'accounts', limit: 10
-          });
-          const xprRow = xprTable.rows.find((r: any) => r.balance.includes('XPR'));
-          if (xprRow) {
-            foundXpr = parseFloat(xprRow.balance.split(' ')[0]);
-            console.log(`[Wallet] XPR Balance (Method B): ${foundXpr}`);
-          }
-        }
-      } catch (e) { console.error("[Wallet] XPR fetch error:", e); }
-
-      // 2. Fetch GUY Balance (vtoken)
-      try {
-        // Method A: Standard currency balance
-        const guyRes = await rpc.get_currency_balance('vtoken', account, 'GUY');
-        if (guyRes && guyRes.length > 0) {
-          foundGuy = parseFloat(guyRes[0].split(' ')[0]);
-          console.log(`[Wallet] GUY Balance (Method A): ${foundGuy}`);
-        } 
+        console.log(`[Wallet] Trying endpoint: ${endpoint}`);
         
-        // Method B: Direct table query (Fallback)
-        if (foundGuy === 0) {
-          const guyTable = await rpc.get_table_rows({
-            json: true, 
-            code: 'vtoken', 
-            scope: account, 
-            table: 'accounts', 
-            limit: 50 
+        // 1. Fetch XPR
+        const xprResponse = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
+          method: 'POST',
+          body: JSON.stringify({ code: 'eosio.token', account, symbol: 'XPR' })
+        });
+        const xprData = await xprResponse.json();
+        if (Array.isArray(xprData) && xprData.length > 0) {
+          finalXpr = parseFloat(xprData[0].split(' ')[0]);
+        }
+
+        // 2. Fetch GUY (vtoken)
+        const guyResponse = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
+          method: 'POST',
+          body: JSON.stringify({ code: 'vtoken', account, symbol: 'GUY' })
+        });
+        const guyData = await guyResponse.json();
+        
+        if (Array.isArray(guyData) && guyData.length > 0) {
+          finalGuy = parseFloat(guyData[0].split(' ')[0]);
+          console.log(`[Wallet] Found GUY balance: ${finalGuy} via ${endpoint}`);
+          success = true;
+        } else {
+          // If currency balance returns empty, check the table directly as a fallback
+          const tableResponse = await fetch(`${endpoint}/v1/chain/get_table_rows`, {
+            method: 'POST',
+            body: JSON.stringify({
+              json: true,
+              code: 'vtoken',
+              scope: account,
+              table: 'accounts',
+              limit: 10
+            })
           });
-          
-          const guyRow = guyTable.rows.find((r: any) => r.balance.includes('GUY'));
+          const tableData = await tableResponse.json();
+          const guyRow = tableData.rows?.find((r: any) => r.balance.includes('GUY'));
           if (guyRow) {
-            foundGuy = parseFloat(guyRow.balance.split(' ')[0]);
-            console.log(`[Wallet] GUY Balance (Method B): ${foundGuy}`);
+            finalGuy = parseFloat(guyRow.balance.split(' ')[0]);
+            console.log(`[Wallet] Found GUY balance in table: ${finalGuy}`);
+            success = true;
+          } else {
+            console.log(`[Wallet] No GUY found on ${endpoint}, trying next...`);
           }
         }
-      } catch (e) { console.error("[Wallet] GUY fetch error:", e); }
 
-      setXprBalance(foundXpr);
-      setGuyBalance(foundGuy);
-      console.log(`[Wallet] Final Balances -> XPR: ${foundXpr}, GUY: ${foundGuy}`);
-
-    } catch (err) {
-      console.error("[Wallet] General balance fetch failed:", err);
-    } finally {
-      // Use a slightly longer timeout to ensure the UI doesn't flicker to "Access Denied"
-      // while the state is still updating.
-      setTimeout(() => {
-        setIsFetchingBalances(false);
-      }, 500);
+        if (success) break; // Stop if we got a definitive answer for GUY
+      } catch (err) {
+        console.warn(`[Wallet] Endpoint ${endpoint} failed, trying next...`, err);
+      }
     }
+
+    setXprBalance(finalXpr);
+    setGuyBalance(finalGuy);
+    
+    // Small delay to prevent UI flickering
+    setTimeout(() => {
+      setIsFetchingBalances(false);
+    }, 800);
   }, []);
 
   const refreshBalances = useCallback(async () => {
-    if (address && link?.rpc) {
-      await fetchBalances(address, link.rpc);
-      showSuccess("Balances refreshed");
+    if (address) {
+      await fetchBalances(address);
+      showSuccess("Balances updated");
     }
-  }, [address, link, fetchBalances]);
+  }, [address, fetchBalances]);
 
   const initSDK = useCallback(async (restore = true) => {
     if (initializingRef.current && restore) return null;
@@ -160,7 +165,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const actor = result.session.auth.actor.toString();
         setAddress(actor);
         setIsConnected(true);
-        await fetchBalances(actor, result.link.rpc);
+        await fetchBalances(actor);
       } else {
         setIsFetchingBalances(false);
       }
@@ -185,20 +190,17 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setIsFetchingBalances(true);
     try {
       let currentResult = await initSDK(false);
-      if (!currentResult) {
-        throw new Error("SDK_INIT_FAILED");
-      }
+      if (!currentResult) throw new Error("SDK_INIT_FAILED");
       
-      const { session: newSession, link: newLink } = currentResult;
+      const { session: newSession } = currentResult;
       setSession(newSession);
       const actor = newSession.auth.actor.toString();
       setAddress(actor);
       setIsConnected(true);
       
-      await fetchBalances(actor, newLink.rpc);
+      await fetchBalances(actor);
       showSuccess(`Connected as ${actor}`);
       setIsConnecting(false);
-      
     } catch (err) {
       const msg = (err as any).message || "";
       if (msg !== 'Closed by user' && msg !== 'User cancelled login') {
@@ -227,12 +229,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const payMembership = async () => {
     const FEE = 2500;
-    
     if (!session || !address) {
       showError("Please connect your wallet first.");
       return;
     }
-
     if (xprBalance < FEE) {
       showError(`Insufficient XPR balance. Need ${FEE} XPR.`);
       return;
@@ -252,22 +252,18 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       };
 
       const result = await session.transact({ actions: [action] });
-      
       if (result) {
         setIsMember(true);
         const oneYearInMs = 365 * 24 * 60 * 60 * 1000;
         const currentExpiry = membershipExpiry || Date.now();
         const newExpiry = (currentExpiry > Date.now() ? currentExpiry : Date.now()) + oneYearInMs;
         setMembershipExpiry(newExpiry);
-        
-        await fetchBalances(address, link.rpc);
+        await fetchBalances(address);
         showSuccess(`Membership Activated!`);
       }
     } catch (err) {
       const msg = (err as any).message || "Transaction failed";
-      if (msg !== 'Closed by user' && msg !== 'User cancelled login') {
-        showError(msg);
-      }
+      if (msg !== 'Closed by user' && msg !== 'User cancelled login') showError(msg);
     }
   };
 

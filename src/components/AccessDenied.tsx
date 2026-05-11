@@ -3,10 +3,10 @@
 import React from 'react';
 import { useWallet } from '@/hooks/use-wallet';
 import { Button } from '@/components/ui/button';
-import { ShieldAlert, ExternalLink, LogOut, RefreshCw, Loader2 } from 'lucide-react';
+import { ShieldAlert, ExternalLink, LogOut, RefreshCw, Loader2, User } from 'lucide-react';
 
 const AccessDenied = () => {
-  const { guyBalance, disconnect, refreshBalances, isFetchingBalances } = useWallet();
+  const { guyBalance, disconnect, refreshBalances, isFetchingBalances, address } = useWallet();
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
@@ -20,12 +20,24 @@ const AccessDenied = () => {
 
         <div className="space-y-3">
           <h1 className="text-3xl font-black tracking-tight text-white">Access Restricted</h1>
+          <div className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 w-fit mx-auto">
+            <User size={12} className="text-muted-foreground" />
+            <span className="text-[11px] font-black text-white/80 uppercase tracking-widest">{address}</span>
+          </div>
           <p className="text-muted-foreground text-sm leading-relaxed">
             The AskGuy community is exclusive to members who support the ecosystem. You need at least <span className="text-white font-bold">7,770 GUY</span> tokens in your wallet to enter.
           </p>
         </div>
 
-        <div className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+        <div className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-2 relative overflow-hidden">
+          {isFetchingBalances && (
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-20 animate-in fade-in duration-300">
+              <div className="flex flex-col items-center gap-2">
+                <Loader2 size={24} className="animate-spin text-primary" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-primary">Verifying...</span>
+              </div>
+            </div>
+          )}
           <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Your Current Balance</p>
           <p className="text-3xl font-black text-red-400">{guyBalance.toLocaleString()} GUY</p>
           <p className="text-[10px] text-red-400/60 font-bold uppercase tracking-tighter">

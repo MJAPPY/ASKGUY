@@ -54,64 +54,69 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
     
     setIsFetchingBalances(true);
-    console.log(`Fetching balances for ${account}...`);
+    console.log(`[Wallet] Fetching balances for: ${account}`);
     
     let foundXpr = 0;
     let foundGuy = 0;
 
     try {
-      // 1. Fetch XPR Balance
+      // 1. Fetch XPR Balance (eosio.token)
       try {
         const xprRes = await rpc.get_currency_balance('eosio.token', account, 'XPR');
         if (xprRes && xprRes.length > 0) {
           foundXpr = parseFloat(xprRes[0].split(' ')[0]);
+          console.log(`[Wallet] XPR Balance (Method A): ${foundXpr}`);
         } else {
           const xprTable = await rpc.get_table_rows({
             json: true, code: 'eosio.token', scope: account, table: 'accounts', limit: 10
           });
           const xprRow = xprTable.rows.find((r: any) => r.balance.includes('XPR'));
-          if (xprRow) foundXpr = parseFloat(xprRow.balance.split(' ')[0]);
+          if (xprRow) {
+            foundXpr = parseFloat(xprRow.balance.split(' ')[0]);
+            console.log(`[Wallet] XPR Balance (Method B): ${foundXpr}`);
+          }
         }
-      } catch (e) { console.error("XPR fetch error:", e); }
+      } catch (e) { console.error("[Wallet] XPR fetch error:", e); }
 
       // 2. Fetch GUY Balance (vtoken)
-      // We try multiple methods because some nodes are inconsistent
       try {
         // Method A: Standard currency balance
         const guyRes = await rpc.get_currency_balance('vtoken', account, 'GUY');
         if (guyRes && guyRes.length > 0) {
           foundGuy = parseFloat(guyRes[0].split(' ')[0]);
+          console.log(`[Wallet] GUY Balance (Method A): ${foundGuy}`);
         } 
         
-        // Method B: Direct table query (Fallback or verification)
+        // Method B: Direct table query (Fallback)
         if (foundGuy === 0) {
           const guyTable = await rpc.get_table_rows({
             json: true, 
             code: 'vtoken', 
             scope: account, 
             table: 'accounts', 
-            limit: 20 
+            limit: 50 
           });
           
           const guyRow = guyTable.rows.find((r: any) => r.balance.includes('GUY'));
           if (guyRow) {
             foundGuy = parseFloat(guyRow.balance.split(' ')[0]);
+            console.log(`[Wallet] GUY Balance (Method B): ${foundGuy}`);
           }
         }
-      } catch (e) { console.error("GUY fetch error:", e); }
+      } catch (e) { console.error("[Wallet] GUY fetch error:", e); }
 
-      console.log(`Balances found: XPR=${foundXpr}, GUY=${foundGuy}`);
       setXprBalance(foundXpr);
       setGuyBalance(foundGuy);
+      console.log(`[Wallet] Final Balances -> XPR: ${foundXpr}, GUY: ${foundGuy}`);
 
     } catch (err) {
-      console.error("General balance fetch failed:", err);
+      console.error("[Wallet] General balance fetch failed:", err);
     } finally {
-      // We use a small timeout to ensure React has processed the state updates 
-      // before we tell the UI that loading is finished.
+      // Use a slightly longer timeout to ensure the UI doesn't flicker to "Access Denied"
+      // while the state is still updating.
       setTimeout(() => {
         setIsFetchingBalances(false);
-      }, 300);
+      }, 500);
     }
   }, []);
 

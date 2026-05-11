@@ -16,6 +16,7 @@ interface WalletContextType {
   connect: () => Promise<void>;
   disconnect: () => void;
   payMembership: () => Promise<void>;
+  transferTokens: (to: string, amount: number, symbol: 'XPR' | 'GUY', memo: string) => Promise<boolean>;
   refreshBalances: () => Promise<void>;
 }
 
@@ -193,7 +194,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const payMembership = async () => {
-    const FEE = 1; // Changed from 2500 to 1 for testing
+    const FEE = 1;
     if (!session || !address) {
       showError("Please connect your wallet first.");
       return;
@@ -232,10 +233,45 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
+  const transferTokens = async (to: string, amount: number, symbol: 'XPR' | 'GUY', memo: string) => {
+    if (!session || !address) {
+      showError("Please connect your wallet first.");
+      return false;
+    }
+
+    const contract = symbol === 'XPR' ? 'eosio.token' : 'vtoken';
+    const precision = symbol === 'XPR' ? 4 : 6;
+
+    try {
+      const action = {
+        account: contract,
+        name: 'transfer',
+        authorization: [session.auth],
+        data: {
+          from: address,
+          to: to,
+          quantity: `${amount.toFixed(precision)} ${symbol}`,
+          memo: memo || `Contribution via AskGuy`
+        }
+      };
+
+      const result = await session.transact({ actions: [action] });
+      if (result) {
+        await fetchBalances(address);
+        return true;
+      }
+      return false;
+    } catch (err) {
+      const msg = (err as any).message || "Transaction failed";
+      showError(msg);
+      return false;
+    }
+  };
+
   return (
     <WalletContext.Provider value={{ 
       isConnected, isConnecting, isFetchingBalances, address, guyBalance, xprBalance, isMember, membershipExpiry,
-      connect, disconnect, payMembership, refreshBalances
+      connect, disconnect, payMembership, transferTokens, refreshBalances
     }}>
       {children}
     </WalletContext.Provider>

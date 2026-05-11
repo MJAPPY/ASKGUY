@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Heart, Share2, CheckCircle2, Coins, Eye, MessageSquare, ShieldCheck, X, Calendar, User, MessageCircle, Gift, Sparkles, Clock, Target, Send, AlertCircle } from 'lucide-react';
+import { Heart, Share2, CheckCircle2, Coins, Eye, MessageSquare, ShieldCheck, X, Calendar, User, MessageCircle, Gift, Sparkles, Clock, Target, Send, AlertCircle, Loader2 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useRequests, AidRequest, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
@@ -21,11 +21,12 @@ interface RequestCardProps extends AidRequest {
 
 const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, amount, token, raised, description, status, proofUrl, isUrgent, contributions, timestamp, variant = 'grid' }) => {
   const { contribute, markCompleted } = useRequests();
-  const { address } = useWallet();
+  const { address, transferTokens } = useWallet();
   const [contributionAmount, setContributionAmount] = useState("10");
   const [contributionToken, setContributionToken] = useState<TokenSymbol>(token);
   const [contributionMessage, setContributionMessage] = useState("");
   const [isContributing, setIsContributing] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const progress = Math.min((raised / amount) * 100, 100);
   const isOwner = address === user;
@@ -38,20 +39,33 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
       .reduce((acc, c) => acc + c.amount, 0);
   }, [contributions, token]);
 
-  const handleContribute = () => {
+  const handleContribute = async () => {
     const val = parseFloat(contributionAmount);
     if (isNaN(val) || val <= 0 || !address) return;
     
-    contribute(id, address, val, contributionToken, contributionMessage);
+    setIsProcessing(true);
     
-    if (contributionToken === 'GUY' && token !== 'GUY') {
-      showSuccess(`Sent ${val} GUY as a bonus gift to ${user}!`);
-    } else {
-      showSuccess(`Contributed ${val} ${contributionToken} to ${user}'s request!`);
+    const success = await transferTokens(
+      user, 
+      val, 
+      contributionToken as 'XPR' | 'GUY', 
+      contributionMessage || `AskGuy: ${title}`
+    );
+
+    if (success) {
+      contribute(id, address, val, contributionToken, contributionMessage);
+      
+      if (contributionToken === 'GUY' && token !== 'GUY') {
+        showSuccess(`Sent ${val} GUY as a bonus gift to ${user}!`);
+      } else {
+        showSuccess(`Contributed ${val} ${contributionToken} to ${user}'s request!`);
+      }
+      
+      setIsContributing(false);
+      setContributionMessage("");
     }
     
-    setIsContributing(false);
-    setContributionMessage("");
+    setIsProcessing(false);
   };
 
   const handleShare = async () => {
@@ -279,8 +293,9 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
                 className="h-11 bg-white/10 border-white/20 text-sm font-black" 
                 value={contributionAmount}
                 onChange={(e) => setContributionAmount(e.target.value)}
+                disabled={isProcessing}
               />
-              <Select value={contributionToken} onValueChange={(v: TokenSymbol) => setContributionToken(v)}>
+              <Select value={contributionToken} onValueChange={(v: TokenSymbol) => setContributionToken(v)} disabled={isProcessing}>
                 <SelectTrigger className="w-28 h-11 bg-white/10 font-bold">
                   <SelectValue />
                 </SelectTrigger>
@@ -298,14 +313,19 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
                 className="h-11 pl-9 bg-white/5 border-white/10 text-xs font-medium focus:border-emerald-500/50"
                 value={contributionMessage}
                 onChange={(e) => setContributionMessage(e.target.value)}
+                disabled={isProcessing}
               />
             </div>
 
             <div className="flex gap-2">
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white h-11 font-black text-[11px] tracking-widest uppercase gap-2">
-                    <Send size={14} /> Send Help
+                  <Button 
+                    className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white h-11 font-black text-[11px] tracking-widest uppercase gap-2"
+                    disabled={isProcessing}
+                  >
+                    {isProcessing ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+                    Send Help
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent className="glass-card border-white/10">
@@ -327,7 +347,7 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
                 </AlertDialogContent>
               </AlertDialog>
               
-              <Button variant="ghost" onClick={() => setIsContributing(false)} className="h-11 w-11 hover:bg-white/10">
+              <Button variant="ghost" onClick={() => setIsContributing(false)} className="h-11 w-11 hover:bg-white/10" disabled={isProcessing}>
                 <X size={18} />
               </Button>
             </div>

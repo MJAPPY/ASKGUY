@@ -1,7 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { showSuccess, showError } from '@/utils/toast';
+import { supabase } from '@/lib/supabase';
 
 export type RequestStatus = 'Open' | 'Funded' | 'Completed';
 export type TokenSymbol = 'XPR' | 'GUY';
@@ -33,105 +34,119 @@ export interface AidRequest {
 
 interface RequestsContextType {
   requests: AidRequest[];
-  addRequest: (request: Omit<AidRequest, 'id' | 'raised' | 'status' | 'timestamp' | 'contributions'>) => boolean;
-  contribute: (id: string, user: string, amount: number, token: TokenSymbol, message?: string) => void;
-  markCompleted: (id: string) => void;
+  loading: boolean;
+  addRequest: (request: Omit<AidRequest, 'id' | 'raised' | 'status' | 'timestamp' | 'contributions'>) => Promise<boolean>;
+  contribute: (id: string, user: string, amount: number, token: TokenSymbol, message?: string) => Promise<void>;
+  markCompleted: (id: string) => Promise<void>;
+  refreshRequests: () => Promise<void>;
 }
 
 const RequestsContext = createContext<RequestsContextType | undefined>(undefined);
 
 export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [requests, setRequests] = useState<AidRequest[]>([
-    { 
-      id: '1', 
-      user: 'alice.xpr', 
-      title: 'Emergency Dental Care',
-      category: 'Medical / Healthcare', 
-      amount: 1200, 
-      token: 'XPR',
-      raised: 850, 
-      description: 'Need help with unexpected dental surgery costs. The pain is becoming unbearable and I need to get this sorted before it gets worse. Any contribution helps!', 
-      status: 'Open',
-      timestamp: Date.now() - 86400000,
-      isUrgent: true,
-      proofUrl: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=800',
-      contributions: [
-        { id: 'c1', user: 'tripseven.xpr', amount: 500, token: 'XPR', message: 'Stay strong, Alice!', timestamp: Date.now() - 43200000 },
-        { id: 'c2', user: 'guy_whale.xpr', amount: 350, token: 'XPR', message: 'Hope this helps.', timestamp: Date.now() - 21600000 }
-      ]
-    },
-    { 
-      id: '2', 
-      user: 'bob.xpr', 
-      title: 'Overdue Electricity Bill',
-      category: 'Utilities (Electricity, Water, Internet)', 
-      amount: 450, 
-      token: 'XPR',
-      raised: 450, 
-      description: 'Electricity bill is overdue due to job loss. Thank you community for the incredible support!', 
-      status: 'Funded',
-      timestamp: Date.now() - 172800000,
-      proofUrl: 'https://images.unsplash.com/photo-1558489580-faa74691fdc5?auto=format&fit=crop&q=80&w=800',
-      contributions: [
-        { id: 'c3', user: 'helper.xpr', amount: 450, token: 'XPR', message: 'We got you, Bob.', timestamp: Date.now() - 150000000 }
-      ]
-    },
-  ]);
+  const [requests, setRequests] = useState<AidRequest[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const addRequest = (newReq: Omit<AidRequest, 'id' | 'raised' | 'status' | 'timestamp' | 'contributions'>) => {
+  const fetchRequests = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('aid_requests')
+        .select('*, contributions(*)')
+        .order('timestamp', { ascending: false });
+
+      if (error) throw error;
+      setRequests(data || []);
+    } catch (err) {
+      console.error("Error fetching requests:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRequests();
+  }, []);
+
+  const addRequest = async (newReq: Omit<AidRequest, 'id' | 'raised' | 'status' | 'timestamp' | 'contributions'>) => {
     const activeCount = requests.filter(req => req.user === newReq.user && (req.status === 'Open' || req.status === 'Funded')).length;
     
     if (activeCount >= 3) {
-      showError("You can only have 3 active requests at a time. Please complete an existing one first.");
+      showError("You can only have 3 active requests at a time.");
       return false;
     }
 
-    const request: AidRequest = {
-      ...newReq,
-      id: Math.random().toString(36).substr(2, 9),
-      raised: 0,
-      status: 'Open',
-      timestamp: Date.now(),
-      contributions: [],
-    };
-    setRequests(prev => [request, ...prev]);
-    return true;
+    try {
+      const { error } = await supabase
+        .from('aid_requests')
+        .insert([{
+          ...newReq,
+          raised: 0,
+          status: 'Open',
+          timestamp: Date.now()
+        }]);
+
+      if (error) throw error;
+      await fetchRequests();
+      return true;
+    } catch (err) {
+      showError("Failed to post request to database.");
+      return false;
+    }
   };
 
-  const contribute = (id: string, user: string, amount: number, token: TokenSymbol, message?: string) => {
-    setRequests(prev => prev.map(req => {
-      if (req.id === id) {
-        const newContribution: Contribution = {
-          id: Math.random().toString(36).substr(2, 9),
+  const contribute = async (id: string, user: string, amount: number, token: TokenSymbol, message?: string) => {
+    try {
+      // 1. Add contribution record
+      const { error: contribError } = await supabase
+        .from('contributions')
+        .insert([{
+          request_id: id,
           user,
           amount,
           token,
           message,
           timestamp: Date.now()
-        };
-        const newRaised = token === req.token ? req.raised + amount : req.raised;
-        const newStatus = newRaised >= req.amount ? 'Funded' : req.status;
+        }]);
+
+      if (contribError) throw contribError;
+
+      // 2. Update request raised amount
+      const request = requests.find(r => r.id === id);
+      if (request && token === request.token) {
+        const newRaised = request.raised + amount;
+        const newStatus = newRaised >= request.amount ? 'Funded' : request.status;
         
-        return { 
-          ...req, 
-          raised: newRaised, 
-          status: newStatus,
-          contributions: [newContribution, ...req.contributions]
-        };
+        const { error: updateError } = await supabase
+          .from('aid_requests')
+          .update({ raised: newRaised, status: newStatus })
+          .eq('id', id);
+
+        if (updateError) throw updateError;
       }
-      return req;
-    }));
+
+      await fetchRequests();
+    } catch (err) {
+      showError("Failed to save contribution.");
+    }
   };
 
-  const markCompleted = (id: string) => {
-    setRequests(prev => prev.map(req => 
-      req.id === id ? { ...req, status: 'Completed' } : req
-    ));
-    showSuccess("Request marked as completed. Thank you for your honesty!");
+  const markCompleted = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('aid_requests')
+        .update({ status: 'Completed' })
+        .eq('id', id);
+
+      if (error) throw error;
+      await fetchRequests();
+      showSuccess("Request marked as completed.");
+    } catch (err) {
+      showError("Failed to update status.");
+    }
   };
 
   return (
-    <RequestsContext.Provider value={{ requests, addRequest, contribute, markCompleted }}>
+    <RequestsContext.Provider value={{ requests, loading, addRequest, contribute, markCompleted, refreshRequests: fetchRequests }}>
       {children}
     </RequestsContext.Provider>
   );

@@ -14,6 +14,7 @@ import SuccessStories from '@/components/SuccessStories';
 import CTASection from '@/components/CTASection';
 import LiveTicker from '@/components/LiveTicker';
 import AccessDenied from '@/components/AccessDenied';
+import BannedOverlay from '@/components/BannedOverlay';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -30,8 +31,8 @@ type SortType = 'newest' | 'oldest';
 type ViewMode = 'grid' | 'list';
 
 const Index = () => {
-  const { isConnected, guyBalance, isMember, membershipExpiry, payMembership, address, connect, isFetchingBalances } = useWallet();
-  const { requests } = useRequests();
+  const { isConnected, guyBalance, isMember, membershipExpiry, payMembership, address, connect, isFetchingBalances, isBanned } = useWallet();
+  const { requests, loading: requestsLoading } = useRequests();
   const [filter, setFilter] = useState<FilterType>('active');
   const [sortBy, setSortBy] = useState<SortType>('oldest');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -64,6 +65,10 @@ const Index = () => {
 
     return result;
   }, [requests, filter, searchQuery, address, sortBy]);
+
+  if (isBanned) {
+    return <BannedOverlay />;
+  }
 
   if (!isConnected) {
     return (
@@ -336,12 +341,17 @@ const Index = () => {
             </div>
 
             <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 gap-6" : "flex flex-col gap-4"}>
-              {filteredRequests.map((req) => (
+              {requestsLoading ? (
+                <div className="col-span-full py-20 flex flex-col items-center gap-4">
+                  <Loader2 className="animate-spin text-primary" size={48} />
+                  <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Loading Requests...</p>
+                </div>
+              ) : filteredRequests.map((req) => (
                 <RequestCard key={req.id} {...req} variant={viewMode} />
               ))}
             </div>
 
-            {filteredRequests.length === 0 && (
+            {!requestsLoading && filteredRequests.length === 0 && (
               <div className="text-center py-20 glass-card rounded-2xl border-dashed border-white/10">
                 <p className="text-muted-foreground">No requests found matching your criteria.</p>
               </div>

@@ -3,11 +3,13 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { showSuccess, showError } from '@/utils/toast';
 import ProtonWebSDK from '@proton/web-sdk';
+import { supabase } from '@/lib/supabase';
 
 interface WalletContextType {
   isConnected: boolean;
   isConnecting: boolean;
   isFetchingBalances: boolean;
+  isBanned: boolean;
   address: string | null;
   guyBalance: number;
   xprBalance: number;
@@ -38,6 +40,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isFetchingBalances, setIsFetchingBalances] = useState(true);
+  const [isBanned, setIsBanned] = useState(false);
   const [address, setAddress] = useState<string | null>(null);
   const [guyBalance, setGuyBalance] = useState(0);
   const [xprBalance, setXprBalance] = useState(0);
@@ -48,6 +51,26 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   
   const initializingRef = useRef(false);
 
+  const checkBanStatus = async (account: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('banned_users')
+        .select('address')
+        .eq('address', account)
+        .single();
+      
+      if (data) {
+        setIsBanned(true);
+        showError("This account has been restricted from the platform.");
+      } else {
+        setIsBanned(false);
+      }
+    } catch (err) {
+      // If error is "no rows found", user is not banned
+      setIsBanned(false);
+    }
+  };
+
   const fetchBalances = useCallback(async (account: string) => {
     if (!account) {
       setIsFetchingBalances(false);
@@ -55,6 +78,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
     
     setIsFetchingBalances(true);
+    await checkBanStatus(account);
+    
     let finalXpr = 0;
     let finalGuy = 0;
     let success = false;
@@ -79,23 +104,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (Array.isArray(guyData) && guyData.length > 0) {
           finalGuy = parseFloat(guyData[0].split(' ')[0]);
           success = true;
-        } else {
-          const tableResponse = await fetch(`${endpoint}/v1/chain/get_table_rows`, {
-            method: 'POST',
-            body: JSON.stringify({
-              json: true,
-              code: 'vtoken',
-              scope: account,
-              table: 'accounts',
-              limit: 10
-            })
-          });
-          const tableData = await tableResponse.json();
-          const guyRow = tableData.rows?.find((r: any) => r.balance.includes('GUY'));
-          if (guyRow) {
-            finalGuy = parseFloat(guyRow.balance.split(' ')[0]);
-            success = true;
-          }
         }
 
         if (success) break;
@@ -190,6 +198,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setSession(null);
     setGuyBalance(0);
     setXprBalance(0);
+    setIsBanned(false);
     showSuccess("Wallet Disconnected");
   };
 
@@ -270,7 +279,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   return (
     <WalletContext.Provider value={{ 
-      isConnected, isConnecting, isFetchingBalances, address, guyBalance, xprBalance, isMember, membershipExpiry,
+      isConnected, isConnecting, isFetchingBalances, isBanned, address, guyBalance, xprBalance, isMember, membershipExpiry,
       connect, disconnect, payMembership, transferTokens, refreshBalances
     }}>
       {children}

@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Profile from "./pages/Profile";
 import LeaderboardPage from "./pages/LeaderboardPage";
 import Guidelines from "./pages/Guidelines";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import { WalletProvider } from "./hooks/use-wallet";
 import { RequestsProvider } from "./hooks/use-requests";
@@ -26,6 +27,7 @@ const App = () => (
               <Route path="/profile" element={<Profile />} />
               <Route path="/leaderboard" element={<LeaderboardPage />} />
               <Route path="/guidelines" element={<Guidelines />} />
+              <Route path="/admin" element={<Admin />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

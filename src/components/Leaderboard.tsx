@@ -1,19 +1,38 @@
 "use client";
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Trophy, Medal, Crown, Star } from 'lucide-react';
+import { Trophy, Medal, Crown, Star, Users } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
-const Leaderboard = () => {
-  const leaders = [
-    { name: "tripseven.xpr", amount: 15400, rank: 1, avatar: "T" },
-    { name: "guy_whale.xpr", amount: 12200, rank: 2, avatar: "G" },
-    { name: "helper.xpr", amount: 8900, rank: 3, avatar: "H" },
-    { name: "community.xpr", amount: 5400, rank: 4, avatar: "C" },
-    { name: "friend.xpr", amount: 3200, rank: 5, avatar: "F" },
-    { name: "legend.xpr", amount: 2100, rank: 6, avatar: "L" },
-    { name: "supporter.xpr", amount: 1800, rank: 7, avatar: "S" },
-  ];
+interface LeaderboardProps {
+  limit?: number;
+}
+
+const Leaderboard: React.FC<LeaderboardProps> = ({ limit = 7 }) => {
+  // Generating mock data for top 100
+  const leaders = useMemo(() => {
+    const baseLeaders = [
+      { name: "tripseven.xpr", amount: 15400, avatar: "T" },
+      { name: "guy_whale.xpr", amount: 12200, avatar: "G" },
+      { name: "helper.xpr", amount: 8900, avatar: "H" },
+      { name: "community.xpr", amount: 5400, avatar: "C" },
+      { name: "friend.xpr", amount: 3200, avatar: "F" },
+      { name: "legend.xpr", amount: 2100, avatar: "L" },
+      { name: "supporter.xpr", amount: 1800, avatar: "S" },
+    ];
+
+    const generated = Array.from({ length: Math.max(0, limit - baseLeaders.length) }, (_, i) => ({
+      name: `user_${i + 8}.xpr`,
+      amount: Math.floor(Math.random() * 1500) + 100,
+      avatar: String.fromCharCode(65 + (i % 26))
+    }));
+
+    return [...baseLeaders, ...generated]
+      .sort((a, b) => b.amount - a.amount)
+      .map((l, i) => ({ ...l, rank: i + 1 }))
+      .slice(0, limit);
+  }, [limit]);
 
   const getRankStyles = (rank: number) => {
     switch(rank) {
@@ -66,55 +85,61 @@ const Leaderboard = () => {
           </CardTitle>
           <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">The community's biggest hearts</p>
         </div>
+        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10">
+          <Users size={12} className="text-muted-foreground" />
+          <span className="text-[10px] font-black uppercase tracking-widest">{limit} Members</span>
+        </div>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="divide-y divide-white/5">
-          {leaders.map((leader) => {
-            const styles = getRankStyles(leader.rank);
-            return (
-              <div 
-                key={leader.name} 
-                className={`flex items-center justify-between p-4 px-6 transition-all duration-300 hover:bg-white/[0.05] ${styles.bg} ${leader.rank <= 3 ? 'py-6' : 'py-4'}`}
-              >
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm border ${styles.border} ${styles.shadow}`}>
-                      {leader.avatar}
+        <ScrollArea className={limit > 10 ? "h-[800px]" : ""}>
+          <div className="divide-y divide-white/5">
+            {leaders.map((leader) => {
+              const styles = getRankStyles(leader.rank);
+              return (
+                <div 
+                  key={leader.name} 
+                  className={`flex items-center justify-between p-4 px-6 transition-all duration-300 hover:bg-white/[0.05] ${styles.bg} ${leader.rank <= 3 ? 'py-6' : 'py-4'}`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm border ${styles.border} ${styles.shadow}`}>
+                        {leader.avatar}
+                      </div>
+                      {leader.rank <= 3 && (
+                        <div className="absolute -top-2 -right-2 bg-background rounded-full p-1 border border-white/10 shadow-lg">
+                          {styles.icon}
+                        </div>
+                      )}
                     </div>
-                    {leader.rank <= 3 && (
-                      <div className="absolute -top-2 -right-2 bg-background rounded-full p-1 border border-white/10 shadow-lg">
-                        {styles.icon}
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className={`font-bold text-sm ${leader.rank === 1 ? 'text-white' : 'text-foreground/90'}`}>
+                          {leader.name}
+                        </span>
+                        {leader.rank <= 5 && leader.rank > 3 && styles.icon}
+                      </div>
+                      <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">Contributor #{leader.rank}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="text-right">
+                    <div className="flex items-center gap-1.5 justify-end">
+                      <span className={`text-sm font-black ${leader.rank === 1 ? 'text-primary' : 'text-foreground'}`}>
+                        {leader.amount.toLocaleString()}
+                      </span>
+                      <span className="text-[10px] font-bold text-muted-foreground">XPR</span>
+                    </div>
+                    {leader.rank <= 5 && (
+                      <div className={`text-[8px] font-black uppercase tracking-widest ${styles.medal}`}>
+                        Elite Supporter
                       </div>
                     )}
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className={`font-bold text-sm ${leader.rank === 1 ? 'text-white' : 'text-foreground/90'}`}>
-                        {leader.name}
-                      </span>
-                      {leader.rank <= 5 && leader.rank > 3 && styles.icon}
-                    </div>
-                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">Contributor #{leader.rank}</p>
-                  </div>
                 </div>
-                
-                <div className="text-right">
-                  <div className="flex items-center gap-1.5 justify-end">
-                    <span className={`text-sm font-black ${leader.rank === 1 ? 'text-primary' : 'text-foreground'}`}>
-                      {leader.amount.toLocaleString()}
-                    </span>
-                    <span className="text-[10px] font-bold text-muted-foreground">XPR</span>
-                  </div>
-                  {leader.rank <= 5 && (
-                    <div className={`text-[8px] font-black uppercase tracking-widest ${styles.medal}`}>
-                      Elite Supporter
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        </ScrollArea>
       </CardContent>
     </Card>
   );

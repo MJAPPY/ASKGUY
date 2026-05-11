@@ -47,7 +47,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   
   const initializingRef = useRef(false);
 
-  // High-reliability balance fetcher
   const fetchBalances = useCallback(async (account: string) => {
     if (!account) {
       setIsFetchingBalances(false);
@@ -55,18 +54,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
     
     setIsFetchingBalances(true);
-    console.log(`[Wallet] Starting deep balance check for: ${account}`);
-    
     let finalXpr = 0;
     let finalGuy = 0;
     let success = false;
 
-    // Try multiple endpoints until one succeeds
     for (const endpoint of ENDPOINTS) {
       try {
-        console.log(`[Wallet] Trying endpoint: ${endpoint}`);
-        
-        // 1. Fetch XPR
         const xprResponse = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
           method: 'POST',
           body: JSON.stringify({ code: 'eosio.token', account, symbol: 'XPR' })
@@ -76,7 +69,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           finalXpr = parseFloat(xprData[0].split(' ')[0]);
         }
 
-        // 2. Fetch GUY (vtoken)
         const guyResponse = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
           method: 'POST',
           body: JSON.stringify({ code: 'vtoken', account, symbol: 'GUY' })
@@ -85,10 +77,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         
         if (Array.isArray(guyData) && guyData.length > 0) {
           finalGuy = parseFloat(guyData[0].split(' ')[0]);
-          console.log(`[Wallet] Found GUY balance: ${finalGuy} via ${endpoint}`);
           success = true;
         } else {
-          // If currency balance returns empty, check the table directly as a fallback
           const tableResponse = await fetch(`${endpoint}/v1/chain/get_table_rows`, {
             method: 'POST',
             body: JSON.stringify({
@@ -103,26 +93,19 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           const guyRow = tableData.rows?.find((r: any) => r.balance.includes('GUY'));
           if (guyRow) {
             finalGuy = parseFloat(guyRow.balance.split(' ')[0]);
-            console.log(`[Wallet] Found GUY balance in table: ${finalGuy}`);
             success = true;
-          } else {
-            console.log(`[Wallet] No GUY found on ${endpoint}, trying next...`);
           }
         }
 
-        if (success) break; // Stop if we got a definitive answer for GUY
+        if (success) break;
       } catch (err) {
-        console.warn(`[Wallet] Endpoint ${endpoint} failed, trying next...`, err);
+        console.warn(`Endpoint ${endpoint} failed`, err);
       }
     }
 
     setXprBalance(finalXpr);
     setGuyBalance(finalGuy);
-    
-    // Small delay to prevent UI flickering
-    setTimeout(() => {
-      setIsFetchingBalances(false);
-    }, 800);
+    setTimeout(() => setIsFetchingBalances(false), 800);
   }, []);
 
   const refreshBalances = useCallback(async () => {
@@ -138,15 +121,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     try {
       const result = await ProtonWebSDK({
-        linkOptions: { 
-          chainId: PROTON_CHAIN_ID, 
-          endpoints: ENDPOINTS,
-          restoreSession: restore 
-        },
-        transportOptions: { 
-          requestAccount: REQUEST_ACCOUNT,
-          backButton: true 
-        },
+        linkOptions: { chainId: PROTON_CHAIN_ID, endpoints: ENDPOINTS, restoreSession: restore },
+        transportOptions: { requestAccount: REQUEST_ACCOUNT, backButton: true },
         selectorOptions: { 
           appName: APP_NAME, 
           appLogo: APP_LOGO,
@@ -185,27 +161,20 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const connect = async () => {
     if (isConnected || isConnecting) return;
-    
     setIsConnecting(true);
     setIsFetchingBalances(true);
     try {
       let currentResult = await initSDK(false);
       if (!currentResult) throw new Error("SDK_INIT_FAILED");
-      
       const { session: newSession } = currentResult;
       setSession(newSession);
       const actor = newSession.auth.actor.toString();
       setAddress(actor);
       setIsConnected(true);
-      
       await fetchBalances(actor);
       showSuccess(`Connected as ${actor}`);
       setIsConnecting(false);
     } catch (err) {
-      const msg = (err as any).message || "";
-      if (msg !== 'Closed by user' && msg !== 'User cancelled login') {
-        showError("Failed to connect wallet");
-      }
       setIsConnecting(false);
       setIsFetchingBalances(false);
     }
@@ -213,11 +182,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const disconnect = async () => {
     if (link && session) {
-      try {
-        await link.removeSession(APP_NAME, session.auth);
-      } catch (e) {
-        console.error("Logout error:", e);
-      }
+      try { await link.removeSession(APP_NAME, session.auth); } catch (e) {}
     }
     setIsConnected(false);
     setAddress(null);
@@ -228,7 +193,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const payMembership = async () => {
-    const FEE = 2500;
+    const FEE = 1; // Changed from 2500 to 1 for testing
     if (!session || !address) {
       showError("Please connect your wallet first.");
       return;
@@ -263,24 +228,14 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     } catch (err) {
       const msg = (err as any).message || "Transaction failed";
-      if (msg !== 'Closed by user' && msg !== 'User cancelled login') showError(msg);
+      showError(msg);
     }
   };
 
   return (
     <WalletContext.Provider value={{ 
-      isConnected, 
-      isConnecting,
-      isFetchingBalances,
-      address, 
-      guyBalance, 
-      xprBalance, 
-      isMember, 
-      membershipExpiry,
-      connect, 
-      disconnect,
-      payMembership,
-      refreshBalances
+      isConnected, isConnecting, isFetchingBalances, address, guyBalance, xprBalance, isMember, membershipExpiry,
+      connect, disconnect, payMembership, refreshBalances
     }}>
       {children}
     </WalletContext.Provider>

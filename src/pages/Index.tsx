@@ -163,20 +163,14 @@ const Index = () => {
 
   const hasGuyBalance = guyBalance >= 7770;
 
-  // Show access denied screen if connected but balance is low
   if (!isFetchingBalances && !hasGuyBalance) {
     return <AccessDenied />;
   }
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col animate-in fade-in duration-500 relative overflow-hidden">
-      {/* Dynamic Background Element */}
       <div className="absolute top-0 right-0 w-[600px] h-[600px] pointer-events-none z-0 opacity-[0.02] lg:opacity-[0.04]">
-         <img 
-            src={heroGuy} 
-            alt="Hero Guy Background" 
-            className="w-full h-full object-cover rounded-full blur-xl"
-          />
+         <img src={heroGuy} alt="Hero Guy Background" className="w-full h-full object-cover rounded-full blur-xl" />
       </div>
 
       <Navbar />
@@ -205,12 +199,12 @@ const Index = () => {
                     <div className="space-y-2">
                       <p className="font-bold text-primary text-lg">Unlock Posting Rights</p>
                       <p className="text-sm text-muted-foreground leading-relaxed">
-                        To post a request and receive help, a yearly membership fee of <span className="text-primary font-bold">2,500 XPR</span> is required. This supports platform hosting and moderation.
+                        To post a request and receive help, a yearly membership fee of <span className="text-primary font-bold">1 XPR</span> is required. This supports platform hosting and moderation.
                       </p>
                     </div>
                   </div>
                   <Button onClick={payMembership} className="w-full bg-primary hover:bg-primary/90 text-black font-bold h-12 shadow-primary/20 text-base btn-premium gold-glow">
-                    Pay 2,500 XPR to Post
+                    Pay 1 XPR to Post
                   </Button>
                   <p className="text-[10px] text-center text-muted-foreground italic">
                     You can still browse and contribute to others without a membership.
@@ -247,7 +241,6 @@ const Index = () => {
           </div>
 
           <div className="lg:col-span-8 space-y-6">
-            {/* Search and Filters */}
             <div id="browse-requests" className="flex flex-col md:flex-row md:items-center justify-between gap-4 scroll-mt-24">
               <h2 className="text-2xl font-bold">Browse Requests</h2>
               <div className="flex flex-col sm:flex-row items-center gap-2">
@@ -263,16 +256,14 @@ const Index = () => {
                 
                 <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-lg p-1">
                   <Button 
-                    variant="ghost" 
-                    size="icon" 
+                    variant="ghost" size="icon" 
                     className={`h-7 w-7 ${viewMode === 'grid' ? 'bg-white/10 text-primary' : 'text-muted-foreground'}`}
                     onClick={() => setViewMode('grid')}
                   >
                     <LayoutGrid size={14} />
                   </Button>
                   <Button 
-                    variant="ghost" 
-                    size="icon" 
+                    variant="ghost" size="icon" 
                     className={`h-7 w-7 ${viewMode === 'list' ? 'bg-white/10 text-primary' : 'text-muted-foreground'}`}
                     onClick={() => setViewMode('list')}
                   >
@@ -295,18 +286,10 @@ const Index = () => {
 
                 <Tabs value={filter} onValueChange={(v: any) => setFilter(v)} className="w-full sm:w-auto">
                   <TabsList className="bg-white/5 border border-white/10 h-9">
-                    <TabsTrigger value="all" className="text-xs h-7 flex gap-1">
-                      <LayoutGrid size={12} /> All
-                    </TabsTrigger>
-                    <TabsTrigger value="active" className="text-xs h-7 flex gap-1">
-                      <Zap size={12} /> Active
-                    </TabsTrigger>
-                    <TabsTrigger value="funded" className="text-xs h-7 flex gap-1">
-                      <CheckCircle2 size={12} /> Funded
-                    </TabsTrigger>
-                    <TabsTrigger value="my-requests" className="text-xs h-7 flex gap-1">
-                      <User size={12} /> Mine
-                    </TabsTrigger>
+                    <TabsTrigger value="all" className="text-xs h-7 flex gap-1"><LayoutGrid size={12} /> All</TabsTrigger>
+                    <TabsTrigger value="active" className="text-xs h-7 flex gap-1"><Zap size={12} /> Active</TabsTrigger>
+                    <TabsTrigger value="funded" className="text-xs h-7 flex gap-1"><CheckCircle2 size={12} /> Funded</TabsTrigger>
+                    <TabsTrigger value="my-requests" className="text-xs h-7 flex gap-1"><User size={12} /> Mine</TabsTrigger>
                   </TabsList>
                 </Tabs>
               </div>

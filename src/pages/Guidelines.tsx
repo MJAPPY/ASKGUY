@@ -14,7 +14,7 @@ const Guidelines = () => {
       title: "Membership & Eligibility",
       content: [
         "To participate in the AskGuy community, users must hold a minimum of 7,770 GUY tokens in their WebAuth wallet.",
-        "To post a request, a yearly membership fee of 2,500 XPR is required. This fee supports platform maintenance and prevents spam.",
+        "To post a request, a yearly membership fee of 1 XPR is required. This fee supports platform maintenance and prevents spam.",
         "Membership is verified on-chain. If your GUY balance falls below the threshold, your access to community features may be restricted."
       ]
     },

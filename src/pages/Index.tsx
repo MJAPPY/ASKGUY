@@ -22,6 +22,7 @@ import { Input } from '@/components/ui/input';
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import heroGuy from '@/assets/hero-guy.jpg';
 
 type FilterType = 'all' | 'active' | 'funded' | 'my-requests';
@@ -203,9 +204,30 @@ const Index = () => {
                       </p>
                     </div>
                   </div>
-                  <Button onClick={payMembership} className="w-full bg-primary hover:bg-primary/90 text-black font-bold h-12 shadow-primary/20 text-base btn-premium gold-glow">
-                    Pay 1 XPR to Post
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button className="w-full bg-primary hover:bg-primary/90 text-black font-bold h-12 shadow-primary/20 text-base btn-premium gold-glow">
+                        Pay 1 XPR to Post
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="glass-card border-white/10">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="flex items-center gap-2">
+                          <ShieldCheck className="text-primary" size={20} />
+                          Unlock Membership
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-muted-foreground">
+                          You are about to pay <span className="text-white font-bold">1 XPR</span> to unlock posting rights for one year. This transaction will be sent to the <span className="text-white font-bold">askguy</span> account.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="bg-white/5 border-white/10 hover:bg-white/10">Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={payMembership} className="bg-primary hover:bg-primary/90 text-black font-bold">
+                          Confirm & Pay
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                   <p className="text-[10px] text-center text-muted-foreground italic">
                     You can still browse and contribute to others without a membership.
                   </p>
@@ -227,9 +249,27 @@ const Index = () => {
                         </p>
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm" onClick={payMembership} className="text-[10px] h-8 font-bold uppercase tracking-wider text-emerald-400 hover:bg-emerald-500/10 btn-premium">
-                      Renew
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="sm" className="text-[10px] h-8 font-bold uppercase tracking-wider text-emerald-400 hover:bg-emerald-500/10 btn-premium">
+                          Renew
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="glass-card border-white/10">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Renew Membership</AlertDialogTitle>
+                          <AlertDialogDescription className="text-muted-foreground">
+                            Extend your membership for another year for <span className="text-white font-bold">1 XPR</span>.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel className="bg-white/5 border-white/10 hover:bg-white/10">Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={payMembership} className="bg-primary hover:bg-primary/90 text-black font-bold">
+                            Confirm & Renew
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </CardContent>
                 </Card>
                 <RequestForm />

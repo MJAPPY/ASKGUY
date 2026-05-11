@@ -5,13 +5,14 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Heart, Share2, CheckCircle2, Coins, Eye, MessageSquare, ShieldCheck, X, Calendar, User, MessageCircle, Gift, Sparkles, Clock, Target, Send } from 'lucide-react';
+import { Heart, Share2, CheckCircle2, Coins, Eye, MessageSquare, ShieldCheck, X, Calendar, User, MessageCircle, Gift, Sparkles, Clock, Target, Send, AlertCircle } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useRequests, AidRequest, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { formatDistanceToNow } from 'date-fns';
 
 interface RequestCardProps extends AidRequest {
@@ -138,7 +139,7 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Funding Progress</p>
                 <div className="flex items-baseline gap-1">
                   <span className="text-lg font-black text-foreground">{raised.toLocaleString()}</span>
-                  <span className="text-[10px] font-bold text-muted-foreground">/ {amount.toLocaleString()} {token}</span>
+                  <span className="text-[10px] font-bold text-muted-foreground">/ {amount.toLocaleString()} {token} Goal</span>
                 </div>
               </div>
               <div className="text-right">
@@ -301,9 +302,31 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
             </div>
 
             <div className="flex gap-2">
-              <Button onClick={handleContribute} className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white h-11 font-black text-[11px] tracking-widest uppercase gap-2">
-                <Send size={14} /> Send Help
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white h-11 font-black text-[11px] tracking-widest uppercase gap-2">
+                    <Send size={14} /> Send Help
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="glass-card border-white/10">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="flex items-center gap-2">
+                      <AlertCircle className="text-primary" size={20} />
+                      Confirm Contribution
+                    </AlertDialogTitle>
+                    <AlertDialogDescription className="text-muted-foreground">
+                      You are about to send <span className="text-white font-bold">{contributionAmount} {contributionToken}</span> directly to <span className="text-white font-bold">{user}</span>. This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="bg-white/5 border-white/10 hover:bg-white/10">Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleContribute} className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold">
+                      Confirm & Send
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              
               <Button variant="ghost" onClick={() => setIsContributing(false)} className="h-11 w-11 hover:bg-white/10">
                 <X size={18} />
               </Button>

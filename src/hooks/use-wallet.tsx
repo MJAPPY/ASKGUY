@@ -61,7 +61,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       
       if (data) {
         setIsBanned(true);
-        showError("This account has been restricted.");
       } else {
         setIsBanned(false);
       }
@@ -101,7 +100,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         
         if (Array.isArray(guyData) && guyData.length > 0) {
           finalGuy = parseFloat(guyData[0].split(' ')[0]);
-          break; // Stop if we successfully got balances
+          break;
         }
       } catch (err) {
         continue;
@@ -132,7 +131,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           restoreSession: restore 
         },
         transportOptions: { 
-          requestAccount: OWNER_ACCOUNT,
           backButton: true 
         },
         selectorOptions: { 
@@ -181,7 +179,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         showSuccess(`Connected as ${currentResult.session.auth.actor.toString()}`);
       }
     } catch (err) {
-      showError("Connection failed. Please try again.");
+      showError("Connection failed.");
     } finally {
       setIsConnecting(false);
     }
@@ -220,11 +218,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         account: 'eosio.token',
         name: 'transfer',
         authorization: [{
-          actor: session.auth.actor,
-          permission: session.auth.permission,
+          actor: session.auth.actor.toString(),
+          permission: session.auth.permission.toString(),
         }],
         data: {
-          from: session.auth.actor,
+          from: session.auth.actor.toString(),
           to: OWNER_ACCOUNT,
           quantity: `${FEE.toFixed(4)} XPR`,
           memo: 'AskGuy Membership'
@@ -243,7 +241,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     } catch (err: any) {
       console.error("Payment error:", err);
-      showError(err.message || "Transaction failed.");
+      showError(err.message || "The transaction was canceled or failed.");
     }
   };
 
@@ -258,11 +256,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         account: contract,
         name: 'transfer',
         authorization: [{
-          actor: session.auth.actor,
-          permission: session.auth.permission,
+          actor: session.auth.actor.toString(),
+          permission: session.auth.permission.toString(),
         }],
         data: {
-          from: session.auth.actor,
+          from: session.auth.actor.toString(),
           to: to,
           quantity: `${amount.toFixed(precision)} ${symbol}`,
           memo: memo || `Contribution`

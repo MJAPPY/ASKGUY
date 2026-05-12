@@ -25,7 +25,7 @@ interface WalletContextType {
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
 const APP_NAME = 'ASK GUY';
-const OWNER_ACCOUNT = 'tripseven'; // The account that receives membership fees
+const OWNER_ACCOUNT = 'askguy'; // Updated to the verified askguy account
 const APP_LOGO = 'https://i.ibb.co/L5kRj6X/logo.png'; 
 
 const PROTON_CHAIN_ID = '3848101010101010101010101010101010101010101010101010101010101010';

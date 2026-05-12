@@ -24,7 +24,7 @@ interface WalletContextType {
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
-const APP_NAME = 'AskGuy XPR';
+const APP_NAME = 'AskGuy';
 const OWNER_ACCOUNT = 'askguy'; 
 const APP_LOGO = 'https://askguy.sh/logo.png'; 
 

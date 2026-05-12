@@ -59,11 +59,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .eq('address', account)
         .single();
       
-      if (data) {
-        setIsBanned(true);
-      } else {
-        setIsBanned(false);
-      }
+      setIsBanned(!!data);
     } catch (err) {
       setIsBanned(false);
     }
@@ -83,6 +79,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     for (const endpoint of ENDPOINTS) {
       try {
+        // Fetch XPR
         const xprResponse = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
           method: 'POST',
           body: JSON.stringify({ code: 'eosio.token', account, symbol: 'XPR' })
@@ -92,16 +89,18 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           finalXpr = parseFloat(xprData[0].split(' ')[0]);
         }
 
+        // Fetch GUY
         const guyResponse = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
           method: 'POST',
           body: JSON.stringify({ code: 'vtoken', account, symbol: 'GUY' })
         });
         const guyData = await guyResponse.json();
-        
         if (Array.isArray(guyData) && guyData.length > 0) {
           finalGuy = parseFloat(guyData[0].split(' ')[0]);
-          break;
         }
+        
+        // If we got here, we succeeded for at least one
+        break;
       } catch (err) {
         continue;
       }
@@ -120,7 +119,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [address, fetchBalances]);
 
   const initSDK = useCallback(async (restore = true) => {
-    if (initializingRef.current && restore) return null;
+    if (initializingRef.current) return null;
     initializingRef.current = true;
 
     try {
@@ -214,15 +213,18 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
 
     try {
+      const actor = session.auth.actor.toString();
+      const permission = session.auth.permission.toString();
+
       const action = {
         account: 'eosio.token',
         name: 'transfer',
         authorization: [{
-          actor: session.auth.actor.toString(),
-          permission: session.auth.permission.toString(),
+          actor: actor,
+          permission: permission,
         }],
         data: {
-          from: session.auth.actor.toString(),
+          from: actor,
           to: OWNER_ACCOUNT,
           quantity: `${FEE.toFixed(4)} XPR`,
           memo: 'AskGuy Membership'
@@ -252,15 +254,18 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const precision = symbol === 'XPR' ? 4 : 6;
 
     try {
+      const actor = session.auth.actor.toString();
+      const permission = session.auth.permission.toString();
+
       const action = {
         account: contract,
         name: 'transfer',
         authorization: [{
-          actor: session.auth.actor.toString(),
-          permission: session.auth.permission.toString(),
+          actor: actor,
+          permission: permission,
         }],
         data: {
-          from: session.auth.actor.toString(),
+          from: actor,
           to: to,
           quantity: `${amount.toFixed(precision)} ${symbol}`,
           memo: memo || `Contribution`

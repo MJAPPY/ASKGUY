@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { showSuccess, showError } from '@/utils/toast';
 import ProtonWebSDK from '@proton/web-sdk';
 import { supabase } from '@/lib/supabase';
@@ -39,7 +39,7 @@ const ENDPOINTS = [
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [isFetchingBalances, setIsFetchingBalances] = useState(true);
+  const [isFetchingBalances, setIsFetchingBalances] = useState(false);
   const [isBanned, setIsBanned] = useState(false);
   const [address, setAddress] = useState<string | null>(null);
   const [guyBalance, setGuyBalance] = useState(0);
@@ -48,8 +48,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [membershipExpiry, setMembershipExpiry] = useState<number | null>(null);
   const [link, setLink] = useState<any>(null);
   const [session, setSession] = useState<any>(null);
-  
-  const initializingRef = useRef(false);
 
   const checkBanStatus = async (account: string) => {
     try {
@@ -58,7 +56,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .select('address')
         .eq('address', account)
         .single();
-      
       setIsBanned(!!data);
     } catch (err) {
       setIsBanned(false);
@@ -66,11 +63,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const fetchBalances = useCallback(async (account: string) => {
-    if (!account) {
-      setIsFetchingBalances(false);
-      return;
-    }
-    
+    if (!account) return;
     setIsFetchingBalances(true);
     await checkBanStatus(account);
     
@@ -79,7 +72,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     for (const endpoint of ENDPOINTS) {
       try {
-        // Fetch XPR
         const xprResponse = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
           method: 'POST',
           body: JSON.stringify({ code: 'eosio.token', account, symbol: 'XPR' })
@@ -89,7 +81,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           finalXpr = parseFloat(xprData[0].split(' ')[0]);
         }
 
-        // Fetch GUY
         const guyResponse = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
           method: 'POST',
           body: JSON.stringify({ code: 'vtoken', account, symbol: 'GUY' })
@@ -98,8 +89,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (Array.isArray(guyData) && guyData.length > 0) {
           finalGuy = parseFloat(guyData[0].split(' ')[0]);
         }
-        
-        // If we got here, we succeeded for at least one
         break;
       } catch (err) {
         continue;
@@ -111,17 +100,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setIsFetchingBalances(false);
   }, []);
 
-  const refreshBalances = useCallback(async () => {
-    if (address) {
-      await fetchBalances(address);
-      showSuccess("Balances updated");
-    }
-  }, [address, fetchBalances]);
-
   const initSDK = useCallback(async (restore = true) => {
-    if (initializingRef.current) return null;
-    initializingRef.current = true;
-
     try {
       const result = await ProtonWebSDK({
         linkOptions: { 
@@ -150,18 +129,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const actor = result.session.auth.actor.toString();
         setAddress(actor);
         setIsConnected(true);
-        await fetchBalances(actor);
-      } else {
-        setIsFetchingBalances(false);
+        fetchBalances(actor);
       }
-      
       return result;
     } catch (err) {
       console.error("SDK Init error:", err);
-      setIsFetchingBalances(false);
       return null;
-    } finally {
-      initializingRef.current = false;
     }
   }, [fetchBalances]);
 
@@ -173,9 +146,9 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (isConnecting) return;
     setIsConnecting(true);
     try {
-      const currentResult = await initSDK(false);
-      if (currentResult && currentResult.session) {
-        showSuccess(`Connected as ${currentResult.session.auth.actor.toString()}`);
+      const result = await initSDK(false);
+      if (result?.session) {
+        showSuccess(`Connected as ${result.session.auth.actor.toString()}`);
       }
     } catch (err) {
       showError("Connection failed.");
@@ -186,9 +159,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const disconnect = async () => {
     if (link && session) {
-      try { 
-        await link.removeSession(APP_NAME, session.auth); 
-      } catch (e) {}
+      try { await link.removeSession(APP_NAME, session.auth); } catch (e) {}
     }
     setIsConnected(false);
     setAddress(null);
@@ -206,25 +177,21 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return;
     }
     
-    await fetchBalances(address);
     if (xprBalance < FEE) {
       showError(`Need at least ${FEE} XPR.`);
       return;
     }
 
     try {
-      const actor = session.auth.actor.toString();
-      const permission = session.auth.permission.toString();
-
       const action = {
         account: 'eosio.token',
         name: 'transfer',
         authorization: [{
-          actor: actor,
-          permission: permission,
+          actor: session.auth.actor.toString(),
+          permission: session.auth.permission.toString(),
         }],
         data: {
-          from: actor,
+          from: session.auth.actor.toString(),
           to: OWNER_ACCOUNT,
           quantity: `${FEE.toFixed(4)} XPR`,
           memo: 'AskGuy Membership'
@@ -235,37 +202,30 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (result) {
         setIsMember(true);
         const oneYearInMs = 365 * 24 * 60 * 60 * 1000;
-        const currentExpiry = membershipExpiry || Date.now();
-        const newExpiry = (currentExpiry > Date.now() ? currentExpiry : Date.now()) + oneYearInMs;
-        setMembershipExpiry(newExpiry);
+        setMembershipExpiry(Date.now() + oneYearInMs);
         await fetchBalances(address);
         showSuccess(`Membership Unlocked!`);
       }
     } catch (err: any) {
-      console.error("Payment error:", err);
-      showError(err.message || "The transaction was canceled or failed.");
+      showError(err.message || "Transaction failed.");
     }
   };
 
   const transferTokens = async (to: string, amount: number, symbol: 'XPR' | 'GUY', memo: string) => {
     if (!session || !address) return false;
-
     const contract = symbol === 'XPR' ? 'eosio.token' : 'vtoken';
     const precision = symbol === 'XPR' ? 4 : 6;
 
     try {
-      const actor = session.auth.actor.toString();
-      const permission = session.auth.permission.toString();
-
       const action = {
         account: contract,
         name: 'transfer',
         authorization: [{
-          actor: actor,
-          permission: permission,
+          actor: session.auth.actor.toString(),
+          permission: session.auth.permission.toString(),
         }],
         data: {
-          from: actor,
+          from: session.auth.actor.toString(),
           to: to,
           quantity: `${amount.toFixed(precision)} ${symbol}`,
           memo: memo || `Contribution`
@@ -287,7 +247,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   return (
     <WalletContext.Provider value={{ 
       isConnected, isConnecting, isFetchingBalances, isBanned, address, guyBalance, xprBalance, isMember, membershipExpiry,
-      connect, disconnect, payMembership, transferTokens, refreshBalances
+      connect, disconnect, payMembership, transferTokens, refreshBalances: () => fetchBalances(address!)
     }}>
       {children}
     </WalletContext.Provider>

@@ -161,13 +161,14 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!session) return showError("Connect wallet first.");
     
     try {
+      // Log session and authority details for debugging
+      console.log('Transaction Authority:', session.auth);
+      console.log('PublicKey being used:', session.publicKey?.toString());
+
       const action = {
         account: 'eosio.token',
         name: 'transfer',
-        authorization: [{
-          actor: session.auth.actor,
-          permission: session.auth.permission
-        }],
+        authorization: [session.auth], // Use the session auth directly
         data: {
           from: session.auth.actor,
           to: OWNER_ACCOUNT,
@@ -184,6 +185,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         showSuccess(`Membership Unlocked!`);
       }
     } catch (err: any) {
+      console.error('Membership Transaction Error:', err);
       showError(err.message || "Transaction failed.");
     }
   };
@@ -194,13 +196,14 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const precision = symbol === 'XPR' ? 4 : 6;
 
     try {
+      // Log session and authority details for debugging
+      console.log('Transfer Authority:', session.auth);
+      console.log('PublicKey being used:', session.publicKey?.toString());
+
       const action = {
         account: contract,
         name: 'transfer',
-        authorization: [{
-          actor: session.auth.actor,
-          permission: session.auth.permission
-        }],
+        authorization: [session.auth], // Use the session auth directly
         data: {
           from: session.auth.actor,
           to: to,
@@ -216,6 +219,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
       return false;
     } catch (err: any) {
+      console.error('Transfer Transaction Error:', err);
       showError(err.message || "Transaction failed.");
       return false;
     }

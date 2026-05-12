@@ -177,6 +177,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return;
     }
     
+    // Always fetch latest balance before payment
+    await fetchBalances(address);
     if (xprBalance < FEE) {
       showError(`Need at least ${FEE} XPR.`);
       return;
@@ -207,7 +209,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         showSuccess(`Membership Unlocked!`);
       }
     } catch (err: any) {
-      showError(err.message || "Transaction failed.");
+      // Improved error reporting for transaction issues
+      const msg = err.message || "Transaction failed or was canceled.";
+      console.error("Payment error:", err);
+      showError(msg);
     }
   };
 

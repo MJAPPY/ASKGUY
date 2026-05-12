@@ -161,12 +161,15 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!session) return showError("Connect wallet first.");
     
     try {
+      const actor = session.auth.actor.toString();
+      const permission = session.auth.permission.toString();
+
       const action = {
         account: 'eosio.token',
         name: 'transfer',
-        authorization: [session.auth],
+        authorization: [{ actor, permission }],
         data: {
-          from: session.auth.actor.toString(),
+          from: actor,
           to: OWNER_ACCOUNT,
           quantity: '1.0000 XPR',
           memo: 'AskGuy Membership'
@@ -191,12 +194,15 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const precision = symbol === 'XPR' ? 4 : 6;
 
     try {
+      const actor = session.auth.actor.toString();
+      const permission = session.auth.permission.toString();
+
       const action = {
         account: contract,
         name: 'transfer',
-        authorization: [session.auth],
+        authorization: [{ actor, permission }],
         data: {
-          from: session.auth.actor.toString(),
+          from: actor,
           to: to,
           quantity: `${amount.toFixed(precision)} ${symbol}`,
           memo: memo || `AskGuy Contribution`

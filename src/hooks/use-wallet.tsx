@@ -25,7 +25,7 @@ interface WalletContextType {
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
 const APP_NAME = 'ASK GUY';
-const OWNER_ACCOUNT = 'askguy'; // Updated to the verified askguy account
+const OWNER_ACCOUNT = 'askguy';
 const APP_LOGO = 'https://i.ibb.co/L5kRj6X/logo.png'; 
 
 const PROTON_CHAIN_ID = '3848101010101010101010101010101010101010101010101010101010101010';
@@ -130,7 +130,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     try {
       const result = await ProtonWebSDK({
         linkOptions: { chainId: PROTON_CHAIN_ID, endpoints: ENDPOINTS, restoreSession: restore },
-        transportOptions: { requestAccount: '', backButton: true },
+        // Setting requestAccount to 'askguy' identifies the app in the wallet UI
+        transportOptions: { requestAccount: OWNER_ACCOUNT, backButton: true },
         selectorOptions: { 
           appName: APP_NAME, 
           appLogo: APP_LOGO,

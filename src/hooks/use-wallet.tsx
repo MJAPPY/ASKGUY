@@ -130,8 +130,9 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     try {
       const result = await ProtonWebSDK({
         linkOptions: { chainId: PROTON_CHAIN_ID, endpoints: ENDPOINTS, restoreSession: restore },
-        // Setting requestAccount to 'askguy' identifies the app in the wallet UI
-        transportOptions: { requestAccount: OWNER_ACCOUNT, backButton: true },
+        // Use an empty string for requestAccount if 'askguy' is not verified in the app directory,
+        // otherwise it can cause transaction errors in some wallet versions.
+        transportOptions: { requestAccount: '', backButton: true },
         selectorOptions: { 
           appName: APP_NAME, 
           appLogo: APP_LOGO,
@@ -208,25 +209,35 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       showError("Please connect your wallet first.");
       return;
     }
+    
+    // Refresh balances one last time before checking
+    await fetchBalances(address);
+    
     if (xprBalance < FEE) {
       showError(`Insufficient XPR balance. Need ${FEE} XPR.`);
       return;
     }
 
     try {
+      const actor = session.auth.actor.toString();
+      const permission = session.auth.permission.toString();
+
       const action = {
         account: 'eosio.token',
         name: 'transfer',
-        authorization: [session.auth],
+        authorization: [{
+          actor: actor,
+          permission: permission
+        }],
         data: {
-          from: address,
+          from: actor,
           to: OWNER_ACCOUNT,
           quantity: `${FEE.toFixed(4)} XPR`,
-          memo: 'ASK GUY Membership Fee'
+          memo: 'AskGuy Membership Fee'
         }
       };
 
-      const result = await session.transact({ actions: [action] });
+      const result = await session.transact({ actions: [action] }, { broadcast: true });
       if (result) {
         setIsMember(true);
         const oneYearInMs = 365 * 24 * 60 * 60 * 1000;
@@ -236,8 +247,9 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         await fetchBalances(address);
         showSuccess(`Membership Activated!`);
       }
-    } catch (err) {
-      const msg = (err as any).message || "Transaction failed";
+    } catch (err: any) {
+      console.error("Membership payment error:", err);
+      const msg = err.message || "Transaction failed. Please check your wallet.";
       showError(msg);
     }
   };
@@ -252,26 +264,33 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const precision = symbol === 'XPR' ? 4 : 6;
 
     try {
+      const actor = session.auth.actor.toString();
+      const permission = session.auth.permission.toString();
+
       const action = {
         account: contract,
         name: 'transfer',
-        authorization: [session.auth],
+        authorization: [{
+          actor: actor,
+          permission: permission
+        }],
         data: {
-          from: address,
+          from: actor,
           to: to,
           quantity: `${amount.toFixed(precision)} ${symbol}`,
           memo: memo || `Contribution via AskGuy`
         }
       };
 
-      const result = await session.transact({ actions: [action] });
+      const result = await session.transact({ actions: [action] }, { broadcast: true });
       if (result) {
         await fetchBalances(address);
         return true;
       }
       return false;
-    } catch (err) {
-      const msg = (err as any).message || "Transaction failed";
+    } catch (err: any) {
+      console.error("Token transfer error:", err);
+      const msg = err.message || "Transaction failed. Please check your wallet.";
       showError(msg);
       return false;
     }

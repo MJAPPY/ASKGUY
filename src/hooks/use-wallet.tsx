@@ -24,11 +24,10 @@ interface WalletContextType {
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
-const APP_NAME = 'AskGuy';
+const APP_NAME = 'AskGuy XPR';
 const OWNER_ACCOUNT = 'askguy'; 
 const APP_LOGO = 'https://askguy.sh/logo.png'; 
 
-// XPR Mainnet Chain ID
 const PROTON_CHAIN_ID = '384da888112027f0321850a169f737c33e53b388aad48b5adace4bab97f437e0';
 const ENDPOINTS = [
   'https://proton.greymass.com',

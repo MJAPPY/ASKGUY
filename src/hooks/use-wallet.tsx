@@ -25,7 +25,7 @@ interface WalletContextType {
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
 const APP_NAME = 'AskGuy';
-const OWNER_ACCOUNT = 'askguy'; // Ensure this is the correct recipient account on XPR Mainnet
+const OWNER_ACCOUNT = 'askguy'; 
 const APP_LOGO = 'https://i.ibb.co/L5kRj6X/logo.png'; 
 
 const PROTON_CHAIN_ID = '3848101010101010101010101010101010101010101010101010101010101010';
@@ -33,8 +33,7 @@ const ENDPOINTS = [
   'https://proton.greymass.com',
   'https://mainnet.protonchain.com',
   'https://rpc.protonchain.com',
-  'https://proton.public.blastapi.io',
-  'https://proton.eoscrown.com'
+  'https://proton.public.blastapi.io'
 ];
 
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -82,7 +81,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     
     let finalXpr = 0;
     let finalGuy = 0;
-    let successCount = 0;
 
     for (const endpoint of ENDPOINTS) {
       try {
@@ -93,7 +91,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const xprData = await xprResponse.json();
         if (Array.isArray(xprData) && xprData.length > 0) {
           finalXpr = parseFloat(xprData[0].split(' ')[0]);
-          successCount++;
         }
 
         const guyResponse = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
@@ -104,10 +101,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         
         if (Array.isArray(guyData) && guyData.length > 0) {
           finalGuy = parseFloat(guyData[0].split(' ')[0]);
-          successCount++;
+          break; // Stop if we successfully got balances
         }
-
-        if (successCount >= 2) break;
       } catch (err) {
         continue;
       }
@@ -180,7 +175,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const connect = async () => {
     if (isConnecting) return;
     setIsConnecting(true);
-    setIsFetchingBalances(true);
     try {
       const currentResult = await initSDK(false);
       if (currentResult && currentResult.session) {
@@ -190,7 +184,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       showError("Connection failed. Please try again.");
     } finally {
       setIsConnecting(false);
-      setIsFetchingBalances(false);
     }
   };
 
@@ -226,9 +219,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const action = {
         account: 'eosio.token',
         name: 'transfer',
-        authorization: [session.auth],
+        authorization: [{
+          actor: session.auth.actor,
+          permission: session.auth.permission,
+        }],
         data: {
-          from: session.auth.actor.toString(),
+          from: session.auth.actor,
           to: OWNER_ACCOUNT,
           quantity: `${FEE.toFixed(4)} XPR`,
           memo: 'AskGuy Membership'
@@ -247,7 +243,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     } catch (err: any) {
       console.error("Payment error:", err);
-      showError(err.message || "The transaction was rejected by the wallet.");
+      showError(err.message || "Transaction failed.");
     }
   };
 
@@ -261,9 +257,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const action = {
         account: contract,
         name: 'transfer',
-        authorization: [session.auth],
+        authorization: [{
+          actor: session.auth.actor,
+          permission: session.auth.permission,
+        }],
         data: {
-          from: session.auth.actor.toString(),
+          from: session.auth.actor,
           to: to,
           quantity: `${amount.toFixed(precision)} ${symbol}`,
           memo: memo || `Contribution`

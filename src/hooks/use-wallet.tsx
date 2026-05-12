@@ -28,7 +28,8 @@ const APP_NAME = 'AskGuy';
 const OWNER_ACCOUNT = 'askguy'; 
 const APP_LOGO = 'https://askguy.sh/logo.png'; 
 
-const PROTON_CHAIN_ID = '3848101010101010101010101010101010101010101010101010101010101010';
+// XPR Mainnet Chain ID
+const PROTON_CHAIN_ID = '384da888112027f0321850a169f737c33e53b388aad48b5adace4bab97f437e0';
 const ENDPOINTS = [
   'https://proton.greymass.com',
   'https://mainnet.protonchain.com',
@@ -95,6 +96,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const handleLogin = (session: any, link: any) => {
     setSession(session);
     setLink(link);
+    console.log('Chain ID:', session.chainId);
+    console.log('Actor:', session.auth?.actor);
+    console.log('Permission:', session.auth?.permission);
+    console.log('Public Key:', session.publicKey);
+    
     const actor = session.auth.actor.toString();
     setAddress(actor);
     setIsConnected(true);
@@ -161,14 +167,15 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!session) return showError("Connect wallet first.");
     
     try {
-      // Log session and authority details for debugging
-      console.log('Transaction Authority:', session.auth);
-      console.log('PublicKey being used:', session.publicKey?.toString());
+      console.log('Chain ID:', session.chainId);
+      console.log('Actor:', session.auth?.actor);
+      console.log('Permission:', session.auth?.permission);
+      console.log('Public Key:', session.publicKey);
 
       const action = {
         account: 'eosio.token',
         name: 'transfer',
-        authorization: [session.auth], // Use the session auth directly
+        authorization: [session.auth],
         data: {
           from: session.auth.actor,
           to: OWNER_ACCOUNT,
@@ -196,14 +203,15 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const precision = symbol === 'XPR' ? 4 : 6;
 
     try {
-      // Log session and authority details for debugging
-      console.log('Transfer Authority:', session.auth);
-      console.log('PublicKey being used:', session.publicKey?.toString());
+      console.log('Chain ID:', session.chainId);
+      console.log('Actor:', session.auth?.actor);
+      console.log('Permission:', session.auth?.permission);
+      console.log('Public Key:', session.publicKey);
 
       const action = {
         account: contract,
         name: 'transfer',
-        authorization: [session.auth], // Use the session auth directly
+        authorization: [session.auth],
         data: {
           from: session.auth.actor,
           to: to,

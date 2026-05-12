@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { showSuccess, showError } from '@/utils/toast';
 import ProtonWebSDK from '@proton/web-sdk';
 import { supabase } from '@/lib/supabase';
@@ -24,17 +24,15 @@ interface WalletContextType {
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
-// App configuration
 const APP_NAME = 'AskGuy';
-const APP_LOGO = 'https://askguy.io/logo.png'; // Updated to a more standard URL format
 const OWNER_ACCOUNT = 'askguy'; 
+const APP_LOGO = 'https://askguy.sh/logo.png'; 
 
 const PROTON_CHAIN_ID = '3848101010101010101010101010101010101010101010101010101010101010';
 const ENDPOINTS = [
   'https://proton.greymass.com',
   'https://mainnet.protonchain.com',
-  'https://rpc.protonchain.com',
-  'https://proton.public.blastapi.io'
+  'https://rpc.protonchain.com'
 ];
 
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -48,8 +46,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [isMember, setIsMember] = useState(false);
   const [membershipExpiry, setMembershipExpiry] = useState<number | null>(null);
   const [session, setSession] = useState<any>(null);
-  
-  const linkRef = useRef<any>(null);
+  const [link, setLink] = useState<any>(null);
 
   const checkBanStatus = async (account: string) => {
     try {
@@ -69,77 +66,59 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setIsFetchingBalances(true);
     await checkBanStatus(account);
     
-    let finalXpr = 0;
-    let finalGuy = 0;
+    try {
+      const endpoint = ENDPOINTS[0];
+      
+      const xprResponse = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
+        method: 'POST',
+        body: JSON.stringify({ code: 'eosio.token', account, symbol: 'XPR' })
+      });
+      const xprData = await xprResponse.json();
+      const xprVal = Array.isArray(xprData) && xprData.length > 0 ? parseFloat(xprData[0].split(' ')[0]) : 0;
 
-    for (const endpoint of ENDPOINTS) {
-      try {
-        const xprResponse = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
-          method: 'POST',
-          body: JSON.stringify({ code: 'eosio.token', account, symbol: 'XPR' })
-        });
-        const xprData = await xprResponse.json();
-        if (Array.isArray(xprData) && xprData.length > 0) {
-          finalXpr = parseFloat(xprData[0].split(' ')[0]);
-        }
+      const guyResponse = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
+        method: 'POST',
+        body: JSON.stringify({ code: 'vtoken', account, symbol: 'GUY' })
+      });
+      const guyData = await guyResponse.json();
+      const guyVal = Array.isArray(guyData) && guyData.length > 0 ? parseFloat(guyData[0].split(' ')[0]) : 0;
 
-        const guyResponse = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
-          method: 'POST',
-          body: JSON.stringify({ code: 'vtoken', account, symbol: 'GUY' })
-        });
-        const guyData = await guyResponse.json();
-        if (Array.isArray(guyData) && guyData.length > 0) {
-          finalGuy = parseFloat(guyData[0].split(' ')[0]);
-        }
-        break;
-      } catch (err) {
-        continue;
-      }
+      setXprBalance(xprVal);
+      setGuyBalance(guyVal);
+    } catch (err) {
+      console.error("Balance fetch error:", err);
+    } finally {
+      setIsFetchingBalances(false);
     }
-
-    setXprBalance(finalXpr);
-    setGuyBalance(finalGuy);
-    setIsFetchingBalances(false);
   }, []);
 
-  // Initialize SDK and restore session
+  const handleLogin = (session: any, link: any) => {
+    setSession(session);
+    setLink(link);
+    const actor = session.auth.actor.toString();
+    setAddress(actor);
+    setIsConnected(true);
+    fetchBalances(actor);
+  };
+
   useEffect(() => {
     const init = async () => {
       try {
-        const { link, session } = await ProtonWebSDK({
-          linkOptions: { 
-            chainId: PROTON_CHAIN_ID, 
-            endpoints: ENDPOINTS, 
-            restoreSession: true 
-          },
-          transportOptions: { 
-            backButton: true 
-          },
-          selectorOptions: { 
-            appName: APP_NAME, 
-            appLogo: APP_LOGO,
-            customStyleOptions: {
-              modalBackgroundColor: '#0A1428',
-              logoBackgroundColor: '#0A1428',
-              isDark: true
-            }
-          }
+        const result = await ProtonWebSDK({
+          linkOptions: { chainId: PROTON_CHAIN_ID, endpoints: ENDPOINTS, restoreSession: true },
+          transportOptions: { requestAccount: APP_NAME, backButton: true },
+          selectorOptions: { appName: APP_NAME, appLogo: APP_LOGO, showContextualError: true }
         });
         
-        linkRef.current = link;
-        
-        if (session) {
-          setSession(session);
-          const actor = session.auth.actor.toString();
-          setAddress(actor);
-          setIsConnected(true);
-          fetchBalances(actor);
+        if (result.session) {
+          handleLogin(result.session, result.link);
+        } else {
+          setLink(result.link);
         }
       } catch (err) {
         console.error("SDK Init error:", err);
       }
     };
-    
     init();
   }, [fetchBalances]);
 
@@ -147,32 +126,15 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (isConnecting) return;
     setIsConnecting(true);
     try {
-      // Re-running initialization with restoreSession: false to trigger the selector
-      const { link, session } = await ProtonWebSDK({
-        linkOptions: { 
-          chainId: PROTON_CHAIN_ID, 
-          endpoints: ENDPOINTS, 
-          restoreSession: false 
-        },
-        transportOptions: { 
-          backButton: true 
-        },
-        selectorOptions: { 
-          appName: APP_NAME, 
-          appLogo: APP_LOGO,
-          showContextualError: true // Helps with debugging identity issues
-        }
+      const result = await ProtonWebSDK({
+        linkOptions: { chainId: PROTON_CHAIN_ID, endpoints: ENDPOINTS, restoreSession: false },
+        transportOptions: { requestAccount: APP_NAME, backButton: true },
+        selectorOptions: { appName: APP_NAME, appLogo: APP_LOGO, showContextualError: true }
       });
 
-      linkRef.current = link;
-
-      if (session) {
-        setSession(session);
-        const actor = session.auth.actor.toString();
-        setAddress(actor);
-        setIsConnected(true);
-        fetchBalances(actor);
-        showSuccess(`Connected as ${actor}`);
+      if (result.session) {
+        handleLogin(result.session, result.link);
+        showSuccess(`Connected!`);
       }
     } catch (err) {
       console.error("Connection error:", err);
@@ -183,10 +145,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const disconnect = async () => {
-    if (linkRef.current && session) {
-      try { 
-        await linkRef.current.removeSession(APP_NAME, session.auth); 
-      } catch (e) {}
+    if (link && session) {
+      try { await link.removeSession(APP_NAME, session.auth); } catch (e) {}
     }
     setIsConnected(false);
     setAddress(null);
@@ -198,30 +158,17 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const payMembership = async () => {
-    const FEE = 1.0000;
-    if (!session || !address) {
-      showError("Please connect your wallet first.");
-      return;
-    }
+    if (!session) return showError("Connect wallet first.");
     
-    await fetchBalances(address);
-    if (xprBalance < FEE) {
-      showError(`Insufficient balance. You need at least ${FEE.toFixed(4)} XPR.`);
-      return;
-    }
-
     try {
-      const actor = session.auth.actor.toString();
-      const permission = session.auth.permission.toString();
-
       const action = {
         account: 'eosio.token',
         name: 'transfer',
-        authorization: [{ actor, permission }],
+        authorization: [session.auth],
         data: {
-          from: actor,
+          from: session.auth.actor.toString(),
           to: OWNER_ACCOUNT,
-          quantity: `${FEE.toFixed(4)} XPR`,
+          quantity: '1.0000 XPR',
           memo: 'AskGuy Membership'
         }
       };
@@ -229,62 +176,49 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const result = await session.transact({ actions: [action] }, { broadcast: true });
       if (result) {
         setIsMember(true);
-        const oneYearInMs = 365 * 24 * 60 * 60 * 1000;
-        setMembershipExpiry(Date.now() + oneYearInMs);
-        await fetchBalances(address);
-        showSuccess(`Membership Unlocked! Welcome to AskGuy.`);
+        setMembershipExpiry(Date.now() + (365 * 24 * 60 * 60 * 1000));
+        await fetchBalances(address!);
+        showSuccess(`Membership Unlocked!`);
       }
     } catch (err: any) {
-      console.error("Payment error:", err);
-      showError(err.message || "Transaction canceled or failed.");
+      showError(err.message || "Transaction failed.");
     }
   };
 
   const transferTokens = async (to: string, amount: number, symbol: 'XPR' | 'GUY', memo: string) => {
-    if (!session || !address) return false;
+    if (!session) return false;
     const contract = symbol === 'XPR' ? 'eosio.token' : 'vtoken';
     const precision = symbol === 'XPR' ? 4 : 6;
 
     try {
-      const actor = session.auth.actor.toString();
-      const permission = session.auth.permission.toString();
-
       const action = {
         account: contract,
         name: 'transfer',
-        authorization: [{ actor, permission }],
+        authorization: [session.auth],
         data: {
-          from: actor,
+          from: session.auth.actor.toString(),
           to: to,
           quantity: `${amount.toFixed(precision)} ${symbol}`,
-          memo: memo || `Contribution`
+          memo: memo || `AskGuy Contribution`
         }
       };
 
       const result = await session.transact({ actions: [action] }, { broadcast: true });
       if (result) {
-        await fetchBalances(address);
+        await fetchBalances(address!);
         return true;
       }
       return false;
     } catch (err: any) {
-      console.error("Transfer error:", err);
       showError(err.message || "Transaction failed.");
       return false;
-    }
-  };
-
-  const refreshBalances = async () => {
-    if (address) {
-      await fetchBalances(address);
-      showSuccess("Balances updated.");
     }
   };
 
   return (
     <WalletContext.Provider value={{ 
       isConnected, isConnecting, isFetchingBalances, isBanned, address, guyBalance, xprBalance, isMember, membershipExpiry,
-      connect, disconnect, payMembership, transferTokens, refreshBalances
+      connect, disconnect, payMembership, transferTokens, refreshBalances: () => fetchBalances(address!)
     }}>
       {children}
     </WalletContext.Provider>

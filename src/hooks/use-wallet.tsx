@@ -24,9 +24,10 @@ interface WalletContextType {
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
+// App configuration
 const APP_NAME = 'AskGuy';
+const APP_LOGO = 'https://askguy.io/logo.png'; // Updated to a more standard URL format
 const OWNER_ACCOUNT = 'askguy'; 
-const APP_LOGO = 'https://i.ibb.co/L5kRj6X/logo.png'; 
 
 const PROTON_CHAIN_ID = '3848101010101010101010101010101010101010101010101010101010101010';
 const ENDPOINTS = [
@@ -101,7 +102,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setIsFetchingBalances(false);
   }, []);
 
-  // Initialize SDK
+  // Initialize SDK and restore session
   useEffect(() => {
     const init = async () => {
       try {
@@ -146,6 +147,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (isConnecting) return;
     setIsConnecting(true);
     try {
+      // Re-running initialization with restoreSession: false to trigger the selector
       const { link, session } = await ProtonWebSDK({
         linkOptions: { 
           chainId: PROTON_CHAIN_ID, 
@@ -158,11 +160,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         selectorOptions: { 
           appName: APP_NAME, 
           appLogo: APP_LOGO,
-          customStyleOptions: {
-            modalBackgroundColor: '#0A1428',
-            logoBackgroundColor: '#0A1428',
-            isDark: true
-          }
+          showContextualError: true // Helps with debugging identity issues
         }
       });
 
@@ -238,7 +236,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     } catch (err: any) {
       console.error("Payment error:", err);
-      showError(err.message || "The transaction was canceled or failed.");
+      showError(err.message || "Transaction canceled or failed.");
     }
   };
 

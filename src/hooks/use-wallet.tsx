@@ -25,7 +25,7 @@ interface WalletContextType {
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
 const APP_NAME = 'ASK GUY';
-const REQUEST_ACCOUNT = 'askguy'; 
+const OWNER_ACCOUNT = 'tripseven'; // The account that receives membership fees
 const APP_LOGO = 'https://i.ibb.co/L5kRj6X/logo.png'; 
 
 const PROTON_CHAIN_ID = '3848101010101010101010101010101010101010101010101010101010101010';
@@ -53,7 +53,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const checkBanStatus = async (account: string) => {
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('banned_users')
         .select('address')
         .eq('address', account)
@@ -66,7 +66,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setIsBanned(false);
       }
     } catch (err) {
-      // If error is "no rows found", user is not banned
       setIsBanned(false);
     }
   };
@@ -131,7 +130,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     try {
       const result = await ProtonWebSDK({
         linkOptions: { chainId: PROTON_CHAIN_ID, endpoints: ENDPOINTS, restoreSession: restore },
-        transportOptions: { requestAccount: REQUEST_ACCOUNT, backButton: true },
+        transportOptions: { requestAccount: '', backButton: true },
         selectorOptions: { 
           appName: APP_NAME, 
           appLogo: APP_LOGO,
@@ -220,7 +219,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         authorization: [session.auth],
         data: {
           from: address,
-          to: 'askguy',
+          to: OWNER_ACCOUNT,
           quantity: `${FEE.toFixed(4)} XPR`,
           memo: 'ASK GUY Membership Fee'
         }

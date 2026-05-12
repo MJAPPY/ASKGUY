@@ -37,11 +37,6 @@ const Footer = () => {
                 </a>
               </li>
               <li>
-                <a href="https://www.webauth.com/" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
-                  WebAuth Wallet
-                </a>
-              </li>
-              <li>
                 <Link to="/guidelines" className="hover:text-primary transition-colors">
                   Community Guidelines
                 </Link>

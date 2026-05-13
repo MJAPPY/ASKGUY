@@ -61,14 +61,15 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const linkRef = useRef<any>(null);
 
   const checkMembership = async (account: string) => {
+    if (!supabase) return;
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("memberships")
         .select("expiry")
         .eq("address", account.toLowerCase())
         .single();
       
-      if (data && data.expiry > Date.now()) {
+      if (!error && data && data.expiry > Date.now()) {
         setIsMember(true);
         setMembershipExpiry(data.expiry);
       } else {
@@ -76,18 +77,20 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setMembershipExpiry(null);
       }
     } catch (err) {
+      // Background check failed, default to non-member
       setIsMember(false);
     }
   };
 
   const checkBanStatus = async (account: string) => {
+    if (!supabase) return;
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("banned_users")
         .select("address")
         .eq("address", account.toLowerCase())
         .single();
-      setIsBanned(!!data);
+      setIsBanned(!error && !!data);
     } catch (err) {
       setIsBanned(false);
     }
@@ -97,9 +100,9 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!account) return;
     setIsFetchingBalances(true);
     
-    // Background checks
-    checkBanStatus(account);
-    checkMembership(account);
+    // Fire and forget background checks
+    checkBanStatus(account).catch(() => {});
+    checkMembership(account).catch(() => {});
 
     try {
       const endpoint = ENDPOINTS[0];
@@ -116,11 +119,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         })
       ]);
 
-      const xprData = await xprRes.json();
-      const guyData = await guyRes.json();
-
-      setXprBalance(Array.isArray(xprData) && xprData.length > 0 ? parseFloat(xprData[0].split(" ")[0]) : 0);
-      setGuyBalance(Array.isArray(guyData) && guyData.length > 0 ? parseFloat(guyData[0].split(" ")[0]) : 0);
+      if (xprRes.ok && guyRes.ok) {
+        const xprData = await xprRes.json();
+        const guyData = await guyRes.json();
+        setXprBalance(Array.isArray(xprData) && xprData.length > 0 ? parseFloat(xprData[0].split(" ")[0]) : 0);
+        setGuyBalance(Array.isArray(guyData) && guyData.length > 0 ? parseFloat(guyData[0].split(" ")[0]) : 0);
+      }
     } catch (err) {
       console.error("Balance fetch error:", err);
     } finally {
@@ -162,23 +166,17 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (isConnecting) return;
     setIsConnecting(true);
     try {
-      if (linkRef.current) {
-        const { session: newSession } = await linkRef.current.login(APP_NAME);
-        if (newSession) {
-          handleLogin(newSession);
-          showSuccess("Connected!");
-        }
-      } else {
-        // Fallback if link not initialized
-        const { session: newSession } = await ProtonWebSDK({
-          linkOptions: { chainId: PROTON_CHAIN_ID, endpoints: ENDPOINTS, restoreSession: false },
-          transportOptions: { requestPermission: "active", backButton: true },
-          selectorOptions: { appName: APP_NAME, appLogo: APP_LOGO },
-        });
-        if (newSession) {
-          handleLogin(newSession);
-          showSuccess("Connected!");
-        }
+      // Always initialize a fresh connection to avoid stale link issues
+      const { link, session: newSession } = await ProtonWebSDK({
+        linkOptions: { chainId: PROTON_CHAIN_ID, endpoints: ENDPOINTS, restoreSession: false },
+        transportOptions: { requestPermission: "active", backButton: true },
+        selectorOptions: { appName: APP_NAME, appLogo: APP_LOGO },
+      });
+
+      if (newSession) {
+        linkRef.current = link;
+        handleLogin(newSession);
+        showSuccess("Connected!");
       }
     } catch (err) {
       console.error("Connection error:", err);
@@ -224,16 +222,18 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (result) {
         const expiry = Date.now() + 365 * 24 * 60 * 60 * 1000;
         
-        supabase
-          .from("memberships")
-          .upsert({ 
-            address: address?.toLowerCase(), 
-            expiry: expiry,
-            updated_at: new Date().toISOString()
-          }).then(() => {
-            setIsMember(true);
-            setMembershipExpiry(expiry);
-          });
+        if (supabase) {
+          supabase
+            .from("memberships")
+            .upsert({ 
+              address: address?.toLowerCase(), 
+              expiry: expiry,
+              updated_at: new Date().toISOString()
+            }).then(() => {
+              setIsMember(true);
+              setMembershipExpiry(expiry);
+            }).catch(() => {});
+        }
 
         if (address) fetchBalances(address);
         showSuccess("Membership unlocked!");

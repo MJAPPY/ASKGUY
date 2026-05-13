@@ -9,7 +9,7 @@ import React, {
   useRef
 } from "react";
 import { showSuccess, showError } from "@/utils/toast";
-import { ProtonWebSDK } from "@proton/web-sdk";
+import ProtonWebSDK from "@proton/web-sdk";
 import { supabase } from "@/lib/supabase";
 
 const APP_NAME = "AskGuy";

@@ -58,6 +58,7 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       if (error) throw error;
 
+      // Ensure we map the 'requestor' column from DB to the 'user' property in our app
       const mapped = (data || []).map((r: any) => ({
         ...r,
         user: r.requestor || r.user || 'unknown',
@@ -73,7 +74,6 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     fetchRequests();
 
-    // Real-time subscription for requests and contributions
     const requestsSubscription = supabase
       .channel('public:aid_requests')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'aid_requests' }, () => {
@@ -90,24 +90,26 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [fetchRequests]);
 
   const addRequest = async (newReq: Omit<AidRequest, 'id' | 'raised' | 'status' | 'timestamp' | 'contributions' | 'user'> & { requestor: string }) => {
-    const activeCount = requests.filter(
-      (req) => req.user === newReq.requestor && (req.status === 'Open' || req.status === 'Funded')
-    ).length;
-
-    if (activeCount >= 3) {
-      showError('You can only have 3 active requests at a time.');
-      return false;
-    }
-
     try {
       const { error } = await supabase
         .from('aid_requests')
-        .insert([{ ...newReq, raised: 0, status: 'Open', timestamp: Date.now() }]);
+        .insert([{ 
+          requestor: newReq.requestor,
+          title: newReq.title,
+          category: newReq.category,
+          amount: newReq.amount,
+          token: newReq.token,
+          description: newReq.description,
+          proof_url: newReq.proofUrl,
+          raised: 0, 
+          status: 'Open', 
+          timestamp: Date.now() 
+        }]);
 
       if (error) throw error;
-      // fetchRequests() is handled by real-time subscription
       return true;
     } catch (err) {
+      console.error("Add request error:", err);
       showError('Failed to post request.');
       return false;
     }
@@ -133,7 +135,6 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
         if (updateError) throw updateError;
       }
-      // fetchRequests() is handled by real-time subscription
     } catch (err) {
       showError('Failed to save contribution.');
     }
@@ -147,7 +148,6 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         .eq('id', id);
 
       if (error) throw error;
-      // fetchRequests() is handled by real-time subscription
       showSuccess('Request marked as completed.');
     } catch (err) {
       showError('Failed to update status.');

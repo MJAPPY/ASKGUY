@@ -77,7 +77,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setMembershipExpiry(null);
       }
     } catch (err) {
-      // Background check failed, default to non-member
       setIsMember(false);
     }
   };
@@ -100,7 +99,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!account) return;
     setIsFetchingBalances(true);
     
-    // Fire and forget background checks
     checkBanStatus(account).catch(() => {});
     checkMembership(account).catch(() => {});
 
@@ -134,6 +132,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const handleLogin = useCallback((newSession: any) => {
     const actor = newSession.auth?.actor?.toString() ?? null;
+    console.log("Handling login for actor:", actor);
     if (actor) {
       setSession(newSession);
       setAddress(actor);
@@ -144,6 +143,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   useEffect(() => {
     const init = async () => {
+      console.log("Initializing Proton SDK...");
       try {
         const { link, session: restoredSession } = await ProtonWebSDK({
           linkOptions: { chainId: PROTON_CHAIN_ID, endpoints: ENDPOINTS, restoreSession: true },
@@ -153,7 +153,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         linkRef.current = link;
         if (restoredSession) {
+          console.log("Restored session found:", restoredSession.auth.actor.toString());
           handleLogin(restoredSession);
+        } else {
+          console.log("No restored session found.");
         }
       } catch (err) {
         console.error("SDK Init error:", err);
@@ -163,10 +166,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [handleLogin]);
 
   const connect = async () => {
+    console.log("Connect button clicked. isConnecting:", isConnecting);
     if (isConnecting) return;
     setIsConnecting(true);
+    
     try {
-      // Always initialize a fresh connection to avoid stale link issues
+      console.log("Requesting login via Proton SDK...");
       const { link, session: newSession } = await ProtonWebSDK({
         linkOptions: { chainId: PROTON_CHAIN_ID, endpoints: ENDPOINTS, restoreSession: false },
         transportOptions: { requestPermission: "active", backButton: true },
@@ -174,23 +179,29 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       });
 
       if (newSession) {
+        console.log("Login successful:", newSession.auth.actor.toString());
         linkRef.current = link;
         handleLogin(newSession);
         showSuccess("Connected!");
+      } else {
+        console.log("Login cancelled or failed - no session returned.");
       }
     } catch (err) {
       console.error("Connection error:", err);
-      showError("Connection failed.");
+      showError("Connection failed. Please try again.");
     } finally {
       setIsConnecting(false);
     }
   };
 
   const disconnect = async () => {
+    console.log("Disconnecting...");
     if (linkRef.current && session) {
       try {
         await linkRef.current.removeSession(APP_NAME, session.auth);
-      } catch (e) {}
+      } catch (e) {
+        console.error("Error removing session:", e);
+      }
     }
     setIsConnected(false);
     setAddress(null);
@@ -232,7 +243,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             }).then(() => {
               setIsMember(true);
               setMembershipExpiry(expiry);
-            }).catch(() => {});
+            }).catch((e) => console.error("Supabase upsert error:", e));
         }
 
         if (address) fetchBalances(address);

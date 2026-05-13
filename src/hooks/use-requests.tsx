@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { showSuccess, showError } from '@/utils/toast';
 import { supabase } from '@/lib/supabase';
 
@@ -18,7 +18,7 @@ export interface Contribution {
 
 export interface AidRequest {
   id: string;
-  user: string; // UI uses this field
+  user: string;
   title: string;
   category: string;
   amount: number;
@@ -30,7 +30,6 @@ export interface AidRequest {
   proofUrl?: string;
   isUrgent?: boolean;
   contributions: Contribution[];
-  // The actual DB column is `requestor`; we map it to `user` after fetch
 }
 
 interface RequestsContextType {
@@ -40,7 +39,7 @@ interface RequestsContextType {
     request: Omit<
       AidRequest,
       'id' | 'raised' | 'status' | 'timestamp' | 'contributions' | 'user'
-    > & { requestor?: string }
+    > & { requestor: string }
   ) => Promise<boolean>;
   contribute: (
     id: string,
@@ -61,7 +60,7 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({
   const [requests, setRequests] = useState<AidRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchRequests = async () => {
+  const fetchRequests = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('aid_requests')
@@ -70,10 +69,9 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({
 
       if (error) throw error;
 
-      // Map the DB column `requestor` to the UI field `user`
       const mapped = (data || []).map((r: any) => ({
         ...r,
-        user: r.requestor ?? r.user,
+        user: r.requestor || r.user || 'unknown',
       }));
       setRequests(mapped);
     } catch (err) {
@@ -81,22 +79,20 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchRequests();
-  }, []);
+  }, [fetchRequests]);
 
   const addRequest = async (
     newReq: Omit<
       AidRequest,
       'id' | 'raised' | 'status' | 'timestamp' | 'contributions' | 'user'
-    > & { requestor?: string }
+    > & { requestor: string }
   ) => {
-    // `requestor` is the actual column name in Supabase
-    const requestor = newReq.requestor;
     const activeCount = requests.filter(
-      (req) => req.user === requestor && (req.status === 'Open' || req.status === 'Funded')
+      (req) => req.user === newReq.requestor && (req.status === 'Open' || req.status === 'Funded')
     ).length;
 
     if (activeCount >= 3) {
@@ -110,7 +106,6 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({
         .insert([
           {
             ...newReq,
-            requestor, // store under the correct column
             raised: 0,
             status: 'Open',
             timestamp: Date.now(),
@@ -121,7 +116,7 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({
       await fetchRequests();
       return true;
     } catch (err) {
-      showError('Failed to post request to database.');
+      showError('Failed to post request.');
       return false;
     }
   };

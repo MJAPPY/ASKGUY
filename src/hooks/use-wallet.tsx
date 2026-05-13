@@ -63,18 +63,18 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
   const [session, setSession] = useState<any>(null);
   const [link, setLink] = useState<any>(null);
 
-  const checkBanStatus = async (account: string) => {
+  const checkBanStatus = useCallback(async (account: string) => {
     try {
       const { data } = await supabase
         .from("banned_users")
         .select("address")
-        .eq("address", account)
+        .eq("address", account.toLowerCase())
         .single();
       setIsBanned(!!data);
     } catch (err) {
       setIsBanned(false);
     }
-  };
+  }, []);
 
   const fetchBalances = useCallback(
     async (account: string) => {
@@ -126,19 +126,20 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
         setIsFetchingBalances(false);
       }
     },
-    [],
+    [checkBanStatus],
   );
 
-  const handleLogin = (session: any, link: any) => {
+  const handleLogin = useCallback((session: any, link: any) => {
     setSession(session);
     setLink(link);
     const actor = session.auth?.actor?.toString() ?? null;
     setAddress(actor);
     setIsConnected(!!actor);
     if (actor) fetchBalances(actor);
-  };
+  }, [fetchBalances]);
 
   useEffect(() => {
+    let isMounted = true;
     const init = async () => {
       try {
         const result = await ProtonWebSDK({
@@ -159,17 +160,20 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
           },
         });
 
-        if (result.session) {
-          handleLogin(result.session, result.link);
-        } else {
-          setLink(result.link);
+        if (isMounted) {
+          if (result.session) {
+            handleLogin(result.session, result.link);
+          } else {
+            setLink(result.link);
+          }
         }
       } catch (err) {
         console.error("SDK Init error:", err);
       }
     };
     init();
-  }, [fetchBalances]);
+    return () => { isMounted = false; };
+  }, [handleLogin]);
 
   const connect = async () => {
     if (isConnecting) return;
@@ -243,7 +247,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       if (result) {
         setIsMember(true);
         setMembershipExpiry(Date.now() + 365 * 24 * 60 * 60 * 1000);
-        await fetchBalances(address!);
+        if (address) await fetchBalances(address);
         showSuccess("Membership unlocked!");
       }
     } catch (err: any) {
@@ -279,7 +283,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
         { broadcast: true },
       );
       if (result) {
-        await fetchBalances(address!);
+        if (address) await fetchBalances(address);
         return true;
       }
       return false;
@@ -305,7 +309,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
         disconnect,
         payMembership,
         transferTokens,
-        refreshBalances: () => fetchBalances(address!),
+        refreshBalances: () => address ? fetchBalances(address) : Promise.resolve(),
       }}
     >
       {children}

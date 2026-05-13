@@ -18,7 +18,7 @@ export interface Contribution {
 
 export interface AidRequest {
   id: string;
-  user: string;
+  user: string; // UI uses this field
   title: string;
   category: string;
   amount: number;
@@ -30,20 +30,34 @@ export interface AidRequest {
   proofUrl?: string;
   isUrgent?: boolean;
   contributions: Contribution[];
+  // The actual DB column is `requestor`; we map it to `user` after fetch
 }
 
 interface RequestsContextType {
   requests: AidRequest[];
   loading: boolean;
-  addRequest: (request: Omit<AidRequest, 'id' | 'raised' | 'status' | 'timestamp' | 'contributions'>) => Promise<boolean>;
-  contribute: (id: string, user: string, amount: number, token: TokenSymbol, message?: string) => Promise<void>;
+  addRequest: (
+    request: Omit<
+      AidRequest,
+      'id' | 'raised' | 'status' | 'timestamp' | 'contributions' | 'user'
+    > & { requestor?: string }
+  ) => Promise<boolean>;
+  contribute: (
+    id: string,
+    user: string,
+    amount: number,
+    token: TokenSymbol,
+    message?: string
+  ) => Promise<void>;
   markCompleted: (id: string) => Promise<void>;
   refreshRequests: () => Promise<void>;
 }
 
 const RequestsContext = createContext<RequestsContextType | undefined>(undefined);
 
-export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [requests, setRequests] = useState<AidRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -55,9 +69,15 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         .order('timestamp', { ascending: false });
 
       if (error) throw error;
-      setRequests(data || []);
+
+      // Map the DB column `requestor` to the UI field `user`
+      const mapped = (data || []).map((r: any) => ({
+        ...r,
+        user: r.requestor ?? r.user,
+      }));
+      setRequests(mapped);
     } catch (err) {
-      console.error("Error fetching requests:", err);
+      console.error('Error fetching requests:', err);
     } finally {
       setLoading(false);
     }
@@ -67,55 +87,73 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     fetchRequests();
   }, []);
 
-  const addRequest = async (newReq: Omit<AidRequest, 'id' | 'raised' | 'status' | 'timestamp' | 'contributions'>) => {
-    const activeCount = requests.filter(req => req.user === newReq.user && (req.status === 'Open' || req.status === 'Funded')).length;
-    
+  const addRequest = async (
+    newReq: Omit<
+      AidRequest,
+      'id' | 'raised' | 'status' | 'timestamp' | 'contributions' | 'user'
+    > & { requestor?: string }
+  ) => {
+    // `requestor` is the actual column name in Supabase
+    const requestor = newReq.requestor;
+    const activeCount = requests.filter(
+      (req) => req.user === requestor && (req.status === 'Open' || req.status === 'Funded')
+    ).length;
+
     if (activeCount >= 3) {
-      showError("You can only have 3 active requests at a time.");
+      showError('You can only have 3 active requests at a time.');
       return false;
     }
 
     try {
       const { error } = await supabase
         .from('aid_requests')
-        .insert([{
-          ...newReq,
-          raised: 0,
-          status: 'Open',
-          timestamp: Date.now()
-        }]);
+        .insert([
+          {
+            ...newReq,
+            requestor, // store under the correct column
+            raised: 0,
+            status: 'Open',
+            timestamp: Date.now(),
+          },
+        ]);
 
       if (error) throw error;
       await fetchRequests();
       return true;
     } catch (err) {
-      showError("Failed to post request to database.");
+      showError('Failed to post request to database.');
       return false;
     }
   };
 
-  const contribute = async (id: string, user: string, amount: number, token: TokenSymbol, message?: string) => {
+  const contribute = async (
+    id: string,
+    user: string,
+    amount: number,
+    token: TokenSymbol,
+    message?: string
+  ) => {
     try {
-      // 1. Add contribution record
       const { error: contribError } = await supabase
         .from('contributions')
-        .insert([{
-          request_id: id,
-          user,
-          amount,
-          token,
-          message,
-          timestamp: Date.now()
-        }]);
+        .insert([
+          {
+            request_id: id,
+            user,
+            amount,
+            token,
+            message,
+            timestamp: Date.now(),
+          },
+        ]);
 
       if (contribError) throw contribError;
 
-      // 2. Update request raised amount
-      const request = requests.find(r => r.id === id);
+      const request = requests.find((r) => r.id === id);
       if (request && token === request.token) {
         const newRaised = request.raised + amount;
         const newStatus = newRaised >= request.amount ? 'Funded' : request.status;
-        
+
         const { error: updateError } = await supabase
           .from('aid_requests')
           .update({ raised: newRaised, status: newStatus })
@@ -126,7 +164,7 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       await fetchRequests();
     } catch (err) {
-      showError("Failed to save contribution.");
+      showError('Failed to save contribution.');
     }
   };
 
@@ -139,14 +177,23 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       if (error) throw error;
       await fetchRequests();
-      showSuccess("Request marked as completed.");
+      showSuccess('Request marked as completed.');
     } catch (err) {
-      showError("Failed to update status.");
+      showError('Failed to update status.');
     }
   };
 
   return (
-    <RequestsContext.Provider value={{ requests, loading, addRequest, contribute, markCompleted, refreshRequests: fetchRequests }}>
+    <RequestsContext.Provider
+      value={{
+        requests,
+        loading,
+        addRequest,
+        contribute,
+        markCompleted,
+        refreshRequests: fetchRequests,
+      }}
+    >
       {children}
     </RequestsContext.Provider>
   );
@@ -154,6 +201,6 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
 export const useRequests = () => {
   const context = useContext(RequestsContext);
-  if (!context) throw new Error("useRequests must be used within RequestsProvider");
+  if (!context) throw new Error('useRequests must be used within RequestsProvider');
   return context;
 };

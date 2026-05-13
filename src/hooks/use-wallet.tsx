@@ -9,7 +9,7 @@ import React, {
   useRef
 } from "react";
 import { showSuccess, showError } from "@/utils/toast";
-import ProtonWebSDK from "@proton/web-sdk";
+import { ProtonWebSDK } from "@proton/web-sdk";
 import { supabase } from "@/lib/supabase";
 
 const APP_NAME = "AskGuy";
@@ -47,6 +47,7 @@ interface WalletContextType {
 export const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const[
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isFetchingBalances, setIsFetchingBalances] = useState(false);
@@ -76,7 +77,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setMembershipExpiry(null);
       }
     } catch (err) {
-      // Silently fail if table doesn't exist yet
+      setIsMember(false);
     }
   };
 
@@ -89,7 +90,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .single();
       setIsBanned(!!data);
     } catch (err) {
-      // Silently fail
+      setIsBanned(false);
     }
   };
 
@@ -97,7 +98,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!account) return;
     setIsFetchingBalances(true);
     
-    // Run these in background, don't block
+    // Background checks
     checkBanStatus(account);
     checkMembership(account);
 
@@ -106,10 +107,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const [xprRes, guyRes] = await Promise.all([
         fetch(`${endpoint}/v1/chain/get_currency_balance`, {
           method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ code: "eosio.token", account, symbol: "XPR" }),
         }),
         fetch(`${endpoint}/v1/chain/get_currency_balance`, {
           method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ code: "vtoken", account, symbol: "GUY" }),
         })
       ]);
@@ -160,15 +163,23 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (isConnecting) return;
     setIsConnecting(true);
     try {
-      const { session: newSession } = await ProtonWebSDK({
-        linkOptions: { chainId: PROTON_CHAIN_ID, endpoints: ENDPOINTS, restoreSession: false },
-        transportOptions: { requestPermission: "active", backButton: true },
-        selectorOptions: { appName: APP_NAME, appLogo: APP_LOGO },
-      });
-
-      if (newSession) {
-        handleLogin(newSession);
-        showSuccess("Connected!");
+      if (linkRef.current) {
+        const { session: newSession } = await linkRef.current.login(APP_NAME);
+        if (newSession) {
+          handleLogin(newSession);
+          showSuccess("Connected!");
+        }
+      } else {
+        // Fallback if link not initialized
+        const { session: newSession } = await ProtonWebSDK({
+          linkOptions: { chainId: PROTON_CHAIN_ID, endpoints: ENDPOINTS, restoreSession: false },
+          transportOptions: { requestPermission: "active", backButton: true },
+          selectorOptions: { appName: APP_NAME, appLogo: APP_LOGO },
+        });
+        if (newSession) {
+          handleLogin(newSession);
+          showSuccess("Connected!");
+        }
       }
     } catch (err) {
       console.error("Connection error:", err);
@@ -214,7 +225,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (result) {
         const expiry = Date.now() + 365 * 24 * 60 * 60 * 1000;
         
-        // Persist to Supabase in background
         supabase
           .from("memberships")
           .upsert({ 

@@ -60,9 +60,9 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   
   const linkRef = useRef<any>(null);
 
-  const checkMembership = useCallback(async (account: string) => {
+  const checkMembership = async (account: string) => {
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("memberships")
         .select("expiry")
         .eq("address", account.toLowerCase())
@@ -76,12 +76,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setMembershipExpiry(null);
       }
     } catch (err) {
-      setIsMember(false);
+      // Silently fail if table doesn't exist yet
     }
-  }, []);
+  };
 
-  const checkBanStatus = useCallback(async (account: string) => {
-    if (!account) return;
+  const checkBanStatus = async (account: string) => {
     try {
       const { data } = await supabase
         .from("banned_users")
@@ -90,14 +89,17 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .single();
       setIsBanned(!!data);
     } catch (err) {
-      setIsBanned(false);
+      // Silently fail
     }
-  }, []);
+  };
 
   const fetchBalances = useCallback(async (account: string) => {
     if (!account) return;
     setIsFetchingBalances(true);
-    await Promise.all([checkBanStatus(account), checkMembership(account)]);
+    
+    // Run these in background, don't block
+    checkBanStatus(account);
+    checkMembership(account);
 
     try {
       const endpoint = ENDPOINTS[0];
@@ -122,14 +124,16 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } finally {
       setIsFetchingBalances(false);
     }
-  }, [checkBanStatus, checkMembership]);
+  }, []);
 
   const handleLogin = useCallback((newSession: any) => {
-    setSession(newSession);
     const actor = newSession.auth?.actor?.toString() ?? null;
-    setAddress(actor);
-    setIsConnected(!!actor);
-    if (actor) fetchBalances(actor);
+    if (actor) {
+      setSession(newSession);
+      setAddress(actor);
+      setIsConnected(true);
+      fetchBalances(actor);
+    }
   }, [fetchBalances]);
 
   useEffect(() => {
@@ -210,18 +214,19 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (result) {
         const expiry = Date.now() + 365 * 24 * 60 * 60 * 1000;
         
-        // Persist to Supabase
-        await supabase
+        // Persist to Supabase in background
+        supabase
           .from("memberships")
           .upsert({ 
             address: address?.toLowerCase(), 
             expiry: expiry,
             updated_at: new Date().toISOString()
+          }).then(() => {
+            setIsMember(true);
+            setMembershipExpiry(expiry);
           });
 
-        setIsMember(true);
-        setMembershipExpiry(expiry);
-        if (address) await fetchBalances(address);
+        if (address) fetchBalances(address);
         showSuccess("Membership unlocked!");
       }
     } catch (err: any) {
@@ -249,7 +254,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       const result = await session.transact({ actions: [action] }, { broadcast: true });
       if (result) {
-        if (address) await fetchBalances(address);
+        if (address) fetchBalances(address);
         return true;
       }
       return false;

@@ -60,6 +60,26 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   
   const linkRef = useRef<any>(null);
 
+  const checkMembership = useCallback(async (account: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("memberships")
+        .select("expiry")
+        .eq("address", account.toLowerCase())
+        .single();
+      
+      if (data && data.expiry > Date.now()) {
+        setIsMember(true);
+        setMembershipExpiry(data.expiry);
+      } else {
+        setIsMember(false);
+        setMembershipExpiry(null);
+      }
+    } catch (err) {
+      setIsMember(false);
+    }
+  }, []);
+
   const checkBanStatus = useCallback(async (account: string) => {
     if (!account) return;
     try {
@@ -77,7 +97,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const fetchBalances = useCallback(async (account: string) => {
     if (!account) return;
     setIsFetchingBalances(true);
-    await checkBanStatus(account);
+    await Promise.all([checkBanStatus(account), checkMembership(account)]);
 
     try {
       const endpoint = ENDPOINTS[0];
@@ -102,7 +122,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } finally {
       setIsFetchingBalances(false);
     }
-  }, [checkBanStatus]);
+  }, [checkBanStatus, checkMembership]);
 
   const handleLogin = useCallback((newSession: any) => {
     setSession(newSession);
@@ -166,6 +186,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setGuyBalance(0);
     setXprBalance(0);
     setIsBanned(false);
+    setIsMember(false);
+    setMembershipExpiry(null);
     showSuccess("Disconnected");
   };
 
@@ -186,8 +208,19 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       const result = await session.transact({ actions: [action] }, { broadcast: true });
       if (result) {
+        const expiry = Date.now() + 365 * 24 * 60 * 60 * 1000;
+        
+        // Persist to Supabase
+        await supabase
+          .from("memberships")
+          .upsert({ 
+            address: address?.toLowerCase(), 
+            expiry: expiry,
+            updated_at: new Date().toISOString()
+          });
+
         setIsMember(true);
-        setMembershipExpiry(Date.now() + 365 * 24 * 60 * 60 * 1000);
+        setMembershipExpiry(expiry);
         if (address) await fetchBalances(address);
         showSuccess("Membership unlocked!");
       }

@@ -72,6 +72,21 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   useEffect(() => {
     fetchRequests();
+
+    // Real-time subscription for requests and contributions
+    const requestsSubscription = supabase
+      .channel('public:aid_requests')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'aid_requests' }, () => {
+        fetchRequests();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'contributions' }, () => {
+        fetchRequests();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(requestsSubscription);
+    };
   }, [fetchRequests]);
 
   const addRequest = async (newReq: Omit<AidRequest, 'id' | 'raised' | 'status' | 'timestamp' | 'contributions' | 'user'> & { requestor: string }) => {
@@ -90,7 +105,7 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         .insert([{ ...newReq, raised: 0, status: 'Open', timestamp: Date.now() }]);
 
       if (error) throw error;
-      await fetchRequests();
+      // fetchRequests() is handled by real-time subscription
       return true;
     } catch (err) {
       showError('Failed to post request.');
@@ -118,8 +133,7 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
         if (updateError) throw updateError;
       }
-
-      await fetchRequests();
+      // fetchRequests() is handled by real-time subscription
     } catch (err) {
       showError('Failed to save contribution.');
     }
@@ -133,7 +147,7 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         .eq('id', id);
 
       if (error) throw error;
-      await fetchRequests();
+      // fetchRequests() is handled by real-time subscription
       showSuccess('Request marked as completed.');
     } catch (err) {
       showError('Failed to update status.');

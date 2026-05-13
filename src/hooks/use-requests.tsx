@@ -36,27 +36,16 @@ interface RequestsContextType {
   requests: AidRequest[];
   loading: boolean;
   addRequest: (
-    request: Omit<
-      AidRequest,
-      'id' | 'raised' | 'status' | 'timestamp' | 'contributions' | 'user'
-    > & { requestor: string }
+    request: Omit<AidRequest, 'id' | 'raised' | 'status' | 'timestamp' | 'contributions' | 'user'> & { requestor: string }
   ) => Promise<boolean>;
-  contribute: (
-    id: string,
-    user: string,
-    amount: number,
-    token: TokenSymbol,
-    message?: string
-  ) => Promise<void>;
+  contribute: (id: string, user: string, amount: number, token: TokenSymbol, message?: string) => Promise<void>;
   markCompleted: (id: string) => Promise<void>;
   refreshRequests: () => Promise<void>;
 }
 
 const RequestsContext = createContext<RequestsContextType | undefined>(undefined);
 
-export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [requests, setRequests] = useState<AidRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -85,12 +74,7 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({
     fetchRequests();
   }, [fetchRequests]);
 
-  const addRequest = async (
-    newReq: Omit<
-      AidRequest,
-      'id' | 'raised' | 'status' | 'timestamp' | 'contributions' | 'user'
-    > & { requestor: string }
-  ) => {
+  const addRequest = async (newReq: Omit<AidRequest, 'id' | 'raised' | 'status' | 'timestamp' | 'contributions' | 'user'> & { requestor: string }) => {
     const activeCount = requests.filter(
       (req) => req.user === newReq.requestor && (req.status === 'Open' || req.status === 'Funded')
     ).length;
@@ -103,14 +87,7 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       const { error } = await supabase
         .from('aid_requests')
-        .insert([
-          {
-            ...newReq,
-            raised: 0,
-            status: 'Open',
-            timestamp: Date.now(),
-          },
-        ]);
+        .insert([{ ...newReq, raised: 0, status: 'Open', timestamp: Date.now() }]);
 
       if (error) throw error;
       await fetchRequests();
@@ -121,26 +98,11 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const contribute = async (
-    id: string,
-    user: string,
-    amount: number,
-    token: TokenSymbol,
-    message?: string
-  ) => {
+  const contribute = async (id: string, user: string, amount: number, token: TokenSymbol, message?: string) => {
     try {
       const { error: contribError } = await supabase
         .from('contributions')
-        .insert([
-          {
-            request_id: id,
-            user,
-            amount,
-            token,
-            message,
-            timestamp: Date.now(),
-          },
-        ]);
+        .insert([{ request_id: id, user, amount, token, message, timestamp: Date.now() }]);
 
       if (contribError) throw contribError;
 

@@ -49,7 +49,7 @@ const RequestForm = () => {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!address || isLimitReached) return;
     
@@ -59,34 +59,32 @@ const RequestForm = () => {
       ? formData.customCategory || 'Other' 
       : formData.category;
 
-    setTimeout(() => {
-      const success = addRequest({
-        user: address,
-        title: formData.title,
-        category: categoryToSubmit,
-        amount: parseFloat(formData.amount),
-        token: formData.token,
-        description: formData.description,
-        proofUrl: preview || undefined
-      });
+    const success = await addRequest({
+      requestor: address, // Correctly pass address to the requestor column
+      title: formData.title,
+      category: categoryToSubmit,
+      amount: parseFloat(formData.amount),
+      token: formData.token,
+      description: formData.description,
+      proofUrl: preview || undefined
+    });
 
-      if (success) {
-        setFormData({ 
-          title: '',
-          category: 'Medical / Healthcare', 
-          customCategory: '',
-          amount: '', 
-          token: 'XPR', 
-          description: '' 
-        });
-        setPreview(null);
-        setSkipProof(false);
-        showSuccess("Request posted successfully!");
-        const browseSection = document.getElementById('browse-requests');
-        if (browseSection) browseSection.scrollIntoView({ behavior: 'smooth' });
-      }
-      setLoading(false);
-    }, 1000);
+    if (success) {
+      setFormData({ 
+        title: '',
+        category: 'Medical / Healthcare', 
+        customCategory: '',
+        amount: '', 
+        token: 'XPR', 
+        description: '' 
+      });
+      setPreview(null);
+      setSkipProof(false);
+      showSuccess("Request posted successfully!");
+      const browseSection = document.getElementById('browse-requests');
+      if (browseSection) browseSection.scrollIntoView({ behavior: 'smooth' });
+    }
+    setLoading(false);
   };
 
   const categories = [
@@ -210,7 +208,6 @@ const RequestForm = () => {
                   </p>
                 </div>
 
-                {/* Privacy Warning */}
                 <div className="flex gap-3 p-3 rounded-xl bg-orange-500/10 border border-orange-500/20">
                   <AlertTriangle className="text-orange-400 shrink-0 mt-0.5" size={14} />
                   <p className="text-[10px] leading-tight text-orange-100/70 font-bold uppercase tracking-tight">

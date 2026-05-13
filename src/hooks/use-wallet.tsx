@@ -11,11 +11,6 @@ import { showSuccess, showError } from "@/utils/toast";
 import ProtonWebSDK from "@proton/web-sdk";
 import { supabase } from "@/lib/supabase";
 
-/* -------------------------------------------------------------
-   No static OWNER_ACCOUNT – we will use the connected address
-   ------------------------------------------------------------- */
-// const OWNER_ACCOUNT = "xpr1...YOUR_ACTUAL_PUBLIC_KEY_HERE"; // removed
-
 const APP_NAME = "AskGuy";
 const APP_LOGO = "https://askguy.sh/logo.png";
 
@@ -49,7 +44,6 @@ interface WalletContextType {
   refreshBalances: () => Promise<void>;
 }
 
-/* Export the context so it can be imported elsewhere if needed */
 export const WalletContext = createContext<WalletContextType | undefined>(
   undefined,
 );
@@ -69,9 +63,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
   const [session, setSession] = useState<any>(null);
   const [link, setLink] = useState<any>(null);
 
-  /* -------------------------------------------------------------
-     Helper: check if the current address is on the banned list
-     ------------------------------------------------------------- */
   const checkBanStatus = async (account: string) => {
     try {
       const { data } = await supabase
@@ -85,9 +76,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  /* -------------------------------------------------------------
-     Fetch XPR and GUY balances for a given account
-     ------------------------------------------------------------- */
   const fetchBalances = useCallback(
     async (account: string) => {
       if (!account) return;
@@ -96,8 +84,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
 
       try {
         const endpoint = ENDPOINTS[0];
-
-        // XPR balance
         const xprRes = await fetch(
           `${endpoint}/v1/chain/get_currency_balance`,
           {
@@ -115,7 +101,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
             ? parseFloat(xprData[0].split(" ")[0])
             : 0;
 
-        // GUY balance
         const guyRes = await fetch(
           `${endpoint}/v1/chain/get_currency_balance`,
           {
@@ -144,21 +129,15 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
     [],
   );
 
-  /* -------------------------------------------------------------
-     Handle a successful login – store session, address, and balances
-     ------------------------------------------------------------- */
   const handleLogin = (session: any, link: any) => {
     setSession(session);
     setLink(link);
     const actor = session.auth?.actor?.toString() ?? null;
     setAddress(actor);
-    setIsConnected(true);
+    setIsConnected(!!actor);
     if (actor) fetchBalances(actor);
   };
 
-  /* -------------------------------------------------------------
-     Initialise Proton SDK on component mount – restore any saved session
-     ------------------------------------------------------------- */
   useEffect(() => {
     const init = async () => {
       try {
@@ -169,8 +148,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
             restoreSession: true,
           },
           transportOptions: {
-            // Use the connected address as requestAccount (if we have one)
-            requestAccount: undefined, // let SDK infer from session
+            requestAccount: undefined,
             requestPermission: "active",
             backButton: true,
           },
@@ -193,9 +171,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
     init();
   }, [fetchBalances]);
 
-  /* -------------------------------------------------------------
-     Manual wallet connect (user clicks “Connect”)
-     ------------------------------------------------------------- */
   const connect = async () => {
     if (isConnecting) return;
     setIsConnecting(true);
@@ -207,7 +182,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
           restoreSession: false,
         },
         transportOptions: {
-          // When connecting manually we still let the SDK decide the account
           requestAccount: undefined,
           requestPermission: "active",
           backButton: true,
@@ -231,16 +205,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  /* -------------------------------------------------------------
-     Disconnect wallet
-     ------------------------------------------------------------- */
   const disconnect = async () => {
     if (link && session) {
       try {
         await link.removeSession(APP_NAME, session.auth);
-      } catch (e) {
-        // ignore errors on removal
-      }
+      } catch (e) {}
     }
     setIsConnected(false);
     setAddress(null);
@@ -251,9 +220,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
     showSuccess("Disconnected");
   };
 
-  /* -------------------------------------------------------------
-     Pay the 1 XPR membership fee
-     ------------------------------------------------------------- */
   const payMembership = async () => {
     if (!session) return showError("Connect wallet first.");
 
@@ -264,7 +230,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
         authorization: [session.auth],
         data: {
           from: session.auth.actor,
-          to: "askguy", // <-- the correct requestor account
+          to: "askguy",
           quantity: "1.0000 XPR",
           memo: "AskGuy Membership",
         },
@@ -276,21 +242,15 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       );
       if (result) {
         setIsMember(true);
-        setMembershipExpiry(
-          Date.now() + 365 * 24 * 60 * 60 * 1000,
-        );
+        setMembershipExpiry(Date.now() + 365 * 24 * 60 * 60 * 1000);
         await fetchBalances(address!);
         showSuccess("Membership unlocked!");
       }
     } catch (err: any) {
-      console.error("Membership Transaction Error:", err);
       showError(err.message || "Transaction failed.");
     }
   };
 
-  /* -------------------------------------------------------------
-     Transfer XPR or GUY tokens to another user
-     ------------------------------------------------------------- */
   const transferTokens = async (
     to: string,
     amount: number,
@@ -324,7 +284,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       }
       return false;
     } catch (err: any) {
-      console.error("Transfer Transaction Error:", err);
       showError(err.message || "Transaction failed.");
       return false;
     }
@@ -354,9 +313,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-/* -------------------------------------------------------------
-   Hook for consuming the wallet context
-   ------------------------------------------------------------- */
 export const useWallet = () => {
   const context = useContext(WalletContext);
   if (!context)

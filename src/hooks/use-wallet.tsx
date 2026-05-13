@@ -11,14 +11,16 @@ import { showSuccess, showError } from "@/utils/toast";
 import ProtonWebSDK from "@proton/web-sdk";
 import { supabase } from "@/lib/supabase";
 
-/* -------------------------------------------------------------   👉 1️⃣  REPLACE THIS WITH THE REAL PUBLIC KEY FROM THE EXPLORER
+/* -------------------------------------------------------------
+   No static OWNER_ACCOUNT – we will use the connected address
    ------------------------------------------------------------- */
-const OWNER_ACCOUNT = "xpr1...YOUR_ACTUAL_PUBLIC_KEY_HERE"; // <-- INSERT HERE
+// const OWNER_ACCOUNT = "xpr1...YOUR_ACTUAL_PUBLIC_KEY_HERE"; // removed
 
 const APP_NAME = "AskGuy";
 const APP_LOGO = "https://askguy.sh/logo.png";
 
-const PROTON_CHAIN_ID = "384da888112027f0321850a169f737c33e53b388aad48b5adace4bab97f437e0";
+const PROTON_CHAIN_ID =
+  "384da888112027f0321850a169f737c33e53b388aad48b5adace4bab97f437e0";
 const ENDPOINTS = [
   "https://proton.greymass.com",
   "https://mainnet.protonchain.com",
@@ -48,7 +50,9 @@ interface WalletContextType {
 }
 
 /* Export the context so it can be imported elsewhere if needed */
-export const WalletContext = createContext<WalletContextType | undefined>(undefined);
+export const WalletContext = createContext<WalletContextType | undefined>(
+  undefined,
+);
 
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -94,14 +98,17 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
         const endpoint = ENDPOINTS[0];
 
         // XPR balance
-        const xprRes = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
-          method: "POST",
-          body: JSON.stringify({
-            code: "eosio.token",
-            account,
-            symbol: "XPR",
-          }),
-        });
+        const xprRes = await fetch(
+          `${endpoint}/v1/chain/get_currency_balance`,
+          {
+            method: "POST",
+            body: JSON.stringify({
+              code: "eosio.token",
+              account,
+              symbol: "XPR",
+            }),
+          },
+        );
         const xprData = await xprRes.json();
         const xprVal =
           Array.isArray(xprData) && xprData.length > 0
@@ -109,14 +116,17 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
             : 0;
 
         // GUY balance
-        const guyRes = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
-          method: "POST",
-          body: JSON.stringify({
-            code: "vtoken",
-            account,
-            symbol: "GUY",
-          }),
-        });
+        const guyRes = await fetch(
+          `${endpoint}/v1/chain/get_currency_balance`,
+          {
+            method: "POST",
+            body: JSON.stringify({
+              code: "vtoken",
+              account,
+              symbol: "GUY",
+            }),
+          },
+        );
         const guyData = await guyRes.json();
         const guyVal =
           Array.isArray(guyData) && guyData.length > 0
@@ -159,7 +169,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
             restoreSession: true,
           },
           transportOptions: {
-            requestAccount: OWNER_ACCOUNT,
+            // Use the connected address as requestAccount (if we have one)
+            requestAccount: undefined, // let SDK infer from session
             requestPermission: "active",
             backButton: true,
           },
@@ -170,7 +181,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
           },
         });
 
-        console.log("Proton init – requestAccount:", OWNER_ACCOUNT);
         if (result.session) {
           handleLogin(result.session, result.link);
         } else {
@@ -197,7 +207,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
           restoreSession: false,
         },
         transportOptions: {
-          requestAccount: OWNER_ACCOUNT,
+          // When connecting manually we still let the SDK decide the account
+          requestAccount: undefined,
           requestPermission: "active",
           backButton: true,
         },
@@ -208,7 +219,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
         },
       });
 
-      console.log("Proton connect – requestAccount:", OWNER_ACCOUNT);
       if (result.session) {
         handleLogin(result.session, result.link);
         showSuccess("Connected!");
@@ -254,16 +264,21 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
         authorization: [session.auth],
         data: {
           from: session.auth.actor,
-          to: OWNER_ACCOUNT,
+          to: "askguy", // <-- the correct requestor account
           quantity: "1.0000 XPR",
           memo: "AskGuy Membership",
         },
       };
 
-      const result = await session.transact({ actions: [action] }, { broadcast: true });
+      const result = await session.transact(
+        { actions: [action] },
+        { broadcast: true },
+      );
       if (result) {
         setIsMember(true);
-        setMembershipExpiry(Date.now() + 365 * 24 * 60 * 60 * 1000);
+        setMembershipExpiry(
+          Date.now() + 365 * 24 * 60 * 60 * 1000,
+        );
         await fetchBalances(address!);
         showSuccess("Membership unlocked!");
       }
@@ -299,7 +314,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
         },
       };
 
-      const result = await session.transact({ actions: [action] }, { broadcast: true });
+      const result = await session.transact(
+        { actions: [action] },
+        { broadcast: true },
+      );
       if (result) {
         await fetchBalances(address!);
         return true;
@@ -341,6 +359,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
    ------------------------------------------------------------- */
 export const useWallet = () => {
   const context = useContext(WalletContext);
-  if (!context) throw new Error("useWallet must be used within WalletProvider");
+  if (!context)
+    throw new Error("useWallet must be used within WalletProvider");
   return context;
 };

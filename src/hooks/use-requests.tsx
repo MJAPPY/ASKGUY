@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+"use client";
+
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface AidRequest {
@@ -13,7 +15,7 @@ export interface AidRequest {
   timestamp: number;
   proofUrl?: string;
   raised: number;
-  contributions?: {
+  contributions: {
     id: string;
     user: string;
     amount: number;
@@ -25,7 +27,20 @@ export interface AidRequest {
 
 export type TokenSymbol = 'XPR' | 'GUY';
 
-export const useRequests = () => {
+interface RequestsContextType {
+  requests: AidRequest[];
+  loading: boolean;
+  fetchRequests: () => Promise<void>;
+  addRequest: (req: any) => Promise<any>;
+  updateRequest: (id: string, updates: any) => Promise<any>;
+  deleteRequest: (id: string) => Promise<void>;
+  contribute: (requestId: string, contributor: string, amount: number, token: TokenSymbol, message?: string) => Promise<boolean>;
+  markCompleted: (id: string) => Promise<any>;
+}
+
+const RequestsContext = createContext<RequestsContextType | undefined>(undefined);
+
+export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [requests, setRequests] = useState<AidRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,8 +49,12 @@ export const useRequests = () => {
     try {
       const { data, error } = await supabase
         .from('aid_requests')
-        .select('*')
+        .select(`
+          *,
+          contributions (*)
+        `)
         .order('timestamp', { ascending: false });
+      
       if (error) throw error;
       setRequests(data || []);
     } catch (err) {
@@ -49,8 +68,14 @@ export const useRequests = () => {
     try {
       const { data, error } = await supabase
         .from('aid_requests')
-        .insert(req)
+        .insert({
+          ...req,
+          timestamp: Date.now(),
+          status: 'Open',
+          raised: 0
+        })
         .select();
+      
       if (error) throw error;
       await fetchRequests();
       return data;
@@ -67,6 +92,7 @@ export const useRequests = () => {
         .update(updates)
         .eq('id', id)
         .select();
+      
       if (error) throw error;
       await fetchRequests();
       return data;
@@ -82,6 +108,7 @@ export const useRequests = () => {
         .from('aid_requests')
         .delete()
         .eq('id', id);
+      
       if (error) throw error;
       await fetchRequests();
     } catch (err) {
@@ -91,7 +118,7 @@ export const useRequests = () => {
 
   const contribute = async (requestId: string, contributor: string, amount: number, token: TokenSymbol, message?: string) => {
     try {
-      const { error } = await supabase.from('contributions').insert({
+      const { error: contribError } = await supabase.from('contributions').insert({
         request_id: requestId,
         user: contributor,
         amount,
@@ -99,7 +126,18 @@ export const useRequests = () => {
         message,
         timestamp: Date.now(),
       });
-      if (error) throw error;
+      
+      if (contribError) throw contribError;
+
+      // Update the total raised amount on the request
+      const request = requests.find(r => r.id === requestId);
+      if (request && token === request.token) {
+        await updateRequest(requestId, { 
+          raised: (request.raised || 0) + amount,
+          status: (request.raised || 0) + amount >= request.amount ? 'Funded' : 'Open'
+        });
+      }
+
       await fetchRequests();
       return true;
     } catch (err) {
@@ -114,20 +152,37 @@ export const useRequests = () => {
 
   useEffect(() => {
     fetchRequests();
+    
+    // Set up realtime subscription
+    const subscription = supabase
+      .channel('requests_channel')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'aid_requests' }, fetchRequests)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'contributions' }, fetchRequests)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(subscription);
+    };
   }, [fetchRequests]);
 
-  return {
-    requests,
-    loading,
-    fetchRequests,
-    addRequest,
-    updateRequest,
-    deleteRequest,
-    contribute,
-    markCompleted,
-  };
+  return (
+    <RequestsContext.Provider value={{
+      requests,
+      loading,
+      fetchRequests,
+      addRequest,
+      updateRequest,
+      deleteRequest,
+      contribute,
+      markCompleted,
+    }}>
+      {children}
+    </RequestsContext.Provider>
+  );
 };
 
-export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return <>{children}</>;
+export const useRequests = () => {
+  const context = useContext(RequestsContext);
+  if (context === undefined) throw new Error('useRequests must be used within RequestsProvider');
+  return context;
 };

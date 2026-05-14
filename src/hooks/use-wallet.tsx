@@ -39,6 +39,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [xprBalance, setXprBalance] = useState(0);
   const [membershipExpiry, setMembershipExpiry] = useState(0);
   const [isFetchingBalances, setIsFetchingBalances] = useState(false);
+  const [isBanned, setIsBanned] = useState(false);
   const [session, setSession] = useState<LinkSession | null>(null);
   const linkRef = useRef<any>(null);
 
@@ -55,8 +56,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         if (res.ok) {
           const data = await res.json();
-          console.log(`[use-wallet] ${endpoint} response for ${symbol}:`, data);
-
           if (Array.isArray(data) && data.length > 0) {
             const val = parseFloat(data[0].split(' ')[0] || '0');
             console.log(`[use-wallet] ✅ ${symbol} = ${val}`);
@@ -88,17 +87,19 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setXprBalance(realXpr);
       setGuyBalance(realGuy);
 
-      // Persist status and balances to Supabase
-      const { data } = await supabase
-        .from('profiles')
-        .select('membership_expiry')
-        .eq('address', cleanAddress)
-        .maybeSingle();
+      // Fetch profile and ban status
+      const [profileRes, banRes] = await Promise.all([
+        supabase.from('profiles').select('membership_expiry').eq('address', cleanAddress).maybeSingle(),
+        supabase.from('banned_users').select('address').eq('address', cleanAddress).maybeSingle()
+      ]);
       
-      if (data) {
-        setMembershipExpiry(data.membership_expiry ?? 0);
+      if (profileRes.data) {
+        setMembershipExpiry(profileRes.data.membership_expiry ?? 0);
       }
 
+      setIsBanned(!!banRes.data);
+
+      // Sync stats to database
       await supabase.from('profiles').upsert({
         address: cleanAddress,
         xpr_balance: realXpr,
@@ -128,8 +129,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       if (result.session) {
         const actor = String(result.session.auth.actor);
-        console.log(`[use-wallet] ✅ Connected as: ${actor}`);
-
         setSession(result.session);
         setAddress(actor);
         setIsConnected(true);
@@ -163,7 +162,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       try { await linkRef.current.removeSession(APP_NAME, session.auth); } catch {}
     }
     setAddress(''); setSession(null); setIsConnected(false);
-    setGuyBalance(0); setXprBalance(0); setIsConnecting(false);
+    setGuyBalance(0); setXprBalance(0); setIsBanned(false);
   }, [session]);
 
   const refreshBalances = useCallback(async () => {
@@ -173,6 +172,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const transferTokens = useCallback(async (to: string, amount: number, token: 'XPR' | 'GUY', memo?: string) => {
     if (!session) return false;
     try {
+      const precision = token === 'XPR' ? 4 : 6;
       const action = {
         account: token === 'XPR' ? 'eosio.token' : 'proton-vtoken',
         name: 'transfer',
@@ -180,7 +180,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         data: { 
           from: session.auth.actor, 
           to, 
-          quantity: `${amount.toFixed(token === 'XPR' ? 4 : 6)} ${token}`, 
+          quantity: `${amount.toFixed(precision)} ${token}`, 
           memo: memo || '' 
         }
       };
@@ -203,8 +203,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [transferTokens, address]);
 
   const hasGuyThreshold = guyBalance >= 7770;
-  const isMember = membershipExpiry > Date.now() || hasGuyThreshold;
-  const isBanned = false;
+  const isMember = (membershipExpiry > Date.now()) || hasGuyThreshold;
 
   return (
     <WalletContext.Provider value={{

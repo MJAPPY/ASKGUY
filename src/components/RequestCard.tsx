@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, X, Loader2, CheckCircle2, User, Zap, Sparkles } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Heart, X, Loader2, CheckCircle2, Zap, Sparkles } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useRequests, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
@@ -51,7 +52,6 @@ const RequestCard: React.FC<RequestCardProps> = ({
   isUrgent = false,
   contributions = [],
   timestamp,
-  variant = 'grid',
 }) => {
   const { contribute, markCompleted } = useRequests();
   const { address, transferTokens } = useWallet();
@@ -136,37 +136,37 @@ const RequestCard: React.FC<RequestCardProps> = ({
               </span>
             ) : null}
           </div>
-          <span className="text-[10px] text-muted-foreground font-bold">
+          <span className="text-[10px] text-muted-foreground font-black uppercase tracking-tighter">
             {formatDistanceToNow(timestamp, { addSuffix: true })}
           </span>
         </div>
 
-        <h3 className="text-lg font-black mb-2 group-hover:text-primary transition-colors line-clamp-1">{title}</h3>
+        <h3 className="text-xl font-black mb-3 group-hover:text-primary transition-colors line-clamp-1 tracking-tight">{title}</h3>
         
-        <div className="flex items-center gap-2 mb-4">
-          <Avatar className="w-5 h-5 border border-white/10">
+        <div className="flex items-center gap-2 mb-5">
+          <Avatar className="w-6 h-6 border border-white/10">
             <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${requestor}`} />
-            <AvatarFallback className="text-[8px] bg-primary text-black font-black">{requestor.substring(0, 2).toUpperCase()}</AvatarFallback>
+            <AvatarFallback className="text-[10px] bg-primary text-black font-black">{requestor.substring(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
-          <Link to={`/profile/${requestor}`} className="text-[10px] font-black text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+          <Link to={`/profile/${requestor}`} className="text-xs font-black text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 uppercase tracking-wider">
              @{requestor}
           </Link>
         </div>
 
-        <p className="text-sm text-muted-foreground/80 mb-6 leading-relaxed line-clamp-2 min-h-[40px] italic">
+        <p className="text-sm font-bold text-foreground/90 mb-8 leading-relaxed line-clamp-3 min-h-[60px] italic bg-white/5 p-4 rounded-xl border border-white/5">
           "{description}"
         </p>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-widest">
             <div className="flex items-center gap-1.5 text-primary">
-              <Zap size={12} className="fill-primary" />
-              <span>{raised.toLocaleString()} {token}</span>
+              <Zap size={14} className="fill-primary" />
+              <span className="text-sm">{raised.toLocaleString()} {token}</span>
             </div>
             <span className="text-muted-foreground">Goal: {amount.toLocaleString()}</span>
           </div>
           
-          <div className="w-full bg-white/5 rounded-full h-2.5 overflow-hidden border border-white/5 p-[1px]">
+          <div className="w-full bg-white/5 rounded-full h-3 overflow-hidden border border-white/5 p-[1px] shadow-inner">
             <div 
               className={cn(
                 "h-full rounded-full transition-all duration-1000 ease-out relative",
@@ -178,13 +178,13 @@ const RequestCard: React.FC<RequestCardProps> = ({
             </div>
           </div>
           
-          <div className="flex items-center justify-between text-[10px] font-bold text-muted-foreground">
-            <div className="flex items-center gap-1">
-              <Heart size={10} className="text-primary fill-primary/20" />
-              <span>{contributions.length} Support{contributions.length === 1 ? '' : 's'}</span>
+          <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <Heart size={12} className="text-primary fill-primary" />
+              <span className="text-foreground">{contributions.length} Supports</span>
             </div>
-            <span className={cn("font-black", progress >= 100 ? "text-emerald-400" : "text-primary")}>
-              {Math.round(progress)}%
+            <span className={cn("text-sm", progress >= 100 ? "text-emerald-400" : "text-primary")}>
+              {Math.round(progress)}% Complete
             </span>
           </div>
         </div>
@@ -195,72 +195,81 @@ const RequestCard: React.FC<RequestCardProps> = ({
           <div className="w-full space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
             {!showContribute ? (
               <Button 
-                className="w-full bg-primary hover:bg-primary/90 text-black font-black h-12 rounded-xl btn-premium gold-glow uppercase tracking-widest text-[11px] gap-2" 
+                className="w-full bg-primary hover:bg-primary/90 text-black font-black h-14 rounded-xl btn-premium gold-glow uppercase tracking-widest text-sm gap-2" 
                 onClick={() => setShowContribute(true)}
               >
-                <Heart size={16} className="fill-current" />
-                Support Request
+                <Heart size={18} className="fill-current" />
+                Help Now
               </Button>
             ) : (
-              <div className="space-y-4 bg-white/5 p-4 rounded-2xl border border-white/10 animate-in zoom-in-95 duration-200">
+              <div className="space-y-5 bg-white/5 p-5 rounded-2xl border border-primary/20 animate-in zoom-in-95 duration-200 shadow-2xl">
                 <div className="flex items-center justify-between">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-primary">Contribute</p>
-                  <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full hover:bg-white/10" onClick={() => setShowContribute(false)}>
-                    <X size={12} />
+                  <p className="text-[11px] font-black uppercase tracking-widest text-primary">Send Contribution</p>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-white/10" onClick={() => setShowContribute(false)}>
+                    <X size={14} />
                   </Button>
                 </div>
 
-                <div className="grid grid-cols-4 gap-2">
-                  {quickAmounts.map(amt => (
-                    <Button 
-                      key={amt} 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => setContributionAmount(amt.toString())}
-                      className={cn(
-                        "h-8 text-[10px] font-black border-white/5 hover:border-primary/50 transition-all",
-                        contributionAmount === amt.toString() ? "bg-primary/10 border-primary text-primary" : "bg-white/5"
-                      )}
-                    >
-                      {amt}
-                    </Button>
-                  ))}
-                </div>
-
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Input
-                      type="number"
-                      placeholder="Custom Amount"
-                      value={contributionAmount}
-                      onChange={(e) => setContributionAmount(e.target.value)}
-                      className="bg-white/5 border-white/10 h-10 text-sm font-black focus:border-primary/50 pr-12"
-                    />
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Quick Select</Label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {quickAmounts.map(amt => (
+                      <Button 
+                        key={amt} 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setContributionAmount(amt.toString())}
+                        className={cn(
+                          "h-10 text-xs font-black border-white/5 hover:border-primary/50 transition-all",
+                          contributionAmount === amt.toString() ? "bg-primary text-black border-primary" : "bg-white/5"
+                        )}
+                      >
+                        {amt}
+                      </Button>
+                    ))}
                   </div>
-                  <Select value={contributionToken} onValueChange={(v: TokenSymbol) => setContributionToken(v)}>
-                    <SelectTrigger className="w-24 h-10 bg-white/5 border-white/10 text-xs font-black">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="glass-card">
-                      <SelectItem value="XPR">XPR</SelectItem>
-                      <SelectItem value="GUY">GUY</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
 
-                <Input
-                  placeholder="Leave a message of support..."
-                  value={contributionMessage}
-                  onChange={(e) => setContributionMessage(e.target.value)}
-                  className="bg-white/5 border-white/10 h-10 text-[11px] italic"
-                />
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Amount to Send</Label>
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Input
+                        type="number"
+                        placeholder="0.00"
+                        value={contributionAmount}
+                        onChange={(e) => setContributionAmount(e.target.value)}
+                        className="bg-white/5 border-white/10 h-12 text-lg font-black focus:border-primary/50 text-white"
+                      />
+                    </div>
+                    <Select value={contributionToken} onValueChange={(v: TokenSymbol) => setContributionToken(v)}>
+                      <SelectTrigger className="w-28 h-12 bg-white/5 border-white/10 text-sm font-black">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="glass-card">
+                        <SelectItem value="XPR" className="font-black">XPR</SelectItem>
+                        <SelectItem value="GUY" className="font-black">GUY</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Support Message (Optional)</Label>
+                  <Input
+                    placeholder="Leave a kind word..."
+                    value={contributionMessage}
+                    onChange={(e) => setContributionMessage(e.target.value)}
+                    className="bg-white/5 border-white/10 h-12 text-xs font-bold italic"
+                  />
+                </div>
 
                 <Button 
-                  className="w-full bg-primary hover:bg-primary/90 text-black font-black h-11 rounded-xl shadow-lg transition-transform active:scale-95" 
+                  className="w-full bg-primary hover:bg-primary/90 text-black font-black h-14 rounded-xl shadow-[0_0_30px_rgba(244,201,93,0.3)] transition-all active:scale-95 text-base uppercase tracking-widest" 
                   onClick={handleContribute} 
                   disabled={isProcessing}
                 >
-                  {isProcessing ? <Loader2 className="animate-spin" size={18} /> : `Send ${contributionAmount} ${contributionToken}`}
+                  {isProcessing ? <Loader2 className="animate-spin" size={20} /> : `Confirm ${contributionAmount} ${contributionToken}`}
                 </Button>
               </div>
             )}
@@ -270,22 +279,18 @@ const RequestCard: React.FC<RequestCardProps> = ({
         {isOwner && status !== 'Completed' && (
           <Button 
             variant="outline" 
-            className="w-full h-12 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 font-black rounded-xl gap-2 uppercase tracking-widest text-[11px]"
+            className="w-full h-14 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 font-black rounded-xl gap-2 uppercase tracking-widest text-xs"
             onClick={handleComplete}
             disabled={isProcessing}
           >
-            {isProcessing ? <Loader2 className="animate-spin" size={16} /> : <><CheckCircle2 size={16} /> Finish Request</>}
+            {isProcessing ? <Loader2 className="animate-spin" size={18} /> : <><CheckCircle2 size={18} /> Finish My Request</>}
           </Button>
         )}
 
         {status === 'Completed' && (
-          <Button 
-            disabled 
-            variant="outline" 
-            className="w-full h-12 border-white/5 text-muted-foreground font-black rounded-xl uppercase tracking-widest text-[11px]"
-          >
-            Request Closed
-          </Button>
+          <div className="w-full h-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+             <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">Need Fulfilled</span>
+          </div>
         )}
       </CardFooter>
     </Card>

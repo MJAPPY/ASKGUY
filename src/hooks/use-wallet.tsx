@@ -12,7 +12,8 @@ export interface WalletState {
   guyBalance: number;
   xprBalance: number;
   membershipExpiry: number;
-  isMember: boolean;
+  isMember: boolean; // This refers to the 1 XPR paid membership
+  hasGuyThreshold: boolean; // This refers to the 7,770 GUY requirement
   isBanned: boolean;
   payMembership: () => Promise<void>;
   connect: () => Promise<void>;
@@ -43,8 +44,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const linkRef = useRef<any>(null);
 
   const fetchChainBalance = async (account: string, code: string, symbol: string): Promise<number> => {
-    console.log(`[use-wallet] 🔍 Searching for ${symbol} balance for ${account}...`);
-    
     for (const endpoint of ENDPOINTS) {
       try {
         const response = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
@@ -57,11 +56,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (response.ok) {
           const data = await response.json();
           if (Array.isArray(data) && data.length > 0) {
-            const val = parseFloat(data[0].split(' ')[0]);
-            if (val > 0) {
-              console.log(`[use-wallet] ✅ Found ${val} ${symbol} via get_currency_balance on ${endpoint}`);
-              return val;
-            }
+            return parseFloat(data[0].split(' ')[0]);
           }
         }
 
@@ -82,18 +77,13 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           const tableData = await tableResponse.json();
           const row = tableData.rows?.[0];
           if (row && row.balance) {
-            const val = parseFloat(row.balance.split(' ')[0]);
-            if (val > 0) {
-              console.log(`[use-wallet] ✅ Found ${val} ${symbol} via get_table_rows on ${endpoint}`);
-              return val;
-            }
+            return parseFloat(row.balance.split(' ')[0]);
           }
         }
       } catch (err) {
-        console.warn(`[use-wallet] ⚠️ Node ${endpoint} error for ${symbol}:`, err);
+        console.warn(`[use-wallet] Node error on ${endpoint}:`, err);
       }
     }
-    
     return 0;
   };
 
@@ -102,7 +92,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const cleanAddress = String(walletAddress).toLowerCase().trim();
     
     if (retryCount === 0) setIsFetchingBalances(true);
-    console.log(`[use-wallet] 🔄 Loading balances for ${cleanAddress} (Attempt ${retryCount + 1})`);
 
     try {
       const [realXpr, realGuy] = await Promise.all([
@@ -113,15 +102,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setXprBalance(realXpr);
       setGuyBalance(realGuy);
 
-      // If GUY balance is 0 and we have retries left, wait and recursive call
-      // IMPORTANT: We must AWAIT this so the outer loader doesn't resolve early
       if (realGuy === 0 && retryCount < 2) {
-        console.log(`[use-wallet] ⏳ GUY balance is 0, retrying in 2s...`);
         await new Promise(r => setTimeout(r, 2000));
         return await loadBalances(walletAddress, retryCount + 1);
       }
-
-      console.log(`[use-wallet] 📊 Final values → XPR: ${realXpr}, GUY: ${realGuy}`);
 
       const { data } = await supabase
         .from('profiles')
@@ -139,7 +123,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }, { onConflict: 'address' });
 
     } catch (err) {
-      console.error('[use-wallet] loadBalances error:', err);
+      console.error('[use-wallet] Load error:', err);
     } finally {
       if (retryCount >= 0) setIsFetchingBalances(false);
     }
@@ -165,15 +149,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setIsConnected(true);
         setIsConnecting(true);
 
-        console.log(`[use-wallet] ⏱️ Waiting for initial chain sync...`);
         await new Promise(r => setTimeout(r, 1000));
-        
-        // This will now correctly block until all retries are done
         await loadBalances(actor);
         setIsConnecting(false);
       }
     } catch (err) {
-      console.error('[use-wallet] Connect error:', err);
+      console.error('[use-wallet] Init error:', err);
       setIsConnecting(false);
     }
   }, [loadBalances]);
@@ -235,14 +216,15 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [transferTokens, address]);
 
-  const isMember = guyBalance >= 7770;
+  const hasGuyThreshold = guyBalance >= 7770;
+  const isMember = membershipExpiry > Date.now();
   const isBanned = false;
 
   return (
     <WalletContext.Provider value={{
       address, isConnected, isConnecting, isFetchingBalances,
       guyBalance, xprBalance, membershipExpiry,
-      isMember, isBanned, payMembership, connect, disconnect,
+      isMember, hasGuyThreshold, isBanned, payMembership, connect, disconnect,
       refreshBalances, transferTokens, requestor: address,
     }}>
       {children}

@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Heart, X, Loader2 } from 'lucide-react';
+import { Heart, X, Loader2, Lock } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useRequests, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
@@ -22,8 +22,8 @@ export interface RequestCardProps {
   description: string;
   status: string;
   proofUrl?: string;
-  isUrgent?: boolean; // Made optional to fix TS2741
-  contributions?: { // Made optional with default value in destructuring
+  isUrgent?: boolean;
+  contributions?: {
     id: string;
     user: string;
     amount: number;
@@ -46,12 +46,12 @@ const RequestCard: React.FC<RequestCardProps> = ({
   description,
   status,
   isUrgent = false,
-  contributions = [], // Default to empty array
+  contributions = [],
   timestamp,
   variant = 'grid',
 }) => {
   const { contribute } = useRequests();
-  const { address, transferTokens } = useWallet();
+  const { address, transferTokens, hasGuyThreshold } = useWallet();
   const [contributionAmount, setContributionAmount] = useState('10');
   const [contributionToken, setContributionToken] = useState<TokenSymbol>(token);
   const [contributionMessage, setContributionMessage] = useState('');
@@ -74,6 +74,10 @@ const RequestCard: React.FC<RequestCardProps> = ({
   };
 
   const handleContribute = async () => {
+    if (!hasGuyThreshold) {
+      showError("You need 7,770 GUY to contribute to the community.");
+      return;
+    }
     const val = parseFloat(contributionAmount);
     if (isNaN(val) || val <= 0 || !address) return;
     setIsProcessing(true);
@@ -145,44 +149,60 @@ const RequestCard: React.FC<RequestCardProps> = ({
         {!isOwner && status === 'Open' && (
           <div className="space-y-2 pt-2">
             {!showContribute ? (
-              <Button className="w-full bg-primary hover:bg-primary/90 text-black font-bold h-11 rounded-xl btn-premium gold-glow" onClick={() => setShowContribute(true)}>
-                <Heart size={16} className="fill-current" />
+              <Button 
+                className="w-full bg-primary hover:bg-primary/90 text-black font-bold h-11 rounded-xl btn-premium gold-glow" 
+                onClick={() => setShowContribute(true)}
+              >
+                {!hasGuyThreshold && <Lock size={14} className="mr-2" />}
+                <Heart size={16} className="fill-current mr-2" />
                 Contribute
               </Button>
             ) : (
               <div className="space-y-3 bg-white/5 p-4 rounded-xl border border-white/10">
-                <div className="flex gap-2">
-                  <Input
-                    type="number"
-                    placeholder="Amount"
-                    value={contributionAmount}
-                    onChange={(e) => setContributionAmount(e.target.value)}
-                    className="bg-white/5 border-white/10 h-10"
-                  />
-                  <Select value={contributionToken} onValueChange={(v: TokenSymbol) => setContributionToken(v)}>
-                    <SelectTrigger className="w-20 h-10 bg-white/5 border-white/10">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#1E2937] border-white/10">
-                      <SelectItem value="XPR">XPR</SelectItem>
-                      <SelectItem value="GUY">GUY</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Input
-                  placeholder="Message (optional)"
-                  value={contributionMessage}
-                  onChange={(e) => setContributionMessage(e.target.value)}
-                  className="bg-white/5 border-white/10 h-10"
-                />
-                <div className="flex gap-2">
-                  <Button className="flex-1 bg-primary hover:bg-primary/90 text-black font-bold h-10 rounded-xl" onClick={handleContribute} disabled={isProcessing}>
-                    {isProcessing ? <Loader2 className="animate-spin" size={16} /> : 'Send'}
-                  </Button>
-                  <Button variant="ghost" className="h-10 border-white/10" onClick={() => setShowContribute(false)}>
-                    <X size={16} />
-                  </Button>
-                </div>
+                {!hasGuyThreshold ? (
+                  <div className="text-center space-y-3 py-2">
+                    <p className="text-[10px] font-black text-red-400 uppercase tracking-widest">7,770 GUY Required</p>
+                    <Button asChild size="sm" variant="outline" className="w-full h-9 border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-black">
+                      <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer">Buy GUY</a>
+                    </Button>
+                    <Button variant="ghost" size="sm" className="w-full h-8 text-[10px]" onClick={() => setShowContribute(false)}>Cancel</Button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex gap-2">
+                      <Input
+                        type="number"
+                        placeholder="Amount"
+                        value={contributionAmount}
+                        onChange={(e) => setContributionAmount(e.target.value)}
+                        className="bg-white/5 border-white/10 h-10"
+                      />
+                      <Select value={contributionToken} onValueChange={(v: TokenSymbol) => setContributionToken(v)}>
+                        <SelectTrigger className="w-20 h-10 bg-white/5 border-white/10">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#1E2937] border-white/10">
+                          <SelectItem value="XPR">XPR</SelectItem>
+                          <SelectItem value="GUY">GUY</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Input
+                      placeholder="Message (optional)"
+                      value={contributionMessage}
+                      onChange={(e) => setContributionMessage(e.target.value)}
+                      className="bg-white/5 border-white/10 h-10"
+                    />
+                    <div className="flex gap-2">
+                      <Button className="flex-1 bg-primary hover:bg-primary/90 text-black font-bold h-10 rounded-xl" onClick={handleContribute} disabled={isProcessing}>
+                        {isProcessing ? <Loader2 className="animate-spin" size={16} /> : 'Send'}
+                      </Button>
+                      <Button variant="ghost" className="h-10 border-white/10" onClick={() => setShowContribute(false)}>
+                        <X size={16} />
+                      </Button>
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>

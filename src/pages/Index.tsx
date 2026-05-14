@@ -13,7 +13,6 @@ import ActivityFeed from '@/components/ActivityFeed';
 import SuccessStories from '@/components/SuccessStories';
 import CTASection from '@/components/CTASection';
 import LiveTicker from '@/components/LiveTicker';
-import AccessDenied from '@/components/AccessDenied';
 import BannedOverlay from '@/components/BannedOverlay';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -31,7 +30,7 @@ type SortType = 'newest' | 'oldest';
 type ViewMode = 'grid' | 'list';
 
 const Index = () => {
-  const { isConnected, guyBalance, isMember, membershipExpiry, payMembership, address, connect, isFetchingBalances, isConnecting, isBanned } = useWallet();
+  const { isConnected, guyBalance, isMember, hasGuyThreshold, membershipExpiry, payMembership, address, connect, isFetchingBalances, isConnecting, isBanned } = useWallet();
   const { requests, loading: requestsLoading } = useRequests();
   const [filter, setFilter] = useState<FilterType>('active');
   const [sortBy, setSortBy] = useState<SortType>('oldest');
@@ -168,15 +167,6 @@ const Index = () => {
     );
   }
 
-  // If connected, handle loading states and gated access
-  const hasGuyBalance = guyBalance >= 7770;
-
-  // IMPORTANT: Only show AccessDenied if we are NOT currently connecting OR fetching balances
-  // This prevents the flicker during the 1s delay and initial fetch
-  if (!isConnecting && !isFetchingBalances && !hasGuyBalance) {
-    return <AccessDenied />;
-  }
-
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col animate-in fade-in duration-500 relative overflow-hidden">
       <div className="absolute top-0 right-0 w-[600px] h-[600px] pointer-events-none z-0 opacity-[0.02] lg:opacity-[0.04]">
@@ -199,6 +189,28 @@ const Index = () => {
                     {isConnecting ? "Connecting..." : "Verifying Balance..."}
                   </p>
                 </div>
+              </Card>
+            ) : !hasGuyThreshold ? (
+              <Card className="border-red-500/50 bg-red-500/5 overflow-hidden relative glass-card">
+                 <div className="absolute top-0 right-0 p-4 opacity-10">
+                  <Lock size={48} className="text-red-500" />
+                </div>
+                <CardContent className="p-6 space-y-4">
+                  <div className="flex gap-4">
+                    <ShieldAlert className="text-red-500 shrink-0" />
+                    <div className="space-y-2">
+                      <p className="font-bold text-red-500 text-lg">Community Access Required</p>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        To participate in AskGuy, you need at least <span className="text-white font-bold">7,770 GUY</span> tokens. You can browse requests, but cannot post or contribute yet.
+                      </p>
+                    </div>
+                  </div>
+                  <Button asChild className="w-full bg-primary hover:bg-primary/90 text-black font-bold h-12 shadow-primary/20 text-base btn-premium gold-glow">
+                    <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer">
+                      Buy GUY on Vibrr
+                    </a>
+                  </Button>
+                </CardContent>
               </Card>
             ) : !isMember ? (
               <Card className="border-primary/50 bg-primary/5 overflow-hidden relative glass-card">
@@ -240,7 +252,7 @@ const Index = () => {
                     </AlertDialogContent>
                   </AlertDialog>
                   <p className="text-xs text-center text-muted-foreground italic">
-                    You can still browse and contribute to others without a membership.
+                    You can browse and contribute without a membership fee as long as you hold 7,770 GUY.
                   </p>
                 </CardContent>
               </Card>

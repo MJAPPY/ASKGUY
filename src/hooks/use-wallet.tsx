@@ -43,11 +43,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const linkRef = useRef<any>(null);
 
   const fetchChainBalance = async (account: string, code: string, symbol: string): Promise<number> => {
-    console.log(`[use-wallet] 🔍 Fetching ${symbol} from ${code} for ${account}...`);
+    console.log(`[use-wallet] 🔍 Searching for ${symbol} balance for ${account}...`);
     
     for (const endpoint of ENDPOINTS) {
       try {
-        // Use get_currency_balance first
+        // Method 1: get_currency_balance
         const response = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -59,13 +59,14 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           const data = await response.json();
           if (Array.isArray(data) && data.length > 0) {
             const val = parseFloat(data[0].split(' ')[0]);
-            console.log(`[use-wallet] ✅ ${symbol} Balance found via API: ${val}`);
-            return isNaN(val) ? 0 : val;
+            if (val > 0) {
+              console.log(`[use-wallet] ✅ Found ${val} ${symbol} via get_currency_balance on ${endpoint}`);
+              return val;
+            }
           }
         }
 
-        // Fallback: Check the accounts table directly if the above returns []
-        // This is often more reliable for specific tokens
+        // Method 2: get_table_rows (Direct table access)
         const tableResponse = await fetch(`${endpoint}/v1/chain/get_table_rows`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -74,36 +75,38 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             code: code,
             scope: account,
             table: 'accounts',
-            limit: 10
+            limit: 1
           }),
           cache: 'no-cache'
         });
 
         if (tableResponse.ok) {
           const tableData = await tableResponse.json();
-          const row = tableData.rows?.find((r: any) => r.balance?.includes(symbol));
-          if (row) {
+          const row = tableData.rows?.[0];
+          if (row && row.balance) {
             const val = parseFloat(row.balance.split(' ')[0]);
-            console.log(`[use-wallet] ✅ ${symbol} Balance found via Table: ${val}`);
-            return isNaN(val) ? 0 : val;
+            if (val > 0) {
+              console.log(`[use-wallet] ✅ Found ${val} ${symbol} via get_table_rows on ${endpoint}`);
+              return val;
+            }
           }
         }
       } catch (err) {
-        console.warn(`[use-wallet] ⚠️ Failed on ${endpoint} for ${symbol}`);
+        console.warn(`[use-wallet] ⚠️ Node ${endpoint} error for ${symbol}:`, err);
       }
     }
     
-    console.log(`[use-wallet] ℹ️ Final balance for ${symbol}: 0`);
     return 0;
   };
 
-  const loadBalances = useCallback(async (walletAddress: string) => {
+  const loadBalances = useCallback(async (walletAddress: string, retryCount = 0) => {
     if (!walletAddress) return;
     const cleanAddress = String(walletAddress).toLowerCase().trim();
     
     setIsFetchingBalances(true);
+    console.log(`[use-wallet] 🔄 Loading balances for ${cleanAddress} (Attempt ${retryCount + 1})`);
+
     try {
-      // Fetch in parallel
       const [realXpr, realGuy] = await Promise.all([
         fetchChainBalance(cleanAddress, 'eosio.token', 'XPR'),
         fetchChainBalance(cleanAddress, 'proton-vtoken', 'GUY')
@@ -111,6 +114,16 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       setXprBalance(realXpr);
       setGuyBalance(realGuy);
+
+      // If balance is 0 and we haven't exhausted retries, try again after a delay
+      // This handles the "koopz" case where tokens might be slow to show up on specific nodes
+      if (realGuy === 0 && retryCount < 2) {
+        console.log(`[use-wallet] ⏳ GUY balance is 0, retrying in 2s...`);
+        setTimeout(() => loadBalances(walletAddress, retryCount + 1), 2000);
+        return;
+      }
+
+      console.log(`[use-wallet] 📊 Final values → XPR: ${realXpr}, GUY: ${realGuy}`);
 
       const { data } = await supabase
         .from('profiles')
@@ -129,7 +142,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }, { onConflict: 'address' });
 
     } catch (err) {
-      console.error('[use-wallet] loadBalances error:', err);
+      console.error('[use-wallet] loadBalances fatal error:', err);
     } finally {
       setIsFetchingBalances(false);
     }
@@ -155,8 +168,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setIsConnected(true);
         setIsConnecting(true);
 
-        // Mandatory wait for chain state
-        await new Promise(r => setTimeout(r, 1000));
+        // Increased wait time for chain state synchronization
+        console.log(`[use-wallet] ⏱️ Waiting 1500ms for initial sync...`);
+        await new Promise(r => setTimeout(r, 1500));
+        
         await loadBalances(actor);
         setIsConnecting(false);
       }
@@ -198,7 +213,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         account: token === 'XPR' ? 'eosio.token' : 'proton-vtoken',
         name: 'transfer',
         authorization: [session.auth],
-        // XPR: 4 decimals, GUY: 6 decimals
         data: { 
           from: session.auth.actor, 
           to, 

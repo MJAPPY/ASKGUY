@@ -23,7 +23,8 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
-import heroGuy from '@/assets/hero-guy.jpg';
+// Using the new hero image provided in the attachment
+import heroGuy from '@/assets/hero-guy.jpg'; 
 
 type FilterType = 'all' | 'active' | 'funded' | 'my-requests';
 type SortType = 'newest' | 'oldest';
@@ -72,6 +73,9 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
         <Navbar />
+        {/* Background glow for hero character */}
+        <div className="absolute top-[20%] right-[-10%] w-[600px] h-[600px] bg-emerald-500/10 blur-[150px] rounded-full pointer-events-none hidden lg:block" />
+        
         <div className="flex-1 relative z-10 flex flex-col justify-center">
           <div className="container mx-auto px-4 py-20">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
@@ -101,9 +105,17 @@ const Index = () => {
                 </div>
               </div>
               <div className="relative animate-in fade-in slide-in-from-right-8 duration-1000">
-                <div className="relative max-w-[500px] mx-auto">
-                  <div className="relative rounded-[40px] overflow-hidden border border-white/10 shadow-[0_0_50px_rgba(16,185,129,0.1)] glass-card aspect-square">
-                    <img src={heroGuy} alt="AskGuy" className="w-full h-full object-cover" />
+                <div className="relative max-w-[600px] mx-auto group">
+                  {/* Subtle outer glow that pulses */}
+                  <div className="absolute inset-0 bg-emerald-500/10 rounded-full blur-[80px] group-hover:bg-emerald-500/20 transition-all duration-700 animate-pulse" />
+                  
+                  <div className="relative overflow-hidden aspect-square flex items-center justify-center">
+                    <img 
+                      src={heroGuy} 
+                      alt="AskGuy Hero" 
+                      className="w-full h-full object-contain scale-110 drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-transform duration-700 group-hover:scale-115"
+                      style={{ mixBlendMode: 'lighten' }} 
+                    />
                   </div>
                 </div>
               </div>

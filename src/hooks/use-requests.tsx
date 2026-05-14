@@ -40,6 +40,21 @@ interface RequestsContextType {
 
 const RequestsContext = createContext<RequestsContextType | undefined>(undefined);
 
+// Helper to map DB snake_case to CamelCase
+const mapRequestFromDB = (data: any): AidRequest => ({
+  ...data,
+  proofUrl: data.proof_url,
+  contributions: (data.contributions || []).map((c: any) => ({
+    ...c,
+    id: c.id,
+    user: c.user,
+    amount: c.amount,
+    token: c.token,
+    message: c.message,
+    timestamp: c.timestamp
+  }))
+});
+
 export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [requests, setRequests] = useState<AidRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,9 +71,9 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         .order('timestamp', { ascending: false });
       
       if (error) throw error;
-      setRequests(data || []);
+      setRequests((data || []).map(mapRequestFromDB));
     } catch (err) {
-      console.error('Fetch requests failed:', err);
+      console.error('[use-requests] Fetch requests failed:', err);
     } finally {
       setLoading(false);
     }
@@ -66,30 +81,46 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const addRequest = async (req: any) => {
     try {
+      // Map camelCase to snake_case for DB
+      const dbRequest = {
+        requestor: req.requestor,
+        title: req.title,
+        category: req.category,
+        amount: req.amount,
+        token: req.token,
+        description: req.description,
+        proof_url: req.proofUrl,
+        timestamp: Date.now(),
+        status: 'Open',
+        raised: 0
+      };
+
       const { data, error } = await supabase
         .from('aid_requests')
-        .insert({
-          ...req,
-          timestamp: Date.now(),
-          status: 'Open',
-          raised: 0
-        })
+        .insert(dbRequest)
         .select();
       
       if (error) throw error;
       await fetchRequests();
       return data;
     } catch (err) {
-      console.error('Add request failed:', err);
+      console.error('[use-requests] Add request failed:', err);
       return null;
     }
   };
 
   const updateRequest = async (id: string, updates: any) => {
     try {
+      // Map updates if needed (e.g. proofUrl -> proof_url)
+      const dbUpdates = { ...updates };
+      if (updates.proofUrl) {
+        dbUpdates.proof_url = updates.proofUrl;
+        delete dbUpdates.proofUrl;
+      }
+
       const { data, error } = await supabase
         .from('aid_requests')
-        .update(updates)
+        .update(dbUpdates)
         .eq('id', id)
         .select();
       
@@ -97,7 +128,7 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       await fetchRequests();
       return data;
     } catch (err) {
-      console.error('Update request failed:', err);
+      console.error('[use-requests] Update request failed:', err);
       return null;
     }
   };
@@ -112,7 +143,7 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (error) throw error;
       await fetchRequests();
     } catch (err) {
-      console.error('Delete request failed:', err);
+      console.error('[use-requests] Delete request failed:', err);
     }
   };
 
@@ -132,16 +163,17 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // Update the total raised amount on the request
       const request = requests.find(r => r.id === requestId);
       if (request && token === request.token) {
+        const newRaised = (request.raised || 0) + amount;
         await updateRequest(requestId, { 
-          raised: (request.raised || 0) + amount,
-          status: (request.raised || 0) + amount >= request.amount ? 'Funded' : 'Open'
+          raised: newRaised,
+          status: newRaised >= request.amount ? 'Funded' : 'Open'
         });
       }
 
       await fetchRequests();
       return true;
     } catch (err) {
-      console.error('Contribute failed:', err);
+      console.error('[use-requests] Contribute failed:', err);
       return false;
     }
   };

@@ -16,7 +16,8 @@ import BannedOverlay from '@/components/BannedOverlay';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Heart, ArrowRight, Search, Loader2, LayoutGrid, List } from 'lucide-react';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Heart, ArrowRight, Search, Loader2, LayoutGrid, List, Sparkles, PlusCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -35,6 +36,7 @@ const Index = () => {
   const [sortBy, setSortBy] = useState<SortType>('oldest');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
 
   const filteredRequests = useMemo(() => {
     let result = [...requests];
@@ -121,17 +123,36 @@ const Index = () => {
         <CommunityStats />
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-4 space-y-6">
-            {isConnecting || isFetchingBalances ? (
-              <Card className="glass-card flex items-center justify-center p-12">
-                <Loader2 className="animate-spin text-primary" size={32} />
+            <div className="space-y-6">
+              <Dialog open={isRequestModalOpen} onOpenChange={setIsRequestModalOpen}>
+                <DialogTrigger asChild>
+                  <Button className="w-full h-20 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-[24px] shadow-[0_0_30px_rgba(16,185,129,0.2)] flex flex-col items-center justify-center gap-1 group transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]">
+                    <div className="flex items-center gap-2">
+                      <PlusCircle size={24} className="transition-transform group-hover:rotate-90 duration-500" />
+                      <span className="text-lg uppercase tracking-widest">Post New Request</span>
+                    </div>
+                    <span className="text-[10px] text-emerald-100/60 uppercase font-black tracking-tighter">Ask the community for support</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="glass-card border-white/10 max-w-xl p-8 rounded-[32px] shadow-2xl">
+                  <RequestForm onSuccess={() => setIsRequestModalOpen(false)} />
+                </DialogContent>
+              </Dialog>
+
+              <ActivityFeed />
+              
+              <Card className="glass-card bg-primary/5 border-primary/20 p-6 rounded-[24px] space-y-4">
+                <div className="flex items-center gap-2 text-primary">
+                  <Sparkles size={18} />
+                  <h3 className="font-black text-sm uppercase tracking-widest">Member Tip</h3>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed font-medium">
+                  Requests with clear descriptions and photo proof are funded <span className="text-white font-bold">3x faster</span> by the community. Be transparent and honest!
+                </p>
               </Card>
-            ) : (
-              <div className="space-y-6">
-                <RequestForm />
-                <ActivityFeed />
-              </div>
-            )}
+            </div>
           </div>
+          
           <div className="lg:col-span-8 space-y-6">
             <div id="browse-requests" className="flex flex-col space-y-6">
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">

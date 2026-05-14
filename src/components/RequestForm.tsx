@@ -1,19 +1,23 @@
 "use client";
 
 import React, { useState, useRef, useMemo } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import { CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Upload, Send, X, AlertCircle, ShieldCheck, Sparkles, AlertTriangle } from 'lucide-react';
+import { Upload, X, AlertCircle, ShieldCheck, Sparkles, AlertTriangle } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useRequests, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
 
-const RequestForm = () => {
+interface RequestFormProps {
+  onSuccess?: () => void;
+}
+
+const RequestForm = ({ onSuccess }: RequestFormProps) => {
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [skipProof, setSkipProof] = useState(false);
@@ -85,8 +89,7 @@ const RequestForm = () => {
       setPreview(null);
       setSkipProof(false);
       showSuccess("Request posted successfully!");
-      const browseSection = document.getElementById('browse-requests');
-      if (browseSection) browseSection.scrollIntoView({ behavior: 'smooth' });
+      if (onSuccess) onSuccess();
     }
     setLoading(false);
   };
@@ -102,15 +105,14 @@ const RequestForm = () => {
   ];
 
   return (
-    <Card className="glass-card border-emerald-500/20 shadow-emerald-500/5 overflow-hidden">
-      <div className="h-1 bg-gradient-to-r from-emerald-500/50 via-emerald-400 to-emerald-500/50" />
-      <CardHeader className="pb-4">
+    <div className="overflow-hidden">
+      <CardHeader className="px-0 pb-6">
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
               <Sparkles className="text-emerald-400" size={18} />
             </div>
-            <CardTitle className="text-emerald-400 text-xl font-black tracking-tight">Post New Request</CardTitle>
+            <CardTitle className="text-white text-xl font-black tracking-tight">Post New Request</CardTitle>
           </div>
           <div className={`text-[10px] font-black px-2.5 py-1 rounded-full border uppercase tracking-widest ${isLimitReached ? 'bg-red-500/10 border-red-500/30 text-red-400' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'}`}>
             {activeRequestsCount}/3 Active
@@ -122,9 +124,9 @@ const RequestForm = () => {
       </CardHeader>
       
       <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-5">
+        <CardContent className="px-0 space-y-5">
           {isLimitReached && (
-            <div className="flex items-start gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-100 text-xs font-semibold leading-normal animate-in fade-in slide-in-from-top-2">
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-100 text-xs font-semibold leading-normal">
               <AlertCircle size={18} className="shrink-0 text-red-400 mt-0.5" />
               <p>
                 <span className="text-red-400 font-black uppercase tracking-widest mr-1">Limit Reached:</span> 
@@ -146,7 +148,7 @@ const RequestForm = () => {
               />
             </div>
 
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Category</Label>
                 <Select 
@@ -164,58 +166,58 @@ const RequestForm = () => {
                 </Select>
               </div>
 
-              {formData.category === 'Other' && (
-                <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Custom Category</Label>
-                  <Input 
-                    placeholder="e.g. Education, Pet Care..." 
-                    required 
-                    value={formData.customCategory}
-                    onChange={(e) => setFormData(prev => ({ ...prev, customCategory: e.target.value }))}
-                    className="bg-white/5 border-white/10 focus:border-emerald-500/50 h-11 font-medium"
-                  />
-                </div>
-              )}
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Amount Requested (XPR)</Label>
+                <Input 
+                  type="number" 
+                  placeholder="0.00" 
+                  required 
+                  value={formData.amount}
+                  onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                  className="bg-white/5 border-white/10 focus:border-emerald-500/50 h-11 font-black"
+                />
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Amount Requested (XPR)</Label>
-              <Input 
-                type="number" 
-                placeholder="0.00" 
-                required 
-                value={formData.amount}
-                onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
-                className="bg-white/5 border-white/10 focus:border-emerald-500/50 h-11 font-black"
-              />
-            </div>
+            {formData.category === 'Other' && (
+              <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Custom Category</Label>
+                <Input 
+                  placeholder="e.g. Education, Pet Care..." 
+                  required 
+                  value={formData.customCategory}
+                  onChange={(e) => setFormData(prev => ({ ...prev, customCategory: e.target.value }))}
+                  className="bg-white/5 border-white/10 focus:border-emerald-500/50 h-11 font-medium"
+                />
+              </div>
+            )}
             
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Brief Situation</Label>
               <Textarea 
                 placeholder="Explain your situation..." 
-                className="min-h-[120px] bg-white/5 border-white/10 focus:border-emerald-500/50 leading-relaxed font-medium" 
+                className="min-h-[100px] bg-white/5 border-white/10 focus:border-emerald-500/50 leading-relaxed font-medium" 
                 required 
                 value={formData.description}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               />
             </div>
 
-            <div className="space-y-4 pt-2">
+            <div className="space-y-3 pt-2">
               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Proof of Need (Recommended)</Label>
               
               <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 space-y-4">
                 <div className="flex gap-3">
                   <ShieldCheck className="text-emerald-400 shrink-0 mt-0.5" size={16} />
                   <p className="text-[11px] leading-relaxed text-emerald-100/70 font-medium">
-                    Upload a photo of your bill with your <span className="text-emerald-400 font-black">@{address}</span> handwritten next to it to build trust.
+                    Upload a photo of your bill with your <span className="text-emerald-400 font-black">@{address}</span> handwritten.
                   </p>
                 </div>
 
                 <div className="flex gap-3 p-3 rounded-xl bg-orange-500/10 border border-orange-500/20">
                   <AlertTriangle className="text-orange-400 shrink-0 mt-0.5" size={14} />
                   <p className="text-[10px] leading-tight text-orange-100/70 font-bold uppercase tracking-tight">
-                    Privacy Warning: Please redact or hide sensitive information like your home address, full name, or account numbers before uploading.
+                    Hide sensitive info like address/full name before uploading.
                   </p>
                 </div>
 
@@ -232,7 +234,6 @@ const RequestForm = () => {
                     onClick={() => fileInputRef.current?.click()}
                     className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer group ${skipProof ? 'opacity-40 border-white/10 pointer-events-none' : 'border-emerald-500/20 hover:border-emerald-500/50 hover:bg-emerald-500/5'}`}
                   >
-                    <Upload className={`mx-auto mb-2 transition-colors ${skipProof ? 'text-muted-foreground' : 'text-emerald-400 group-hover:scale-110'}`} size={24} />
                     <p className="text-sm font-black tracking-tight">Click to upload photo proof</p>
                     <p className="text-[10px] text-muted-foreground mt-1 font-bold uppercase tracking-widest">JPG or PNG</p>
                   </div>
@@ -274,17 +275,17 @@ const RequestForm = () => {
           </div>
         </CardContent>
         
-        <CardFooter className="pt-2">
+        <CardFooter className="px-0 pt-6">
           <Button 
             type="submit" 
-            className="w-full gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black h-12 rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] uppercase tracking-widest text-[11px]" 
+            className="w-full gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black h-14 rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] uppercase tracking-widest text-[11px]" 
             disabled={loading || isLimitReached}
           >
             {loading ? "Posting..." : isLimitReached ? "Limit Reached" : "Submit Request"}
           </Button>
         </CardFooter>
       </form>
-    </Card>
+    </div>
   );
 };
 

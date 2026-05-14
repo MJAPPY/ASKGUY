@@ -13,10 +13,11 @@ import ProtonWebSDK from "@proton/web-sdk";
 import { supabase } from "@/lib/supabase";
 
 const APP_NAME = "AskGuy";
-const APP_LOGO = "https://askguy.sh/logo.png";
+const APP_LOGO = "https://i.ibb.co/hRqT2qqk/image-2026-03-31T001901-395.png";
 
 const PROTON_CHAIN_ID =
   "384da888112027f0321850a169f737c33e53b388aad48b5adace4bab97f437e0";
+
 const ENDPOINTS = [
   "https://proton.greymass.com",
   "https://mainnet.protonchain.com",
@@ -33,15 +34,15 @@ interface WalletContextType {
   xprBalance: number;
   isMember: boolean;
   membershipExpiry: number | null;
-  requestor: string; // Added requestor field
+  requestor: string;
   connect: () => Promise<void>;
-  disconnect: () => void;
+  disconnect: () => Promise<void>;
   payMembership: () => Promise<void>;
   transferTokens: (
     to: string,
     amount: number,
     symbol: "XPR" | "GUY",
-    memo: string,
+    memo?: string,
   ) => Promise<boolean>;
   refreshBalances: () => Promise<void>;
 }
@@ -62,7 +63,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
   const [xprBalance, setXprBalance] = useState(0);
   const [isMember, setIsMember] = useState(false);
   const [membershipExpiry, setMembershipExpiry] = useState<number | null>(null);
-  const [requestor, setRequestor] = useState("askguy"); // Will be set on connect
+  const [requestor, setRequestor] = useState("askguy");
   const [session, setSession] = useState<any>(null);
 
   const linkRef = useRef<any>(null);
@@ -76,7 +77,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
         .eq("address", account.toLowerCase())
         .maybeSingle();
 
-      if (!error && data && data.expiry > Date.now()) {
+      if (data && data.expiry > Date.now()) {
         setIsMember(true);
         setMembershipExpiry(data.expiry);
       } else {
@@ -84,20 +85,23 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
         setMembershipExpiry(null);
       }
     } catch (err) {
+      console.error("Membership check failed:", err);
       setIsMember(false);
+      setMembershipExpiry(null);
     }
   };
 
   const checkBanStatus = async (account: string) => {
     if (!supabase) return;
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("banned_users")
         .select("address")
         .eq("address", account.toLowerCase())
         .maybeSingle();
-      setIsBanned(!error && !!data);
+      setIsBanned(!!data);
     } catch (err) {
+      console.error("Ban check failed:", err);
       setIsBanned(false);
     }
   };
@@ -168,9 +172,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
     [fetchBalances],
   );
 
-  // -------------------------------------------------------------------------
-  // SDK INITIALISATION (cast options to any to avoid TS2353)
-  // -------------------------------------------------------------------------
   useEffect(() => {
     const init = async () => {
       if (linkRef.current) return;
@@ -178,7 +179,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
         const { link, session: restoredSession } = await (
           ProtonWebSDK as any
         )({
-          // casting the whole config to any silences the strict type checks
           linkOptions: {
             chainId: PROTON_CHAIN_ID,
             endpoints: ENDPOINTS,
@@ -205,9 +205,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
     init();
   }, [handleLogin]);
 
-  // -------------------------------------------------------------------------
-  // CONNECT (also cast to any)
-  // -------------------------------------------------------------------------
   const connect = async () => {
     if (isConnecting) return;
     setIsConnecting(true);
@@ -264,7 +261,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
     setIsBanned(false);
     setIsMember(false);
     setMembershipExpiry(null);
-    setRequestor("askguy"); // Reset to default requestor
+    setRequestor("askguy");
     showSuccess("Disconnected");
   };
 
@@ -314,7 +311,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
     to: string,
     amount: number,
     symbol: "XPR" | "GUY",
-    memo: string,
+    memo?: string,
   ) => {
     if (!session) return false;
     const contract = symbol === "XPR" ? "eosio.token" : "vtoken";
@@ -360,7 +357,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
         xprBalance,
         isMember,
         membershipExpiry,
-        requestor, // Expose requestor in context
+        requestor,
         connect,
         disconnect,
         payMembership,

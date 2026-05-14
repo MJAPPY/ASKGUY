@@ -62,7 +62,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
   const [xprBalance, setXprBalance] = useState(0);
   const [isMember, setIsMember] = useState(false);
   const [membershipExpiry, setMembershipExpiry] = useState<number | null>(null);
-  const [requestor, setRequestor] = useState("askguy"); // Fixed requestor
+  const [requestor, setRequestor] = useState("askguy"); // Will be set on connect
   const [session, setSession] = useState<any>(null);
 
   const linkRef = useRef<any>(null);
@@ -161,8 +161,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
         setAddress(actor);
         setIsConnected(true);
         fetchBalances(actor);
-        // Always set requestor to "askguy" regardless of user's address
-        setRequestor("askguy");
+        // Set requestor to the user's address (public key)
+        setRequestor(actor);
       }
     },
     [fetchBalances],

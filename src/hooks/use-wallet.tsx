@@ -25,7 +25,7 @@ export interface WalletState {
 const WalletContext = createContext<WalletState | undefined>(undefined);
 
 const APP_NAME = 'AskGuy';
-// List of reliable Proton Mainnet API endpoints
+// Reliable Proton Mainnet API endpoints
 const ENDPOINTS = [
   'https://proton.greymass.com',
   'https://mainnet.protonchain.com',
@@ -46,7 +46,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const fetchChainBalance = async (account: string, code: string, symbol: string): Promise<number> => {
     for (const endpoint of ENDPOINTS) {
       try {
-        console.log(`[use-wallet] Fetching ${symbol} for ${account} from ${endpoint}...`);
         const response = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -56,16 +55,14 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (!response.ok) continue;
 
         const data = await response.json();
-        console.log(`[use-wallet] ${symbol} response from ${endpoint}:`, data);
-        
         if (Array.isArray(data) && data.length > 0) {
           const amountStr = data[0].split(' ')[0];
           const val = parseFloat(amountStr);
           return isNaN(val) ? 0 : val;
         }
-        return 0;
+        return 0; // Account has 0 balance or no token entry
       } catch (err) {
-        console.error(`[use-wallet] ${symbol} fetch failed on ${endpoint}:`, err);
+        console.warn(`[use-wallet] ${symbol} fetch failed on ${endpoint}, trying next...`);
       }
     }
     return 0;
@@ -74,17 +71,15 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const loadBalances = useCallback(async (walletAddress: string) => {
     if (!walletAddress) return;
     const cleanAddress = String(walletAddress).toLowerCase().trim();
-    console.log(`[use-wallet] Starting balance refresh for ${cleanAddress}`);
     
     setIsFetchingBalances(true);
     try {
+      // GUY token is on vibrr.token contract on Proton Mainnet
       const [realXpr, realGuy] = await Promise.all([
         fetchChainBalance(cleanAddress, 'eosio.token', 'XPR'),
-        fetchChainBalance(cleanAddress, 'proton-vtoken', 'GUY')
+        fetchChainBalance(cleanAddress, 'vibrr.token', 'GUY')
       ]);
 
-      console.log(`[use-wallet] Updated balances: ${realXpr} XPR, ${realGuy} GUY`);
-      
       setXprBalance(realXpr);
       setGuyBalance(realGuy);
 
@@ -98,6 +93,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setMembershipExpiry(data.membership_expiry ?? 0);
       }
 
+      // Keep profiles updated for server-side checks if needed
       await supabase.from('profiles').upsert({
         address: cleanAddress,
         xpr_balance: realXpr,
@@ -114,7 +110,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const initWallet = useCallback(async (restore = true) => {
     try {
-      console.log(`[use-wallet] Initializing Proton SDK (restore: ${restore})...`);
       const result = await Connect({
         linkOptions: {
           endpoints: ENDPOINTS,
@@ -138,19 +133,14 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       if (result.session) {
         const actor = String(result.session.auth.actor);
-        console.log(`[use-wallet] Logged in as: ${actor}`);
         setSession(result.session);
         setAddress(actor);
         setIsConnected(true);
         
-        // Disable UI during delay
+        // Brief sync delay to ensure chain state is ready
         setIsConnecting(true);
-        
-        // 1000ms delay before loading balances
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
+        await new Promise(resolve => setTimeout(resolve, 800));
         await loadBalances(actor);
-        
         setIsConnecting(false);
       }
       return result.session;
@@ -166,14 +156,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [initWallet]);
 
   const connect = useCallback(async () => {
-    console.log('[use-wallet] Manual connect requested');
     setIsConnecting(true);
     try {
       await initWallet(false);
     } catch (err) {
       console.error('[use-wallet] Connect call failed:', err);
     } finally {
-      // Only turn off if not handled inside initWallet
       if (!session) setIsConnecting(false);
     }
   }, [initWallet, session]);
@@ -202,13 +190,13 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!session) return false;
     try {
       const action = {
-        account: token === 'XPR' ? 'eosio.token' : 'proton-vtoken',
+        account: token === 'XPR' ? 'eosio.token' : 'vibrr.token',
         name: 'transfer',
         authorization: [session.auth],
         data: {
           from: session.auth.actor,
           to,
-          quantity: `${amount.toFixed(4)} ${token}`,
+          quantity: `${amount.toFixed(token === 'XPR' ? 4 : 4)} ${token}`,
           memo: memo || ''
         }
       };

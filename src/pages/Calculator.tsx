@@ -82,12 +82,13 @@ const Calculator = () => {
 
   useEffect(() => {
     const rate = prices[currency];
-    if (!rate || !inputValue || isNaN(parseFloat(inputValue))) {
+    const rawInput = inputValue.replace(/,/g, '');
+    if (!rate || !rawInput || isNaN(parseFloat(rawInput))) {
       setResultValue('0');
       return;
     }
 
-    const val = parseFloat(inputValue);
+    const val = parseFloat(rawInput);
     if (mode === 'fiat-to-xpr') {
       const calculated = val / rate;
       setResultValue(Math.round(calculated).toLocaleString());
@@ -98,9 +99,12 @@ const Calculator = () => {
   }, [inputValue, currency, prices, mode]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (value === '' || /^\d*\.?\d*$/.test(value)) {
-      setInputValue(value);
+    const rawValue = e.target.value.replace(/,/g, '');
+    if (rawValue === '' || /^\d*\.?\d*$/.test(rawValue)) {
+      // Format with commas but preserve decimals while typing
+      const parts = rawValue.split('.');
+      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      setInputValue(parts.join('.'));
     }
   };
 

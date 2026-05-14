@@ -28,6 +28,7 @@ const WalletContext = createContext<WalletState | undefined>(undefined);
 const APP_NAME = 'AskGuy';
 
 const ENDPOINTS = [
+  'https://proton.greymass.com',
   'https://api.protonnz.com',
   'https://api.protonchain.com',
   'https://proton.eosusa.io',
@@ -50,11 +51,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const cleanAccount = String(account).toLowerCase().trim();
     const cleanCode = String(code).toLowerCase().trim();
     
-    console.log(`[use-wallet] 🔍 Attempting to fetch ${symbol} from ${cleanCode} for account: ${cleanAccount}`);
+    console.log(`[use-wallet] 🔍 Deep Scanning: ${symbol} @ ${cleanCode} for ${cleanAccount}`);
 
     for (const endpoint of ENDPOINTS) {
       try {
-        // Strategy 1: Standard Currency Balance API
+        // Strategy 1: Standard API
         const balanceRes = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -65,14 +66,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           const data = await balanceRes.json();
           if (Array.isArray(data) && data.length > 0) {
             const val = parseFloat(data[0].split(' ')[0] || '0');
-            if (val > 0) {
-              console.log(`✅ [${endpoint}] Strategy 1 Success: ${val} ${symbol}`);
-              return val;
-            }
+            if (val > 0) return val;
           }
         }
 
-        // Strategy 2: User-Scoped Table Lookup (accounts table)
+        // Strategy 2: User-Scoped Accounts Table
         const userScopeRes = await fetch(`${endpoint}/v1/chain/get_table_rows`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -87,21 +85,15 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         if (userScopeRes.ok) {
           const { rows } = await userScopeRes.json();
-          const row = rows?.find((r: any) => 
-            String(r.balance || '').includes(symbol) || 
-            String(r.amount || '').includes(symbol)
-          );
+          const row = rows?.find((r: any) => JSON.stringify(r).includes(symbol));
           if (row) {
             const balanceStr = row.balance || row.amount || Object.values(row).find(v => typeof v === 'string' && v.includes(symbol));
             const val = parseFloat(String(balanceStr).split(' ')[0] || '0');
-            if (val > 0) {
-              console.log(`✅ [${endpoint}] Strategy 2 Success: ${val} ${symbol}`);
-              return val;
-            }
+            if (val > 0) return val;
           }
         }
 
-        // Strategy 3: Contract-Scoped Table Lookup (rare but used by some community tokens)
+        // Strategy 3: Contract-Scoped Underchain Table
         const contractScopeRes = await fetch(`${endpoint}/v1/chain/get_table_rows`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -123,20 +115,37 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             const balanceField = row.balance || row[symbol] || row[symbol.toLowerCase()] || Object.values(row).find(v => typeof v === 'string' && v.includes(symbol));
             if (balanceField) {
               const val = parseFloat(String(balanceField).split(' ')[0] || '0');
-              if (val > 0) {
-                console.log(`✅ [${endpoint}] Strategy 3 Success: ${val} ${symbol}`);
-                return val;
-              }
+              if (val > 0) return val;
             }
           }
         }
 
+        // Strategy 4: Fallback for different table names (e.g., 'balances' or 'user_balances')
+        const alternateTableRes = await fetch(`${endpoint}/v1/chain/get_table_rows`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            json: true,
+            code: cleanCode,
+            scope: cleanAccount,
+            table: 'stat',
+            limit: 10
+          }),
+        });
+
+        if (alternateTableRes.ok) {
+          const { rows } = await alternateTableRes.json();
+          const row = rows?.find((r: any) => JSON.stringify(r).includes(symbol));
+          if (row) {
+            const val = parseFloat(String(row.supply || row.balance).split(' ')[0] || '0');
+            if (val > 0) return val;
+          }
+        }
+
       } catch (err) {
-        // Silent fail to next endpoint
+        continue;
       }
     }
-    
-    console.log(`⚠️ [use-wallet] No balance found for ${symbol} on ${cleanCode}`);
     return 0;
   };
 
@@ -146,41 +155,35 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const cleanAddress = walletAddress.toLowerCase();
     
     try {
-      // Check blacklist
-      const { data: banData } = await supabase
-        .from('banned_users')
-        .select('*')
-        .eq('address', cleanAddress)
-        .maybeSingle();
-      
+      // Blacklist check
+      const { data: banData } = await supabase.from('banned_users').select('*').eq('address', cleanAddress).maybeSingle();
       setIsBanned(!!banData);
 
-      // Fetch XPR (standard)
+      // XPR is always on eosio.token
       const xprVal = await fetchChainBalance(cleanAddress, 'eosio.token', 'XPR');
       setXprBalance(xprVal);
 
-      // Fetch GUY with fallbacks (it might be on proton-vtoken OR xtokens)
-      let guyVal = await fetchChainBalance(cleanAddress, 'proton-vtoken', 'GUY');
-      
-      if (guyVal === 0) {
-        console.log(`[use-wallet] 🔄 GUY not found on proton-vtoken, trying xtokens fallback...`);
-        guyVal = await fetchChainBalance(cleanAddress, 'xtokens', 'GUY');
+      // GUY scanning across likely contracts
+      const potentialContracts = ['proton-vtoken', 'xtokens', 'token.777'];
+      let finalGuy = 0;
+
+      for (const contract of potentialContracts) {
+        const val = await fetchChainBalance(cleanAddress, contract, 'GUY');
+        if (val > 0) {
+          finalGuy = val;
+          console.log(`✨ Found GUY on contract: ${contract}`);
+          break;
+        }
       }
 
-      setGuyBalance(guyVal);
+      setGuyBalance(finalGuy);
 
-      // Sync profile
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('membership_expiry')
-        .eq('address', cleanAddress)
-        .maybeSingle();
+      // Membership data
+      const { data: profileData } = await supabase.from('profiles').select('membership_expiry').eq('address', cleanAddress).maybeSingle();
+      if (profileData?.membership_expiry) setMembershipExpiry(profileData.membership_expiry);
       
-      if (profileData?.membership_expiry) {
-        setMembershipExpiry(profileData.membership_expiry);
-      }
     } catch (err) {
-      console.error('[use-wallet] Critical failure in loadBalances:', err);
+      console.error('[use-wallet] Failed to sync account data:', err);
     } finally {
       setIsFetchingBalances(false);
     }
@@ -207,7 +210,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         loadBalances(actor);
       }
     } catch (err) {
-      console.error('[use-wallet] WebAuth initialization error:', err);
+      console.error('[use-wallet] Connect error:', err);
     }
   }, [loadBalances]);
 
@@ -228,12 +231,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (session && linkRef.current) {
       try { await linkRef.current.removeSession(APP_NAME, session.auth); } catch {}
     }
-    setAddress(''); 
-    setSession(null); 
-    setIsConnected(false);
-    setGuyBalance(0); 
-    setXprBalance(0);
-    setIsBanned(false);
+    setAddress(''); setSession(null); setIsConnected(false);
+    setGuyBalance(0); setXprBalance(0); setIsBanned(false);
   }, [session]);
 
   const refreshBalances = useCallback(async () => {
@@ -244,33 +243,27 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!session) return false;
     try {
       const precision = token === 'XPR' ? 4 : 6;
-      const account = token === 'XPR' ? 'eosio.token' : (guyBalance > 0 ? (await getGuyContract(address)) : 'proton-vtoken');
+      let account = token === 'XPR' ? 'eosio.token' : 'proton-vtoken';
+      
+      if (token === 'GUY') {
+        const xtokensVal = await fetchChainBalance(address, 'xtokens', 'GUY');
+        if (xtokensVal > 0) account = 'xtokens';
+      }
       
       const action = {
         account: account,
         name: 'transfer',
         authorization: [session.auth],
-        data: { 
-          from: session.auth.actor, 
-          to, 
-          quantity: `${amount.toFixed(precision)} ${token}`, 
-          memo: memo || '' 
-        }
+        data: { from: session.auth.actor, to, quantity: `${amount.toFixed(precision)} ${token}`, memo: memo || '' }
       };
       await session.transact({ actions: [action] }, { broadcast: true });
       setTimeout(refreshBalances, 2500);
       return true;
     } catch (err) {
-      console.error('[use-wallet] Token transfer failed:', err);
+      console.error('[use-wallet] Transaction failed:', err);
       return false;
     }
-  }, [session, refreshBalances, address, guyBalance]);
-
-  // Helper to determine which contract to use for transfer based on where balance was found
-  const getGuyContract = async (user: string) => {
-    const vtoken = await fetchChainBalance(user, 'proton-vtoken', 'GUY');
-    return vtoken > 0 ? 'proton-vtoken' : 'xtokens';
-  };
+  }, [session, refreshBalances, address]);
 
   const payMembership = useCallback(async () => {
     const success = await transferTokens('askguy', 1, 'XPR', 'AskGuy Membership Fee');

@@ -19,7 +19,7 @@ const HowItWorks = () => {
     {
       icon: <Users className="text-primary" size={20} />,
       title: "Community Requests",
-      description: "Post your needs and let the community respond. Medical bills, rent, utilities — real help for real life."
+      description: "Post your needs and let the community respond. Medical, bills, rent, utilities, any bill you are struggling to pay — real help for real life."
     },
     {
       icon: <Trophy className="text-primary" size={20} />,

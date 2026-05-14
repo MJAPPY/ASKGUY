@@ -41,7 +41,7 @@ const HowItWorks = () => {
     },
     {
       number: "03",
-      title: "Verify Identity",
+      title: "Trusted Member",
       description: "Pay a small 1 XPR fee to unlock posting rights and prove you are human."
     },
     {

@@ -43,59 +43,89 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [session, setSession] = useState<LinkSession | null>(null);
   const linkRef = useRef<any>(null);
 
-  // Advanced balance fetcher with table fallback
   const fetchChainBalance = async (account: string, code: string, symbol: string): Promise<number> => {
     console.log(`[use-wallet] 🔄 Checking ${symbol} for ${account} on ${code}...`);
-
+  
+    const cleanAccount = account.toLowerCase().trim();
+  
     for (const endpoint of ENDPOINTS) {
       try {
-        // Method 1: Standard get_currency_balance
-        const res = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
+        // === Primary: get_currency_balance (fastest when it works) ===
+        const currencyRes = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code, account, symbol }),
+          body: JSON.stringify({ code, account: cleanAccount, symbol }),
         });
-
-        if (res.ok) {
-          const data = await res.json();
+  
+        if (currencyRes.ok) {
+          const data = await currencyRes.json();
           if (Array.isArray(data) && data.length > 0) {
             const val = parseFloat(data[0].split(' ')[0] || '0');
-            console.log(`[use-wallet] ✅ Found via currency_balance: ${val} ${symbol}`);
+            console.log(`[use-wallet] ✅ ${symbol} via get_currency_balance: ${val}`);
             return val;
           }
         }
-
-        // Method 2: Fallback to direct table query (more reliable for some community tokens)
+  
+        // === Fallback 1: Standard accounts table ===
         const tableRes = await fetch(`${endpoint}/v1/chain/get_table_rows`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             json: true,
-            code: code,
-            scope: account,
+            code,
+            scope: cleanAccount,
             table: 'accounts',
-            limit: 1
+            limit: 10
           }),
         });
-
+  
         if (tableRes.ok) {
-          const tableData = await tableRes.json();
-          if (tableData.rows && tableData.rows.length > 0) {
-            // Find the row matching the symbol
-            const row = tableData.rows.find((r: any) => r.balance.includes(symbol));
+          const { rows } = await tableRes.json();
+          if (rows?.length > 0) {
+            const row = rows.find((r: any) => r.balance?.includes(symbol));
             if (row) {
               const val = parseFloat(row.balance.split(' ')[0] || '0');
-              console.log(`[use-wallet] ✅ Found via table_rows: ${val} ${symbol}`);
+              console.log(`[use-wallet] ✅ ${symbol} via accounts table: ${val}`);
               return val;
             }
           }
         }
+  
+        // === Fallback 2: Try issuer as scope (common pattern) ===
+        const issuerTableRes = await fetch(`${endpoint}/v1/chain/get_table_rows`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            json: true,
+            code,
+            scope: code,           // try contract itself as scope
+            table: 'accounts',
+            limit: 10,
+            lower_bound: cleanAccount,
+            upper_bound: cleanAccount,
+            index_position: 2,     // secondary index on owner
+            key_type: 'name'
+          }),
+        });
+  
+        if (issuerTableRes.ok) {
+          const { rows } = await issuerTableRes.json();
+          if (rows?.length > 0) {
+            const row = rows.find((r: any) => r.balance?.includes?.(symbol) || r.balance === `${symbol}`);
+            if (row) {
+              const val = parseFloat((row.balance || '').split(' ')[0] || '0');
+              console.log(`[use-wallet] ✅ ${symbol} via issuer scope: ${val}`);
+              return val;
+            }
+          }
+        }
+  
       } catch (e) {
-        console.warn(`[use-wallet] ${endpoint} attempt failed:`, e);
+        console.warn(`[use-wallet] ${endpoint} failed:`, e);
       }
     }
-
-    console.log(`[use-wallet] ⚠️ Could not find ${symbol} balance after all attempts.`);
+  
+    console.warn(`[use-wallet] ❌ Could not find ${symbol} balance after all attempts`);
     return 0;
   };
 
@@ -105,13 +135,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     setIsFetchingBalances(true);
     try {
-      // Fetching XPR and GUY in parallel
       const [realXpr, realGuy] = await Promise.all([
         fetchChainBalance(cleanAddress, 'eosio.token', 'XPR'),
         fetchChainBalance(cleanAddress, 'proton-vtoken', 'GUY')
       ]);
-
-      console.log(`[use-wallet] 🎯 Balances updated: XPR: ${realXpr} | GUY: ${realGuy}`);
 
       setXprBalance(realXpr);
       setGuyBalance(realGuy);
@@ -120,7 +147,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const { data } = await supabase.from('profiles').select('membership_expiry').eq('address', cleanAddress).maybeSingle();
         if (data?.membership_expiry) setMembershipExpiry(data.membership_expiry);
       } catch (err) {
-        console.warn('[use-wallet] Profile sync failed, using default state');
+        console.warn('[use-wallet] Profile sync failed');
       }
 
     } catch (err) {
@@ -150,7 +177,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setIsConnected(true);
         setIsConnecting(true);
 
-        // Allow some time for the chain to settle after potential logins/switches
         await new Promise(r => setTimeout(r, 1500));
         await loadBalances(actor);
         setIsConnecting(false);

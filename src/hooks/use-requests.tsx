@@ -36,7 +36,7 @@ interface RequestsContextType {
   updateRequest: (id: string, updates: any) => Promise<any>;
   deleteRequest: (id: string) => Promise<void>;
   contribute: (requestId: string, contributor: string, amount: number, token: TokenSymbol, message?: string) => Promise<boolean>;
-  markCompleted: (id: string) => Promise<any>;
+  markCompleted: (id: string, thanksMessage?: string) => Promise<any>;
 }
 
 const RequestsContext = createContext<RequestsContextType | undefined>(undefined);
@@ -183,7 +183,20 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  const markCompleted = async (id: string) => {
+  const markCompleted = async (id: string, thanksMessage?: string) => {
+    if (thanksMessage) {
+      const req = requests.find(r => r.id === id);
+      if (req) {
+        await supabase.from('contributions').insert({
+          request_id: id,
+          user: req.requestor,
+          amount: 0,
+          token: req.token,
+          message: thanksMessage,
+          timestamp: Date.now(),
+        });
+      }
+    }
     return updateRequest(id, { status: 'Completed' });
   };
 

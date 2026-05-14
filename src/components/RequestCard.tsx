@@ -116,8 +116,8 @@ const RequestCard: React.FC<RequestCardProps> = ({
   const handleComplete = async () => {
     setIsProcessing(true);
     try {
-      await markCompleted(id);
-      showSuccess("Request marked as completed!");
+      await markCompleted(id, "Thanks very much to everyone who contributed to this request! Your support means the world to me.");
+      showSuccess("Request marked as done and thanks sent!");
     } catch (err) {
       showError("Failed to update status");
     } finally {
@@ -447,17 +447,17 @@ const RequestCard: React.FC<RequestCardProps> = ({
                 )}
                 disabled={isProcessing}
               >
-                {isProcessing ? <Loader2 className="animate-spin" size={14} /> : <><CheckCircle2 size={14} /> Done</>}
+                {isProcessing ? <Loader2 className="animate-spin" size={14} /> : <><CheckCircle2 size={14} /> Mark as Done</>}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent className="glass-card border-white/10">
               <AlertDialogHeader>
                 <AlertDialogTitle className="flex items-center gap-2">
                   <AlertTriangle className="text-orange-400" size={20} />
-                  Mark as Completed?
+                  Mark as Done?
                 </AlertDialogTitle>
                 <AlertDialogDescription className="text-muted-foreground">
-                  This will mark your request as <span className="text-emerald-400 font-bold">Completed</span> and hide it from the active browse list. This action cannot be undone.
+                  This will mark your request as <span className="text-emerald-400 font-bold">Completed</span> and send a thank-you message to your supporters. This action cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -466,7 +466,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
                   onClick={handleComplete}
                   className="bg-emerald-600 hover:bg-emerald-500 text-white font-black"
                 >
-                  Confirm Completion
+                  Confirm & Send Thanks
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

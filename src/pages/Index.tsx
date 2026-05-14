@@ -23,7 +23,8 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
-import heroGuy from '@/assets/hero-guy.jpg';
+// Using the new PNG image path
+import heroGuy from '@/assets/hero-guy.png';
 
 type FilterType = 'all' | 'active' | 'funded' | 'my-requests';
 type SortType = 'newest' | 'oldest';
@@ -72,28 +73,32 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
         <Navbar />
+        {/* Background glow effects */}
+        <div className="absolute top-[20%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/10 blur-[120px] rounded-full pointer-events-none" />
+        <div className="absolute bottom-[20%] right-[-10%] w-[50%] h-[50%] bg-primary/10 blur-[120px] rounded-full pointer-events-none" />
+
         <div className="flex-1 relative z-10 flex flex-col justify-center">
-          <div className="container mx-auto px-4 py-20">
+          <div className="container mx-auto px-4 py-20 lg:py-32">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
               <div className="space-y-10 animate-in fade-in slide-in-from-left-8 duration-1000">
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/5 text-emerald-400 text-sm font-medium">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/5 text-emerald-400 text-sm font-black uppercase tracking-widest">
                   <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                   Built on XPR Network
                 </div>
                 <h1 className="text-6xl md:text-8xl font-black tracking-tight leading-none">
                   Real Help, <br />
-                  <span className="text-emerald-400 drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]">Real People</span>
+                  <span className="text-emerald-400 drop-shadow-[0_0_20px_rgba(16,185,129,0.4)]">Real People</span>
                 </h1>
                 <p className="text-muted-foreground text-xl md:text-2xl max-w-2xl leading-relaxed font-medium">
                   AskGuy is a mutual assistance platform where XPR Network members help each other with real-life expenses. Post a need, send tokens, lift each other up.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <Button onClick={connect} size="lg" className="h-14 px-8 text-lg font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl flex gap-2 group transition-all shadow-[0_0_30px_rgba(16,185,129,0.2)] btn-premium">
-                    <Heart size={20} className="fill-white" />
+                <div className="flex flex-col sm:row gap-4 pt-4">
+                  <Button onClick={connect} size="lg" className="h-16 px-10 text-xl font-black bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl flex gap-3 group transition-all shadow-[0_0_40px_rgba(16,185,129,0.3)] btn-premium uppercase tracking-widest">
+                    <Heart size={24} className="fill-white" />
                     Connect & Join
-                    <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight size={24} className="group-hover:translate-x-1 transition-transform" />
                   </Button>
-                  <Button asChild variant="outline" size="lg" className="h-14 px-8 text-lg font-bold border-primary/20 bg-primary/5 text-primary rounded-xl flex gap-2 hover:bg-primary/10 transition-all gold-glow">
+                  <Button asChild variant="outline" size="lg" className="h-16 px-10 text-xl font-black border-primary/20 bg-primary/5 text-primary rounded-2xl flex gap-3 hover:bg-primary/10 transition-all gold-glow uppercase tracking-widest">
                     <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer">
                       Buy GUY Tokens
                     </a>
@@ -101,10 +106,13 @@ const Index = () => {
                 </div>
               </div>
               <div className="relative animate-in fade-in slide-in-from-right-8 duration-1000">
-                <div className="relative max-w-[500px] mx-auto">
-                  <div className="relative rounded-[40px] overflow-hidden border border-white/10 shadow-[0_0_50px_rgba(16,185,129,0.1)] glass-card aspect-square">
-                    <img src={heroGuy} alt="AskGuy" className="w-full h-full object-cover" />
-                  </div>
+                <div className="relative z-10 w-full max-w-[600px] mx-auto group">
+                   <div className="absolute -inset-10 bg-emerald-500/10 rounded-full blur-[100px] opacity-50 group-hover:opacity-80 transition-opacity duration-1000" />
+                   <img 
+                    src={heroGuy} 
+                    alt="AskGuy Hero" 
+                    className="w-full h-auto drop-shadow-[0_0_60px_rgba(16,185,129,0.2)] transition-transform duration-700 group-hover:scale-105" 
+                   />
                 </div>
               </div>
             </div>

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -50,6 +51,8 @@ export interface RequestCardProps {
   variant?: 'grid' | 'list';
 }
 
+const DEFAULT_THANKS = "Thanks very much to everyone who contributed to this request! Your support means the world to me.";
+
 const RequestCard: React.FC<RequestCardProps> = ({
   id,
   requestor,
@@ -71,6 +74,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
   const [contributionAmount, setContributionAmount] = useState('100');
   const [contributionToken, setContributionToken] = useState<TokenSymbol>(token);
   const [contributionMessage, setContributionMessage] = useState('');
+  const [thanksMessage, setThanksMessage] = useState(DEFAULT_THANKS);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
 
@@ -116,7 +120,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
   const handleComplete = async () => {
     setIsProcessing(true);
     try {
-      await markCompleted(id, "Thanks very much to everyone who contributed to this request! Your support means the world to me.");
+      await markCompleted(id, thanksMessage);
       showSuccess("Request marked as done and thanks sent!");
     } catch (err) {
       showError("Failed to update status");
@@ -450,21 +454,35 @@ const RequestCard: React.FC<RequestCardProps> = ({
                 {isProcessing ? <Loader2 className="animate-spin" size={14} /> : <><CheckCircle2 size={14} /> Mark as Done</>}
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent className="glass-card border-white/10">
+            <AlertDialogContent className="glass-card border-white/10 max-w-md">
               <AlertDialogHeader>
-                <AlertDialogTitle className="flex items-center gap-2">
-                  <AlertTriangle className="text-orange-400" size={20} />
-                  Mark as Done?
+                <AlertDialogTitle className="flex items-center gap-2 text-2xl font-black tracking-tight">
+                  <CheckCircle2 className="text-emerald-400" size={24} />
+                  Mark as Done
                 </AlertDialogTitle>
-                <AlertDialogDescription className="text-muted-foreground">
-                  This will mark your request as <span className="text-emerald-400 font-bold">Completed</span> and send a thank-you message to your supporters. This action cannot be undone.
+                <AlertDialogDescription className="text-muted-foreground font-medium">
+                  Complete your request and send a final message of thanks to your supporters.
                 </AlertDialogDescription>
               </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel className="bg-white/5 border-white/10 text-muted-foreground hover:text-white">Cancel</AlertDialogCancel>
+              
+              <div className="space-y-3 py-4">
+                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Your Closing Message</label>
+                <Textarea 
+                  value={thanksMessage}
+                  onChange={(e) => setThanksMessage(e.target.value)}
+                  placeholder="Share your gratitude..."
+                  className="min-h-[100px] bg-white/5 border-white/10 leading-relaxed font-medium focus:border-emerald-500/50"
+                />
+                <p className="text-[9px] text-muted-foreground italic">This message will be visible in the request history for all supporters.</p>
+              </div>
+
+              <AlertDialogFooter className="gap-3">
+                <AlertDialogCancel className="bg-white/5 border-white/10 text-muted-foreground hover:text-white rounded-xl h-12 font-bold px-6">
+                  Not Yet
+                </AlertDialogCancel>
                 <AlertDialogAction 
                   onClick={handleComplete}
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-black"
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl h-12 px-8 shadow-[0_0_20px_rgba(16,185,129,0.2)]"
                 >
                   Confirm & Send Thanks
                 </AlertDialogAction>

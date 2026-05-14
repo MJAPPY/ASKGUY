@@ -42,53 +42,72 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     try {
       const response = await fetch(`${CHAIN_URL}/v1/chain/get_currency_balance`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code, account, symbol })
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
+      console.log(`[use-wallet] Received ${symbol} balance data:`, data);
+      
       if (Array.isArray(data) && data.length > 0) {
-        return parseFloat(data[0].split(' ')[0]);
+        // Proton returns balances as an array of strings like ["123.4567 XPR"]
+        const amount = parseFloat(data[0].split(' ')[0]);
+        return isNaN(amount) ? 0 : amount;
       }
       return 0;
     } catch (err) {
-      console.error(`[use-wallet] Failed to fetch ${symbol} balance:`, err);
+      console.error(`[use-wallet] Failed to fetch ${symbol} balance for ${account}:`, err);
       return 0;
     }
   };
 
   const loadBalances = useCallback(async (walletAddress: string) => {
     if (!walletAddress) return;
+    const cleanAddress = String(walletAddress).trim();
+    console.log(`[use-wallet] Starting balance load for: ${cleanAddress}`);
+    
     setIsFetchingBalances(true);
     try {
       // 1. Fetch real balances from the blockchain
       const [realXpr, realGuy] = await Promise.all([
-        fetchChainBalance(walletAddress, 'eosio.token', 'XPR'),
-        fetchChainBalance(walletAddress, 'token.guy', 'GUY')
+        fetchChainBalance(cleanAddress, 'eosio.token', 'XPR'),
+        fetchChainBalance(cleanAddress, 'token.guy', 'GUY')
       ]);
 
+      console.log(`[use-wallet] Blockchain results: ${realXpr} XPR, ${realGuy} GUY`);
+      
       setXprBalance(realXpr);
       setGuyBalance(realGuy);
 
-      // 2. Sync with database and fetch membership status
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('membership_expiry')
-        .eq('address', walletAddress)
-        .single();
-      
-      if (error && error.code !== 'PGRST116') throw error;
-      
-      setMembershipExpiry(data?.membership_expiry ?? 0);
+      // 2. Sync with database and fetch membership status (non-blocking)
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('membership_expiry')
+          .eq('address', cleanAddress)
+          .single();
+        
+        if (!error && data) {
+          setMembershipExpiry(data.membership_expiry ?? 0);
+        }
 
-      // 3. Upsert profile to keep balances in sync for leaderboard/activity feed
-      await supabase.from('profiles').upsert({
-        address: walletAddress,
-        xpr_balance: realXpr,
-        guy_balance: realGuy,
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'address' });
+        // 3. Upsert profile to keep balances in sync for leaderboard
+        await supabase.from('profiles').upsert({
+          address: cleanAddress,
+          xpr_balance: realXpr,
+          guy_balance: realGuy,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'address' });
+      } catch (dbErr) {
+        console.warn('[use-wallet] Database sync failed (continuing with blockchain data):', dbErr);
+      }
 
     } catch (err) {
-      console.error('[use-wallet] Load/Sync balances failed:', err);
+      console.error('[use-wallet] Fatal loadBalances error:', err);
     } finally {
       setIsFetchingBalances(false);
     }
@@ -118,11 +137,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       linkRef.current = link;
 
       if (protonSession) {
-        const actor = protonSession.auth.actor;
+        const actor = String(protonSession.auth.actor);
         setSession(protonSession);
         setAddress(actor);
         setIsConnected(true);
-        // Explicitly load balances after session is established
+        console.log(`[use-wallet] Session established for ${actor}`);
         await loadBalances(actor);
       }
       return protonSession;
@@ -141,7 +160,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     try {
       const protonSession = await initWallet(false);
       if (!protonSession) {
-        console.warn('[use-wallet] No session returned from Connect');
+        console.warn('[use-wallet] Connection canceled or failed');
       }
     } catch (err) {
       console.error('[use-wallet] Connect failed:', err);
@@ -185,7 +204,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       };
       
       await session.transact({ actions: [action] }, { broadcast: true });
-      // Small delay to allow chain to reflect balance change
       setTimeout(() => refreshBalances(), 1500);
       return true;
     } catch (err) {
@@ -197,8 +215,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const payMembership = useCallback(async () => {
     const success = await transferTokens('askguy', 1, 'XPR', 'AskGuy Membership Fee');
     if (success) {
-      // In a real production app, a backend listener would verify the TX and update membership_expiry
-      // For this demo, we'll update it locally after a successful transaction
       const nextYear = Date.now() + (365 * 24 * 60 * 60 * 1000);
       setMembershipExpiry(nextYear);
       await supabase.from('profiles').update({

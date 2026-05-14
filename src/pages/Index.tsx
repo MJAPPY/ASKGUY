@@ -16,10 +16,11 @@ import BannedOverlay from '@/components/BannedOverlay';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Heart, ArrowRight, Search, Loader2 } from 'lucide-react';
+import { Heart, ArrowRight, Search, Loader2, LayoutGrid, List, ArrowDownWideArrow, ArrowUpWideArrow } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import heroGuy from '@/assets/hero-guy.jpg';
 
 type FilterType = 'all' | 'active' | 'funded' | 'my-requests';
@@ -131,32 +132,63 @@ const Index = () => {
             )}
           </div>
           <div className="lg:col-span-8 space-y-6">
-            <div id="browse-requests" className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <h2 className="text-2xl font-bold">Browse Requests</h2>
-              <div className="flex items-center gap-2">
-                <div className="relative w-full sm:w-48">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
-                  <Input placeholder="Search..." className="pl-9 h-9 bg-white/5 border-white/10" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+            <div id="browse-requests" className="flex flex-col space-y-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <h2 className="text-2xl font-black tracking-tight">Browse Requests</h2>
+                <div className="flex items-center gap-2">
+                  <div className="relative w-full sm:w-48">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
+                    <Input placeholder="Search..." className="pl-9 h-10 bg-white/5 border-white/10 rounded-xl" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                  </div>
+                  
+                  <div className="flex bg-white/5 border border-white/10 p-1 rounded-xl">
+                    <ToggleGroup type="single" value={viewMode} onValueChange={(v) => v && setViewMode(v as ViewMode)}>
+                      <ToggleGroupItem value="grid" className="h-8 w-8 p-0 rounded-lg data-[state=on]:bg-primary data-[state=on]:text-black">
+                        <LayoutGrid size={16} />
+                      </ToggleGroupItem>
+                      <ToggleGroupItem value="list" className="h-8 w-8 p-0 rounded-lg data-[state=on]:bg-primary data-[state=on]:text-black">
+                        <List size={16} />
+                      </ToggleGroupItem>
+                    </ToggleGroup>
+                  </div>
+
+                  <div className="flex bg-white/5 border border-white/10 p-1 rounded-xl">
+                    <ToggleGroup type="single" value={sortBy} onValueChange={(v) => v && setSortBy(v as SortType)}>
+                      <ToggleGroupItem value="oldest" className="h-8 px-3 text-[10px] font-black uppercase tracking-widest rounded-lg data-[state=on]:bg-primary data-[state=on]:text-black">
+                        Oldest
+                      </ToggleGroupItem>
+                      <ToggleGroupItem value="newest" className="h-8 px-3 text-[10px] font-black uppercase tracking-widest rounded-lg data-[state=on]:bg-primary data-[state=on]:text-black">
+                        Newest
+                      </ToggleGroupItem>
+                    </ToggleGroup>
+                  </div>
                 </div>
-                <Tabs value={filter} onValueChange={(v: any) => setFilter(v)}>
-                  <TabsList className="bg-white/5 border border-white/10 h-9">
-                    <TabsTrigger value="all" className="text-xs h-7">All</TabsTrigger>
-                    <TabsTrigger value="active" className="text-xs h-7">Active</TabsTrigger>
-                    <TabsTrigger value="funded" className="text-xs h-7">Funded</TabsTrigger>
-                  </TabsList>
-                </Tabs>
               </div>
+
+              <Tabs value={filter} onValueChange={(v: any) => setFilter(v)} className="w-full">
+                <TabsList className="bg-white/5 border border-white/10 h-11 p-1 w-full justify-start overflow-x-auto no-scrollbar rounded-xl">
+                  <TabsTrigger value="active" className="text-xs font-black uppercase tracking-widest rounded-lg px-6 data-[state=active]:bg-primary data-[state=active]:text-black">Active</TabsTrigger>
+                  <TabsTrigger value="all" className="text-xs font-black uppercase tracking-widest rounded-lg px-6 data-[state=active]:bg-primary data-[state=active]:text-black">All Requests</TabsTrigger>
+                  <TabsTrigger value="funded" className="text-xs font-black uppercase tracking-widest rounded-lg px-6 data-[state=active]:bg-primary data-[state=active]:text-black">History</TabsTrigger>
+                </TabsList>
+              </Tabs>
             </div>
-            <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 gap-6" : "flex flex-col gap-4"}>
+
+            <div className={cn(
+              "animate-in fade-in duration-500",
+              viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 gap-6" : "flex flex-col gap-4"
+            )}>
               {requestsLoading ? (
-                <div className="col-span-full text-center py-20">
+                <div className="col-span-full text-center py-24">
                   <Loader2 className="animate-spin mx-auto text-primary" size={32} />
+                  <p className="mt-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Loading community needs...</p>
                 </div>
               ) : filteredRequests.length > 0 ? (
                 filteredRequests.map((req) => <RequestCard key={req.id} {...req} variant={viewMode} />)
               ) : (
-                <div className="col-span-full py-20 text-center glass-card border-dashed border-white/10">
-                  <p className="text-muted-foreground">No requests found matching your filters.</p>
+                <div className="col-span-full py-24 text-center glass-card border-dashed border-white/10 rounded-[32px]">
+                  <Heart className="mx-auto text-muted-foreground/20 mb-4" size={48} />
+                  <p className="text-muted-foreground font-black uppercase tracking-widest text-xs">No requests found matching your filters.</p>
                 </div>
               )}
             </div>

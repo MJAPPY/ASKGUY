@@ -6,9 +6,10 @@ import Footer from '@/components/Footer';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calculator as CalcIcon, Coins, RefreshCw, ArrowRightLeft, TrendingUp, Info, HelpCircle } from 'lucide-react';
+import { Calculator as CalcIcon, Coins, RefreshCw, ArrowRightLeft, TrendingUp, HelpCircle, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 const Calculator = () => {
   const [fiatAmount, setFiatAmount] = useState<string>('100');

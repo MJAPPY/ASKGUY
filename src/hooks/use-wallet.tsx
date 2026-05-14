@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import Connect, { LinkSession } from '@proton/web-sdk';
+import { ApiClass } from '@proton/api';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface WalletState {
@@ -46,94 +47,13 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [session, setSession] = useState<LinkSession | null>(null);
   const linkRef = useRef<any>(null);
 
-  const fetchChainBalance = async (account: string, code: string, symbol: string): Promise<number> => {
-    const cleanAccount = String(account).toLowerCase().trim();
-    console.log(`[use-wallet] 🔍 Fetching ${symbol} from ${code} for ${cleanAccount}`);
-
-    for (const endpoint of ENDPOINTS) {
-      try {
-        // Strategy 1: get_currency_balance (Fastest, standard for XPR)
-        const balanceRes = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code, account: cleanAccount, symbol }),
-        });
-
-        if (balanceRes.ok) {
-          const data = await balanceRes.json();
-          if (Array.isArray(data) && data.length > 0) {
-            const val = parseFloat(data[0].split(' ')[0] || '0');
-            console.log(`✅ Strategy 1 (Currency API) Success: ${val} ${symbol}`);
-            return val;
-          }
-        }
-
-        // Strategy 2: User-Scoped Table (Common for EOSIO tokens)
-        const userScopeRes = await fetch(`${endpoint}/v1/chain/get_table_rows`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            json: true,
-            code: code,
-            scope: cleanAccount,
-            table: 'accounts',
-            limit: 10
-          }),
-        });
-
-        if (userScopeRes.ok) {
-          const { rows } = await userScopeRes.json();
-          const row = rows?.find((r: any) => String(r.balance || '').includes(symbol));
-          if (row) {
-            const val = parseFloat(String(row.balance).split(' ')[0] || '0');
-            console.log(`✅ Strategy 2 (User Scope) Success: ${val} ${symbol}`);
-            return val;
-          }
-        }
-
-        // Strategy 3: Contract-Scoped Table (Required for many Proton community tokens like GUY)
-        const contractScopeRes = await fetch(`${endpoint}/v1/chain/get_table_rows`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            json: true,
-            code: code,
-            scope: code,
-            table: 'accounts',
-            lower_bound: cleanAccount,
-            upper_bound: cleanAccount,
-            limit: 1
-          }),
-        });
-
-        if (contractScopeRes.ok) {
-          const { rows } = await contractScopeRes.json();
-          if (rows && rows.length > 0) {
-            const row = rows[0];
-            // Look for any field that contains the balance string
-            const balanceField = row.balance || row[symbol] || row[symbol.toLowerCase()] || Object.values(row).find(v => typeof v === 'string' && v.includes(symbol));
-            if (balanceField) {
-              const val = parseFloat(String(balanceField).split(' ')[0] || '0');
-              console.log(`✅ Strategy 3 (Contract Scope) Success: ${val} ${symbol}`);
-              return val;
-            }
-          }
-        }
-
-      } catch (err) {
-        console.warn(`[use-wallet] ${endpoint} attempt failed for ${symbol}`);
-      }
-    }
-    return 0;
-  };
-
   const loadBalances = useCallback(async (walletAddress: string) => {
     if (!walletAddress) return;
     setIsFetchingBalances(true);
-    const cleanAddress = walletAddress.toLowerCase();
+    const cleanAddress = walletAddress.toLowerCase().trim();
     
     try {
-      // 1. Check blacklist status first
+      // 1. Check blacklist status
       const { data: banData } = await supabase
         .from('banned_users')
         .select('*')
@@ -142,16 +62,24 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       
       setIsBanned(!!banData);
 
-      // 2. Fetch both XPR and GUY balances in parallel
-      const [realXpr, realGuy] = await Promise.all([
-        fetchChainBalance(cleanAddress, 'eosio.token', 'XPR'),
-        fetchChainBalance(cleanAddress, 'proton-vtoken', 'GUY')
-      ]);
+      // 2. Use Proton API Class for robust balance fetching
+      const protonApi = new ApiClass(ENDPOINTS[0]);
+      
+      console.log(`[use-wallet] 🔍 Fetching balances for ${cleanAddress} via Proton API`);
+      
+      const balances = await protonApi.getCurrencyBalances(cleanAddress);
+      
+      // Extract XPR balance
+      const xprMatch = balances.find(b => b.currency === 'XPR');
+      setXprBalance(xprMatch ? parseFloat(xprMatch.amount) : 0);
 
-      setXprBalance(realXpr);
-      setGuyBalance(realGuy);
+      // Extract GUY balance - Check multiple common contracts just in case
+      const guyMatch = balances.find(b => b.currency === 'GUY');
+      setGuyBalance(guyMatch ? parseFloat(guyMatch.amount) : 0);
 
-      // 3. Sync membership data from profiles
+      console.log(`[use-wallet] ✅ Balances: ${xprMatch?.amount || 0} XPR, ${guyMatch?.amount || 0} GUY`);
+
+      // 3. Sync membership
       const { data: profileData } = await supabase
         .from('profiles')
         .select('membership_expiry')
@@ -162,7 +90,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setMembershipExpiry(profileData.membership_expiry);
       }
     } catch (err) {
-      console.error('[use-wallet] Balance/Profile load failed:', err);
+      console.error('[use-wallet] Robust balance load failed:', err);
     } finally {
       setIsFetchingBalances(false);
     }
@@ -238,7 +166,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
       };
       await session.transact({ actions: [action] }, { broadcast: true });
-      // Give the blockchain a moment to index before refreshing
       setTimeout(refreshBalances, 2500);
       return true;
     } catch (err) {

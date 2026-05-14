@@ -11,6 +11,7 @@ import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import { WalletProvider } from "./hooks/use-wallet";
 import { RequestsProvider } from "./hooks/use-requests";
+import { supabase } from "@/integrations/supabase/client";
 
 const queryClient = new QueryClient();
 

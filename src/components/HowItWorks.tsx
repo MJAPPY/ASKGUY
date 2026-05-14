@@ -42,7 +42,7 @@ const HowItWorks = () => {
     {
       number: "03",
       title: "Trusted Member",
-      description: "Pay a small 1 XPR fee to unlock posting rights and prove you are human."
+      description: "Hold 4,777 XPR and pay a 25 GUY fee to become a member and unlock request posting."
     },
     {
       number: "04",

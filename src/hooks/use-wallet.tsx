@@ -28,12 +28,12 @@ const WalletContext = createContext<WalletState | undefined>(undefined);
 
 const APP_NAME = 'AskGuy';
 
+// === 1. Optimized ENDPOINTS ===
 const ENDPOINTS = [
-  'https://api.protonnz.com',           // Often more reliable
+  'https://api.protonnz.com',
+  'https://api.protonchain.com',
   'https://proton.eosusa.io',
   'https://proton.protonuk.io',
-  'https://api.protonchain.com',
-  'https://proton.greymass.com'         // keep as last resort
 ];
 
 const protonApi = new ApiClass('proton');
@@ -49,36 +49,17 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [session, setSession] = useState<LinkSession | null>(null);
   const linkRef = useRef<any>(null);
 
+  // === 2. Enhanced fetchChainBalance implementation ===
   const fetchChainBalance = async (account: string, code: string, symbol: string): Promise<number> => {
     const cleanAccount = String(account).toLowerCase().trim();
-    console.log(`[use-wallet] 🔍 Fetching ${symbol} (${code}) for ${cleanAccount}`);
+    console.log(`[use-wallet] 🔍 Fetching ${symbol} from ${code} for ${cleanAccount}`);
 
-    // === OFFICIAL PROTON API (Best method) ===
-    try {
-      console.log(`[use-wallet] Trying protonApi.getTokenBalance...`);
-      const balances = await (protonApi as any).getTokenBalance(code, cleanAccount, symbol);
-      console.log(`[use-wallet] protonApi raw result:`, balances);
-
-      if (Array.isArray(balances) && balances.length > 0) {
-        const val = parseFloat(balances[0].split(' ')[0] || '0');
-        console.log(`✅ SUCCESS via @proton/api: ${val} ${symbol}`);
-        return val;
-      }
-    } catch (err) {
-      console.warn(`[use-wallet] protonApi failed:`, err);
-    }
-
-    // === Fallback raw RPC with better endpoints ===
-    const BETTER_ENDPOINTS = [
-      'https://api.protonnz.com',
-      'https://api.protonchain.com',
-      'https://proton.eosusa.io',
-      'https://proton.protonuk.io'
-    ];
-
-    for (const endpoint of BETTER_ENDPOINTS) {
+    for (const endpoint of ENDPOINTS) {
       try {
-        const res = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
+        console.log(`[use-wallet] → Trying ${endpoint}`);
+
+        // Try 1: get_currency_balance
+        let res = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ code, account: cleanAccount, symbol }),
@@ -86,19 +67,73 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         if (res.ok) {
           const data = await res.json();
-          console.log(`[use-wallet] ${endpoint} raw:`, data);
+          console.log(`[use-wallet] get_currency_balance raw:`, data);
           if (Array.isArray(data) && data.length > 0) {
             const val = parseFloat(data[0].split(' ')[0] || '0');
-            console.log(`✅ SUCCESS via get_currency_balance: ${val} ${symbol}`);
+            console.log(`✅ SUCCESS (currency_balance): ${val} ${symbol}`);
             return val;
           }
         }
-      } catch (err) {
-        console.warn(`[use-wallet] ${endpoint} failed`);
+
+        // Try 2: Table rows with user as scope
+        res = await fetch(`${endpoint}/v1/chain/get_table_rows`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            json: true,
+            code: code,
+            scope: cleanAccount,
+            table: 'accounts',
+            limit: 50
+          }),
+        });
+
+        if (res.ok) {
+          const { rows } = await res.json();
+          console.log(`[use-wallet] user-scope rows:`, rows);
+          const row = rows?.find((r: any) => 
+            r.balance?.toString().includes(symbol) || JSON.stringify(r).includes(symbol)
+          );
+          if (row) {
+            const bal = row.balance || Object.values(row).find((v: any) => String(v).includes(symbol));
+            const val = parseFloat(String(bal).split(' ')[0] || '0');
+            console.log(`✅ SUCCESS (user scope): ${val} ${symbol}`);
+            return val;
+          }
+        }
+
+        // Try 3: Table rows with CONTRACT as scope (key for tokens like GUY)
+        res = await fetch(`${endpoint}/v1/chain/get_table_rows`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            json: true,
+            code: code,
+            scope: code,                    // e.g. proton-vtoken as scope
+            table: 'accounts',
+            lower_bound: cleanAccount,
+            upper_bound: cleanAccount,
+            limit: 10
+          }),
+        });
+
+        if (res.ok) {
+          const { rows } = await res.json();
+          console.log(`[use-wallet] contract-scope rows:`, rows);
+          const row = rows?.find((r: any) => r.balance?.toString().includes(symbol));
+          if (row) {
+            const val = parseFloat(String(row.balance).split(' ')[0] || '0');
+            console.log(`✅ SUCCESS (contract scope): ${val} ${symbol}`);
+            return val;
+          }
+        }
+
+      } catch (err: any) {
+        console.warn(`[use-wallet] ${endpoint} failed:`, err.message || err);
       }
     }
 
-    console.warn(`⚠️ Could not find ${symbol} balance - returning 0`);
+    console.error(`❌ FAILED to fetch ${symbol} balance on all endpoints`);
     return 0;
   };
 

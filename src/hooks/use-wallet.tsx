@@ -1,32 +1,54 @@
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { createContext, useContext, useEffect, useState } from 'react';
 
-/** Context for wallet state */
-const WalletContext = createContext({
+export interface WalletState {
+  address: string;
+  isConnected: boolean;
+  isConnecting: boolean;
+  isFetchingBalances: boolean;
+  guyBalance: number;
+  xprBalance: number;
+  membershipExpiry: number;
+  isMember: boolean;
+  isBanned: boolean;
+  payMembership: () => Promise<void>;
+  connect: () => Promise<void>;
+  disconnect: () => Promise<void>;
+  refreshBalances: () => Promise<void>;
+  transferTokens: (to: string, amount: number, token: 'XPR' | 'GUY', memo?: string) => Promise<boolean>;
+  requestor: string;
+}
+
+const WalletContext = createContext<WalletState>({
   address: '',
   isConnected: false,
   isConnecting: false,
+  isFetchingBalances: false,
   guyBalance: 0,
   xprBalance: 0,
   membershipExpiry: 0,
-  payMembership: () => {},
-  connect: () => {},
-  disconnect: () => {},
-  refreshBalances: () => {},
+  isMember: false,
+  isBanned: false,
+  payMembership: async () => {},
+  connect: async () => {},
+  disconnect: async () => {},
+  refreshBalances: async () => {},
+  transferTokens: async () => false,
+  requestor: '',
 });
 
-export const WalletProvider = ({ children }) => {
+export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [address, setAddress] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [guyBalance, setGuyBalance] = useState(0);
   const [xprBalance, setXprBalance] = useState(0);
   const [membershipExpiry, setMembershipExpiry] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [isFetchingBalances, setIsFetchingBalances] = useState(false);
 
-  const loadBalances = async () => {
+  const loadBalances = useCallback(async () => {
     if (!address) return;
-    setLoading(true);
+    setIsFetchingBalances(true);
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -34,87 +56,112 @@ export const WalletProvider = ({ children }) => {
         .eq('address', address)
         .single();
       if (error) throw error;
-      setGuyBalance(data.guy_balance ?? 0);
-      setXprBalance(data.xpr_balance ?? 0);
-      setMembershipExpiry(data.membership_expiry ?? 0);
+      setGuyBalance(data?.guy_balance ?? 0);
+      setXprBalance(data?.xpr_balance ?? 0);
+      setMembershipExpiry(data?.membership_expiry ?? 0);
+    } catch (err) {
+      console.error('Load balances failed:', err);
     } finally {
-      setLoading(false);
+      setIsFetchingBalances(false);
     }
-  };
-
-  // Load balances when address changes
-  useEffect(() => {
-    if (address) loadBalances();
   }, [address]);
 
-  const connect = async () => {
+  useEffect(() => {
+    if (address) loadBalances();
+  }, [address, loadBalances]);
+
+  const connect = useCallback(async () => {
     setIsConnecting(true);
     try {
-      // Example: using Proton WebAuth or any auth method
-      // Replace with your actual authentication flow
       const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'proton',
+        provider: 'proton' as any,
       });
       if (error) throw error;
-      setAddress(data.user?.id ?? '');
+      const uid = data?.user?.id ?? '';
+      setAddress(uid);
+      setIsConnected(true);
       await loadBalances();
     } catch (err) {
       console.error('Connect failed:', err);
     } finally {
       setIsConnecting(false);
     }
-  };
+  }, [loadBalances]);
 
-  const disconnect = async () => {
+  const disconnect = useCallback(async () => {
     try {
       await supabase.auth.signOut();
-      setAddress('');
-      setGuyBalance(0);
-      setXprBalance(0);
-      setMembershipExpiry(0);
     } catch (err) {
       console.error('Disconnect failed:', err);
     }
-  };
+    setAddress('');
+    setGuyBalance(0);
+    setXprBalance(0);
+    setMembershipExpiry(0);
+    setIsConnected(false);
+  }, []);
 
-  const refreshBalances = async () => {
+  const refreshBalances = useCallback(async () => {
     if (address) await loadBalances();
-  };
+  }, [address, loadBalances]);
 
-  const value = {
+  const payMembership = useCallback(async () => {
+    if (!address) return;
+    try {
+      const { error } = await supabase.rpc('pay_membership', {
+        user_address: address,
+      });
+      if (error) throw error;
+      await loadBalances();
+    } catch (err) {
+      console.error('Pay membership failed:', err);
+      throw err;
+    }
+  }, [address, loadBalances]);
+
+  const transferTokens = useCallback(async (to: string, amount: number, token: 'XPR' | 'GUY', memo?: string) => {
+    if (!address) return false;
+    try {
+      const { error } = await supabase.rpc('transfer_tokens', {
+        from_address: address,
+        to_address: to,
+        amount,
+        token_symbol: token,
+        memo_text: memo || '',
+      });
+      if (error) throw error;
+      await loadBalances();
+      return true;
+    } catch (err) {
+      console.error('Transfer failed:', err);
+      return false;
+    }
+  }, [address, loadBalances]);
+
+  const isMember = guyBalance >= 7770;
+  const isBanned = false;
+
+  const value: WalletState = {
     address,
     isConnected,
     isConnecting,
+    isFetchingBalances,
     guyBalance,
     xprBalance,
     membershipExpiry,
-    payMembership: () => {}, // placeholder – implement as needed
+    isMember,
+    isBanned,
+    payMembership,
     connect,
     disconnect,
     refreshBalances,
+    transferTokens,
+    requestor: address,
   };
 
   return <WalletContext.Provider value={value}>{children}</WalletContext.Provider>;
 };
 
-/** Hook to access wallet context */
 export const useWallet = () => {
   return useContext(WalletContext);
 };
-
-export const RequestsProvider = ({ children }) => {
-  const { fetchRequests, addRequest, updateRequest, deleteRequest } = useRequests();
-  // expose these via context if needed elsewhere
-  return (
-    <RequestsContext.Provider value={{ fetchRequests, addRequest, updateRequest, deleteRequest }}>
-      {children}
-    </RequestsContext.Provider>
-  );
-};
-
-const RequestsContext = createContext({
-  fetchRequests: () => {},
-  addRequest: () => {},
-  updateRequest: () => {},
-  deleteRequest: () => {},
-});

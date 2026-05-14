@@ -45,9 +45,9 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const linkRef = useRef<any>(null);
 
   const fetchChainBalance = async (account: string, code: string, symbol: string): Promise<number> => {
-    console.log(`[use-wallet] 🔄 Syncing ${symbol} from contract: ${code} for user: ${account}`);
-    
-    // Attempt 1: Standard get_currency_balance
+    console.log(`[use-wallet] 🔄 Fetching ${symbol} | Contract: ${code} | Account: ${account}`);
+
+    // Method 1: get_currency_balance
     for (const endpoint of ENDPOINTS) {
       try {
         const response = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
@@ -58,22 +58,20 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         if (response.ok) {
           const data = await response.json();
+          console.log(`[use-wallet] ${endpoint} get_currency_balance response for ${symbol}:`, data);
+
           if (Array.isArray(data) && data.length > 0) {
-            const val = parseFloat(data[0].split(' ')[0]);
-            console.log(`[use-wallet] ✅ Method 1 (${symbol}): ${val}`);
+            const val = parseFloat(data[0].split(' ')[0] || '0');
+            console.log(`[use-wallet] ✅ SUCCESS ${symbol} = ${val} (get_currency_balance)`);
             return val;
-          }
-          if (Array.isArray(data) && data.length === 0) {
-            // Explicit 0 returned from node
-            break; 
           }
         }
       } catch (e) {
-        continue;
+        console.warn(`[use-wallet] ${endpoint} failed (get_currency_balance) for ${symbol}`);
       }
     }
 
-    // Attempt 2: Direct Table Rows (Deep Wallet Check)
+    // Method 2: get_table_rows fallback
     for (const endpoint of ENDPOINTS) {
       try {
         const response = await fetch(`${endpoint}/v1/chain/get_table_rows`, {
@@ -84,27 +82,30 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             code: code,
             scope: account,
             table: 'accounts',
-            limit: 20
+            limit: 50
           }),
         });
 
         if (response.ok) {
-          const data = await response.json();
-          if (data.rows && Array.isArray(data.rows)) {
-            const row = data.rows.find((r: any) => r.balance && r.balance.includes(symbol));
-            if (row) {
-              const val = parseFloat(row.balance.split(' ')[0]);
-              console.log(`[use-wallet] ✅ Method 2 (${symbol}): ${val}`);
-              return val;
+          const result = await response.json();
+          console.log(`[use-wallet] Table rows from ${endpoint} for ${symbol}:`, result);
+
+          if (result.rows && Array.isArray(result.rows)) {
+            for (const row of result.rows) {
+              if (row.balance && typeof row.balance === 'string' && row.balance.includes(symbol)) {
+                const val = parseFloat(row.balance.split(' ')[0] || '0');
+                console.log(`[use-wallet] ✅ SUCCESS ${symbol} = ${val} (table rows)`);
+                return val;
+              }
             }
           }
         }
       } catch (e) {
-        continue;
+        console.warn(`[use-wallet] Table query failed on ${endpoint} for ${symbol}`);
       }
     }
 
-    console.log(`[use-wallet] ℹ️ ${symbol} balance determined as 0 after all checks.`);
+    console.log(`[use-wallet] ❌ No balance found for ${symbol} on ${code}`);
     return 0;
   };
 
@@ -113,18 +114,18 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const cleanAddress = String(walletAddress).toLowerCase().trim();
     
     setIsFetchingBalances(true);
-
     try {
-      // Execute parallel fetches for XPR and GUY
       const [realXpr, realGuy] = await Promise.all([
         fetchChainBalance(cleanAddress, 'eosio.token', 'XPR'),
         fetchChainBalance(cleanAddress, 'proton-vtoken', 'GUY')
       ]);
 
+      console.log(`[use-wallet] 🎯 FINAL BALANCES → XPR: ${realXpr} | GUY: ${realGuy}`);
+
       setXprBalance(realXpr);
       setGuyBalance(realGuy);
 
-      // Refresh local membership status from Supabase
+      // Fetch membership status
       const { data } = await supabase
         .from('profiles')
         .select('membership_expiry')
@@ -135,13 +136,17 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setMembershipExpiry(data.membership_expiry ?? 0);
       }
 
-      // Sync the latest balances to our database for the leaderboard/stats
-      await supabase.from('profiles').upsert({
-        address: cleanAddress,
-        xpr_balance: realXpr,
-        guy_balance: realGuy,
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'address' });
+      // Sync with DB
+      try {
+        await supabase.from('profiles').upsert({
+          address: cleanAddress,
+          xpr_balance: realXpr,
+          guy_balance: realGuy,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'address' });
+      } catch (err) {
+        console.warn('[use-wallet] Supabase sync skipped:', err);
+      }
 
     } catch (err) {
       console.error('[use-wallet] Load failed:', err);
@@ -170,6 +175,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setIsConnected(true);
         setIsConnecting(true);
 
+        // Allow session to stabilize
+        await new Promise(r => setTimeout(r, 800));
         await loadBalances(actor);
         setIsConnecting(false);
       }
@@ -237,7 +244,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [transferTokens, address]);
 
   const hasGuyThreshold = guyBalance >= 7770;
-  const isMember = membershipExpiry > Date.now();
+  const isMember = membershipExpiry > Date.now() || hasGuyThreshold; 
   const isBanned = false;
 
   return (

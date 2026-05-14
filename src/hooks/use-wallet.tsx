@@ -74,10 +74,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     
     setIsFetchingBalances(true);
     try {
-      // GUY token is on vibrr.token contract on Proton Mainnet
+      // GUY token is on proton-vtoken contract on Proton Mainnet
       const [realXpr, realGuy] = await Promise.all([
         fetchChainBalance(cleanAddress, 'eosio.token', 'XPR'),
-        fetchChainBalance(cleanAddress, 'vibrr.token', 'GUY')
+        fetchChainBalance(cleanAddress, 'proton-vtoken', 'GUY')
       ]);
 
       setXprBalance(realXpr);
@@ -190,7 +190,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!session) return false;
     try {
       const action = {
-        account: token === 'XPR' ? 'eosio.token' : 'vibrr.token',
+        account: token === 'XPR' ? 'eosio.token' : 'proton-vtoken',
         name: 'transfer',
         authorization: [session.auth],
         data: {

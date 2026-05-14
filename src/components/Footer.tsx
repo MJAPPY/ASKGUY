@@ -33,7 +33,12 @@ const Footer = () => {
               </li>
               <li>
                 <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
-                  GUY Token Info
+                  GUY Token Info (Vibrr)
+                </a>
+              </li>
+              <li>
+                <a href="https://alcor.exchange/v/xpr/terminal/guy-vtoken" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                  Buy GUY on Alcor
                 </a>
               </li>
               <li>

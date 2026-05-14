@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { showError } from '@/utils/toast';
 
 export interface AidRequest {
   id: string;
@@ -81,7 +82,6 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const addRequest = async (req: any) => {
     try {
-      // Map camelCase to snake_case for DB
       const dbRequest = {
         requestor: req.requestor,
         title: req.title,
@@ -100,9 +100,13 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         .insert(dbRequest)
         .select();
       
-      if (error) throw error;
+      if (error) {
+        showError(`Failed to save request: ${error.message}`);
+        throw error;
+      }
+      
       await fetchRequests();
-      return data;
+      return data && data.length > 0 ? data[0] : null;
     } catch (err) {
       console.error('[use-requests] Add request failed:', err);
       return null;
@@ -111,7 +115,6 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const updateRequest = async (id: string, updates: any) => {
     try {
-      // Map updates if needed (e.g. proofUrl -> proof_url)
       const dbUpdates = { ...updates };
       if (updates.proofUrl) {
         dbUpdates.proof_url = updates.proofUrl;
@@ -158,9 +161,11 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         timestamp: Date.now(),
       });
       
-      if (contribError) throw contribError;
+      if (contribError) {
+        showError(`Failed to record contribution: ${contribError.message}`);
+        throw contribError;
+      }
 
-      // Update the total raised amount on the request
       const request = requests.find(r => r.id === requestId);
       if (request && token === request.token) {
         const newRaised = (request.raised || 0) + amount;
@@ -185,7 +190,6 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     fetchRequests();
     
-    // Set up realtime subscription
     const subscription = supabase
       .channel('requests_channel')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'aid_requests' }, fetchRequests)

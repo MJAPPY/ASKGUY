@@ -51,11 +51,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const cleanAccount = String(account).toLowerCase().trim();
     const cleanCode = String(code).toLowerCase().trim();
     
-    console.log(`[use-wallet] 🔍 Deep Scanning: ${symbol} @ ${cleanCode} for ${cleanAccount}`);
-
     for (const endpoint of ENDPOINTS) {
       try {
-        // Strategy 1: Standard API
         const balanceRes = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -70,7 +67,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           }
         }
 
-        // Strategy 2: User-Scoped Accounts Table
         const userScopeRes = await fetch(`${endpoint}/v1/chain/get_table_rows`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -92,56 +88,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             if (val > 0) return val;
           }
         }
-
-        // Strategy 3: Contract-Scoped Underchain Table
-        const contractScopeRes = await fetch(`${endpoint}/v1/chain/get_table_rows`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            json: true,
-            code: cleanCode,
-            scope: cleanCode,
-            table: 'accounts',
-            lower_bound: cleanAccount,
-            upper_bound: cleanAccount,
-            limit: 1
-          }),
-        });
-
-        if (contractScopeRes.ok) {
-          const { rows } = await contractScopeRes.json();
-          if (rows && rows.length > 0) {
-            const row = rows[0];
-            const balanceField = row.balance || row[symbol] || row[symbol.toLowerCase()] || Object.values(row).find(v => typeof v === 'string' && v.includes(symbol));
-            if (balanceField) {
-              const val = parseFloat(String(balanceField).split(' ')[0] || '0');
-              if (val > 0) return val;
-            }
-          }
-        }
-
-        // Strategy 4: Fallback for different table names (e.g., 'balances' or 'user_balances')
-        const alternateTableRes = await fetch(`${endpoint}/v1/chain/get_table_rows`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            json: true,
-            code: cleanCode,
-            scope: cleanAccount,
-            table: 'stat',
-            limit: 10
-          }),
-        });
-
-        if (alternateTableRes.ok) {
-          const { rows } = await alternateTableRes.json();
-          const row = rows?.find((r: any) => JSON.stringify(r).includes(symbol));
-          if (row) {
-            const val = parseFloat(String(row.supply || row.balance).split(' ')[0] || '0');
-            if (val > 0) return val;
-          }
-        }
-
       } catch (err) {
         continue;
       }
@@ -155,30 +101,23 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const cleanAddress = walletAddress.toLowerCase();
     
     try {
-      // Blacklist check
       const { data: banData } = await supabase.from('banned_users').select('*').eq('address', cleanAddress).maybeSingle();
       setIsBanned(!!banData);
 
-      // XPR is always on eosio.token
       const xprVal = await fetchChainBalance(cleanAddress, 'eosio.token', 'XPR');
       setXprBalance(xprVal);
 
-      // GUY scanning across likely contracts
       const potentialContracts = ['proton-vtoken', 'xtokens', 'token.777'];
       let finalGuy = 0;
-
       for (const contract of potentialContracts) {
         const val = await fetchChainBalance(cleanAddress, contract, 'GUY');
         if (val > 0) {
           finalGuy = val;
-          console.log(`✨ Found GUY on contract: ${contract}`);
           break;
         }
       }
-
       setGuyBalance(finalGuy);
 
-      // Membership data
       const { data: profileData } = await supabase.from('profiles').select('membership_expiry').eq('address', cleanAddress).maybeSingle();
       if (profileData?.membership_expiry) setMembershipExpiry(profileData.membership_expiry);
       
@@ -199,9 +138,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           customStyleOptions: { modalBackgroundColor: '#0A1428', logoBackgroundColor: '#0A1428', isDark: true }
         }
       });
-
       linkRef.current = result.link;
-
       if (result.session) {
         const actor = String(result.session.auth.actor);
         setSession(result.session);
@@ -220,11 +157,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const connect = useCallback(async () => {
     setIsConnecting(true);
-    try {
-      await initWallet(false);
-    } finally {
-      setIsConnecting(false);
-    }
+    try { await initWallet(false); } finally { setIsConnecting(false); }
   }, [initWallet]);
 
   const disconnect = useCallback(async () => {
@@ -244,11 +177,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     try {
       const precision = token === 'XPR' ? 4 : 6;
       let account = token === 'XPR' ? 'eosio.token' : 'proton-vtoken';
-      
-      if (token === 'GUY') {
-        const xtokensVal = await fetchChainBalance(address, 'xtokens', 'GUY');
-        if (xtokensVal > 0) account = 'xtokens';
-      }
+      const xtokensVal = await fetchChainBalance(address, 'xtokens', 'GUY');
+      if (token === 'GUY' && xtokensVal > 0) account = 'xtokens';
       
       const action = {
         account: account,
@@ -270,12 +200,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (success) {
       const nextYear = Date.now() + (365 * 24 * 60 * 60 * 1000);
       setMembershipExpiry(nextYear);
-      await supabase.from('profiles').update({ membership_expiry: nextYear }).eq('address', address);
+      await supabase.from('profiles').upsert({ address, membership_expiry: nextYear }, { onConflict: 'address' });
     }
   }, [transferTokens, address]);
 
-  const hasGuyThreshold = guyBalance >= 7770;
-  const isMember = (membershipExpiry > Date.now()) || hasGuyThreshold;
+  const hasGuyThreshold = true; // GUY requirement removed
+  const isMember = membershipExpiry > Date.now();
 
   return (
     <WalletContext.Provider value={{

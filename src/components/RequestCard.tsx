@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Heart, X, Loader2, Lock, CheckCircle2, User, ExternalLink } from 'lucide-react';
+import { Heart, X, Loader2, CheckCircle2, User } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useRequests, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
@@ -52,7 +52,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
   variant = 'grid',
 }) => {
   const { contribute, markCompleted } = useRequests();
-  const { address, transferTokens, hasGuyThreshold } = useWallet();
+  const { address, transferTokens } = useWallet();
   const [contributionAmount, setContributionAmount] = useState('10');
   const [contributionToken, setContributionToken] = useState<TokenSymbol>(token);
   const [contributionMessage, setContributionMessage] = useState('');
@@ -74,10 +74,6 @@ const RequestCard: React.FC<RequestCardProps> = ({
   };
 
   const handleContribute = async () => {
-    if (!hasGuyThreshold) {
-      showError("You need 7,770 GUY to contribute to the community.");
-      return;
-    }
     const val = parseFloat(contributionAmount);
     if (isNaN(val) || val <= 0 || !address) return;
     setIsProcessing(true);
@@ -167,7 +163,6 @@ const RequestCard: React.FC<RequestCardProps> = ({
                 className="w-full bg-primary hover:bg-primary/90 text-black font-bold h-11 rounded-xl btn-premium gold-glow" 
                 onClick={() => setShowContribute(true)}
               >
-                {!hasGuyThreshold && <Lock size={14} className="mr-2" />}
                 <Heart size={16} className="fill-current mr-2" />
                 Help Now
               </Button>

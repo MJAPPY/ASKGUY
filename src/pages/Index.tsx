@@ -78,7 +78,7 @@ const Index = () => {
         <div className="absolute bottom-[20%] right-[-10%] w-[50%] h-[50%] bg-primary/10 blur-[120px] rounded-full pointer-events-none" />
 
         <div className="flex-1 relative z-10 flex flex-col justify-center">
-          <div className="container mx-auto px-4 py-12 lg:py-24">
+          <div className="container mx-auto px-4 pt-4 pb-12 lg:pt-8 lg:pb-24">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div className="space-y-8 animate-in fade-in slide-in-from-left-8 duration-1000">
                 <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/5 text-emerald-400 text-sm font-black uppercase tracking-widest">
@@ -105,7 +105,7 @@ const Index = () => {
                   </Button>
                 </div>
               </div>
-              <div className="relative animate-in fade-in slide-in-from-right-8 duration-1000">
+              <div className="relative animate-in fade-in slide-in-from-right-8 duration-1000 lg:-translate-y-6">
                 <div className="relative z-10 w-full max-w-[480px] mx-auto group">
                    <div className="absolute -inset-10 bg-emerald-500/10 rounded-full blur-[100px] opacity-50 group-hover:opacity-80 transition-opacity duration-1000" />
                    <img 

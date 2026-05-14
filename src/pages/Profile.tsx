@@ -5,19 +5,6 @@ import { useWallet } from '@/hooks/use-wallet';
 import { useRequests } from '@/hooks/use-requests';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import RequestCard from '@/components/<dyad-problem-report summary="2 problems">
-<problem file="src/pages/Profile.tsx" line="31" column="15" code="2339">Property 'user' does not exist on type 'AidRequest'.</problem>
-<problem file="src/pages/Profile.tsx" line="45" column="49" code="2339">Property 'user' does not exist on type 'AidRequest'.</problem>
-</dyad-problem-report><think>
-
-The user wants me to fix 2 TypeScript errors in Profile.tsx where `req.user` should be `req.requestor`.</think><tool_call>write path="src/pages/Profile.tsx" description="Fix req.user to req.requestor in Profile">
-"use client";
-
-import React, { useMemo } from 'react';
-import { useWallet } from '@/hooks/use-wallet';
-import { useRequests } from '@/hooks/use-requests';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 import RequestCard from '@/components/RequestCard';
 import TransactionHistory from '@/components/TransactionHistory';
 import { Card, CardContent } from '@/components/ui/card';

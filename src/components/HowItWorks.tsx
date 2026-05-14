@@ -9,7 +9,7 @@ const HowItWorks = () => {
     {
       icon: <ShieldCheck className="text-primary" size={20} />,
       title: "Community Trust",
-      description: "A peer-to-peer ecosystem built on trust, transparency, and mutual aid."
+      description: "A peer-to-peer ecosystem built on trust, transparency, and mutual giving."
     },
     {
       icon: <Zap className="text-primary" size={20} />,

@@ -93,6 +93,11 @@ const Index = () => {
                     Connect & Join
                     <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                   </Button>
+                  <Button asChild variant="outline" size="lg" className="h-14 px-8 text-lg font-bold border-primary/20 bg-primary/5 text-primary rounded-xl flex gap-2 hover:bg-primary/10 transition-all gold-glow">
+                    <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer">
+                      Buy GUY Tokens
+                    </a>
+                  </Button>
                 </div>
               </div>
               <div className="relative animate-in fade-in slide-in-from-right-8 duration-1000">

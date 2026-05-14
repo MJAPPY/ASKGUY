@@ -24,7 +24,7 @@ const HowItWorks = () => {
     {
       icon: <Trophy className="text-primary" size={20} />,
       title: "Leaderboard",
-      description: "The most generous members earn recognition. Top helpers are celebrated on our public leaderboard. Guy tokens from posts requests will be shared with the leaderboard & the community on socials"
+      description: "The most generous members earn recognition. Top helpers are celebrated on our public leaderboard. Guy tokens from post requests will be shared with the leaderboard & the community on socials"
     }
   ];
 

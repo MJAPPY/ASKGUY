@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,7 +37,6 @@ export interface RequestCardProps {
     timestamp: number;
   }[];
   timestamp: number;
-  variant?: 'grid' | 'list';
 }
 
 const RequestCard: React.FC<RequestCardProps> = ({
@@ -115,12 +113,13 @@ const RequestCard: React.FC<RequestCardProps> = ({
     }
   };
 
-  const messagesOfSupport = contributions.filter(c => c.message && c.message.trim().length > 0);
+  // Sort contributions by newest first
+  const sortedContributions = [...contributions].sort((a, b) => b.timestamp - a.timestamp);
 
   return (
     <Dialog>
       <Card className={cn(
-        "glass-card overflow-hidden group hover:border-primary/40 transition-all duration-500 flex flex-col",
+        "glass-card overflow-hidden group hover:border-primary/40 transition-all duration-500 flex flex-col h-full",
         isUrgent && status === 'Open' ? 'border-red-500/40 shadow-[0_0_30px_rgba(239,68,68,0.1)]' : '',
         isFunded && status !== 'Completed' ? 'border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.1)]' : ''
       )}>
@@ -316,10 +315,10 @@ const RequestCard: React.FC<RequestCardProps> = ({
       </Card>
 
       <DialogContent className="glass-card border-white/10 max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0">
-        <DialogHeader className="p-6 border-b border-white/5">
+        <DialogHeader className="p-6 border-b border-white/5 shrink-0">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-3xl font-black tracking-tight">{title}</DialogTitle>
-            <span className={cn("text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest border", getCategoryColor())}>
+            <DialogTitle className="text-3xl font-black tracking-tight leading-tight">{title}</DialogTitle>
+            <span className={cn("text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest border shrink-0 ml-4", getCategoryColor())}>
               {category}
             </span>
           </div>
@@ -336,8 +335,8 @@ const RequestCard: React.FC<RequestCardProps> = ({
           </div>
         </DialogHeader>
 
-        <ScrollArea className="flex-1">
-          <div className="p-6 space-y-10">
+        <ScrollArea className="flex-1 overflow-y-auto">
+          <div className="p-6 space-y-10 pb-12">
             {/* The Situation */}
             <div className="space-y-4">
               <h4 className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
@@ -362,41 +361,54 @@ const RequestCard: React.FC<RequestCardProps> = ({
             )}
 
             {/* Messages of Support */}
-            <div className="space-y-4 pb-4">
+            <div className="space-y-4">
               <h4 className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                <MessageSquare size={14} /> Messages of Support
+                <MessageSquare size={14} /> Community Support ({contributions.length})
               </h4>
-              {messagesOfSupport.length > 0 ? (
+              {sortedContributions.length > 0 ? (
                 <div className="grid grid-cols-1 gap-4">
-                  {messagesOfSupport.map((msg, idx) => (
-                    <div key={idx} className="p-5 rounded-[20px] bg-white/5 border border-white/10 space-y-3 hover:bg-white/[0.08] transition-colors">
+                  {sortedContributions.map((msg, idx) => (
+                    <div key={idx} className="p-5 rounded-[20px] bg-white/5 border border-white/10 space-y-3 hover:bg-white/[0.08] transition-colors group">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <Avatar className="w-5 h-5 border border-white/10">
+                          <Avatar className="w-6 h-6 border border-white/10 group-hover:border-primary/50 transition-colors">
                             <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.user}`} />
                             <AvatarFallback className="text-[8px] bg-primary text-black font-black">{msg.user.substring(0, 1)}</AvatarFallback>
                           </Avatar>
-                          <span className="text-[11px] font-black text-primary uppercase tracking-widest">@{msg.user}</span>
+                          <div>
+                            <span className="text-[11px] font-black text-primary uppercase tracking-widest">@{msg.user}</span>
+                            <p className="text-[8px] text-muted-foreground uppercase font-black tracking-tighter">
+                              {formatDistanceToNow(msg.timestamp, { addSuffix: true })}
+                            </p>
+                          </div>
                         </div>
-                        <div className="px-2 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                          <span className="text-[10px] font-black text-emerald-400">+{msg.amount} {msg.token}</span>
+                        <div className="px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.05)]">
+                          <span className="text-xs font-black text-emerald-400">+{msg.amount} {msg.token}</span>
                         </div>
                       </div>
-                      <p className="text-sm font-black text-white/90 leading-relaxed italic">"{msg.message}"</p>
+                      {msg.message ? (
+                        <p className="text-sm font-black text-white/90 leading-relaxed italic border-l-2 border-primary/30 pl-4 py-1">
+                          "{msg.message}"
+                        </p>
+                      ) : (
+                        <p className="text-[10px] font-black text-muted-foreground italic uppercase tracking-widest opacity-50">
+                          Sent support with no message
+                        </p>
+                      )}
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="py-16 text-center border-2 border-dashed border-white/5 rounded-[24px] bg-white/[0.02]">
-                  <MessageSquare className="mx-auto text-muted-foreground/30 mb-3" size={32} />
-                  <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">No messages yet. Be the first to help!</p>
+                  <Heart className="mx-auto text-muted-foreground/20 mb-3" size={32} />
+                  <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">No support yet. Be the first to help!</p>
                 </div>
               )}
             </div>
           </div>
         </ScrollArea>
 
-        <div className="p-8 bg-white/[0.02] border-t border-white/10">
+        <div className="p-8 bg-[#0a0a0c]/90 backdrop-blur-xl border-t border-white/10 shrink-0">
           <div className="flex items-center justify-between mb-6">
             <div className="space-y-1">
               <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Progress</p>
@@ -407,13 +419,13 @@ const RequestCard: React.FC<RequestCardProps> = ({
             </div>
             <div className="text-right">
                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{contributions.length} Supports</p>
-               <p className={cn("text-4xl font-black drop-shadow-sm", isFunded ? "text-emerald-400" : "text-primary")}>
+               <p className={cn("text-4xl font-black drop-shadow-sm transition-colors", isFunded ? "text-emerald-400" : "text-primary")}>
                 {Math.round(progress)}%
                </p>
             </div>
           </div>
           
-          <Button asChild className="w-full bg-primary hover:bg-primary/90 text-black font-black h-16 rounded-[20px] text-lg shadow-[0_0_30px_rgba(244,201,93,0.2)]">
+          <Button asChild className="w-full bg-primary hover:bg-primary/90 text-black font-black h-16 rounded-[20px] text-lg shadow-[0_0_30px_rgba(244,201,93,0.2)] uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98]">
              <DialogTrigger>Close Details</DialogTrigger>
           </Button>
         </div>

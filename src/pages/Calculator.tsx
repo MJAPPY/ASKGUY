@@ -90,10 +90,10 @@ const Calculator = () => {
     const val = parseFloat(inputValue);
     if (mode === 'fiat-to-xpr') {
       const calculated = val / rate;
-      setResultValue(calculated.toLocaleString(undefined, { maximumFractionDigits: 2 }));
+      setResultValue(Math.round(calculated).toLocaleString());
     } else {
       const calculated = val * rate;
-      setResultValue(calculated.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+      setResultValue(Math.round(calculated).toLocaleString());
     }
   }, [inputValue, currency, prices, mode]);
 
@@ -123,10 +123,10 @@ const Calculator = () => {
               <Sparkles size={10} className="animate-pulse" /> Community Utility
             </div>
             <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-none">
-              Precision <span className="text-primary drop-shadow-[0_0_15px_rgba(244,201,93,0.2)]">XPR Calculator</span>
+              <span className="text-primary drop-shadow-[0_0_15px_rgba(244,201,93,0.2)]">XPR Calculator</span>
             </h1>
             <p className="text-muted-foreground text-base max-w-lg mx-auto leading-relaxed font-medium">
-              Real-time calculations for accurate peer-to-peer support across global currencies.
+              Real-time calculations for peer-to-peer support across global currencies.
             </p>
           </div>
 
@@ -316,7 +316,7 @@ const Calculator = () => {
                   <TrendingUp size={20} />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="font-black text-base tracking-tight">Accurate Aid</h3>
+                  <h3 className="font-black text-base tracking-tight">Simple Aid</h3>
                   <p className="text-[11px] font-medium text-muted-foreground leading-relaxed">
                     Mid-market rates from CoinGecko for fair community support estimation.
                   </p>

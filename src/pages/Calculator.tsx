@@ -35,22 +35,23 @@ const Calculator = () => {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
+  // USD at the top, then alphabetically
   const currencies = [
     { code: 'USD', symbol: '$', name: 'US Dollar' },
-    { code: 'EUR', symbol: '€', name: 'Euro' },
-    { code: 'GBP', symbol: '£', name: 'British Pound' },
-    { code: 'JPY', symbol: '¥', name: 'Japanese Yen' },
-    { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
     { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' },
-    { code: 'NZD', symbol: 'NZ$', name: 'NZ Dollar' },
+    { code: 'BRL', symbol: 'R$', name: 'Brazilian Real' },
+    { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
     { code: 'CHF', symbol: 'Fr', name: 'Swiss Franc' },
     { code: 'CNY', symbol: '¥', name: 'Chinese Yuan' },
-    { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
-    { code: 'BRL', symbol: 'R$', name: 'Brazilian Real' },
-    { code: 'ZAR', symbol: 'R', name: 'South African Rand' },
-    { code: 'MXN', symbol: '$', name: 'Mexican Peso' },
-    { code: 'SGD', symbol: 'S$', name: 'Singapore Dollar' },
+    { code: 'EUR', symbol: '€', name: 'Euro' },
+    { code: 'GBP', symbol: '£', name: 'British Pound' },
     { code: 'HKD', symbol: 'HK$', name: 'Hong Kong Dollar' },
+    { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
+    { code: 'JPY', symbol: '¥', name: 'Japanese Yen' },
+    { code: 'MXN', symbol: '$', name: 'Mexican Peso' },
+    { code: 'NZD', symbol: 'NZ$', name: 'NZ Dollar' },
+    { code: 'SGD', symbol: 'S$', name: 'Singapore Dollar' },
+    { code: 'ZAR', symbol: 'R', name: 'South African Rand' },
   ];
 
   const fetchPrices = useCallback(async () => {

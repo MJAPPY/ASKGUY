@@ -47,7 +47,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     
     for (const endpoint of ENDPOINTS) {
       try {
-        // Method 1: get_currency_balance
         const response = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -66,7 +65,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           }
         }
 
-        // Method 2: get_table_rows (Direct table access)
         const tableResponse = await fetch(`${endpoint}/v1/chain/get_table_rows`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -99,11 +97,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return 0;
   };
 
-  const loadBalances = useCallback(async (walletAddress: string, retryCount = 0) => {
+  const loadBalances = useCallback(async (walletAddress: string, retryCount = 0): Promise<void> => {
     if (!walletAddress) return;
     const cleanAddress = String(walletAddress).toLowerCase().trim();
     
-    setIsFetchingBalances(true);
+    if (retryCount === 0) setIsFetchingBalances(true);
     console.log(`[use-wallet] 🔄 Loading balances for ${cleanAddress} (Attempt ${retryCount + 1})`);
 
     try {
@@ -115,12 +113,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setXprBalance(realXpr);
       setGuyBalance(realGuy);
 
-      // If balance is 0 and we haven't exhausted retries, try again after a delay
-      // This handles the "koopz" case where tokens might be slow to show up on specific nodes
+      // If GUY balance is 0 and we have retries left, wait and recursive call
+      // IMPORTANT: We must AWAIT this so the outer loader doesn't resolve early
       if (realGuy === 0 && retryCount < 2) {
         console.log(`[use-wallet] ⏳ GUY balance is 0, retrying in 2s...`);
-        setTimeout(() => loadBalances(walletAddress, retryCount + 1), 2000);
-        return;
+        await new Promise(r => setTimeout(r, 2000));
+        return await loadBalances(walletAddress, retryCount + 1);
       }
 
       console.log(`[use-wallet] 📊 Final values → XPR: ${realXpr}, GUY: ${realGuy}`);
@@ -133,7 +131,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       
       if (data) setMembershipExpiry(data.membership_expiry ?? 0);
 
-      // Sync profile to database
       await supabase.from('profiles').upsert({
         address: cleanAddress,
         xpr_balance: realXpr,
@@ -142,9 +139,9 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }, { onConflict: 'address' });
 
     } catch (err) {
-      console.error('[use-wallet] loadBalances fatal error:', err);
+      console.error('[use-wallet] loadBalances error:', err);
     } finally {
-      setIsFetchingBalances(false);
+      if (retryCount >= 0) setIsFetchingBalances(false);
     }
   }, []);
 
@@ -168,10 +165,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setIsConnected(true);
         setIsConnecting(true);
 
-        // Increased wait time for chain state synchronization
-        console.log(`[use-wallet] ⏱️ Waiting 1500ms for initial sync...`);
-        await new Promise(r => setTimeout(r, 1500));
+        console.log(`[use-wallet] ⏱️ Waiting for initial chain sync...`);
+        await new Promise(r => setTimeout(r, 1000));
         
+        // This will now correctly block until all retries are done
         await loadBalances(actor);
         setIsConnecting(false);
       }

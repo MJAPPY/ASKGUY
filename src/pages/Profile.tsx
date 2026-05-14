@@ -5,6 +5,19 @@ import { useWallet } from '@/hooks/use-wallet';
 import { useRequests } from '@/hooks/use-requests';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import RequestCard from '@/components/<dyad-problem-report summary="2 problems">
+<problem file="src/pages/Profile.tsx" line="31" column="15" code="2339">Property 'user' does not exist on type 'AidRequest'.</problem>
+<problem file="src/pages/Profile.tsx" line="45" column="49" code="2339">Property 'user' does not exist on type 'AidRequest'.</problem>
+</dyad-problem-report><think>
+
+The user wants me to fix 2 TypeScript errors in Profile.tsx where `req.user` should be `req.requestor`.</think><tool_call>write path="src/pages/Profile.tsx" description="Fix req.user to req.requestor in Profile">
+"use client";
+
+import React, { useMemo } from 'react';
+import { useWallet } from '@/hooks/use-wallet';
+import { useRequests } from '@/hooks/use-requests';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 import RequestCard from '@/components/RequestCard';
 import TransactionHistory from '@/components/TransactionHistory';
 import { Card, CardContent } from '@/components/ui/card';
@@ -28,7 +41,7 @@ const Profile = () => {
     let count = 0;
 
     requests.forEach(req => {
-      if (req.user === address) {
+      if (req.requestor === address) {
         received += req.raised;
       }
       req.contributions.forEach(c => {
@@ -42,7 +55,7 @@ const Profile = () => {
     return { given, received, count };
   }, [requests, address]);
 
-  const myRequests = requests.filter(req => req.user === address);
+  const myRequests = requests.filter(req => req.requestor === address);
   const myContributions = requests.filter(req => 
     req.contributions.some(c => c.user === address)
   );
@@ -195,9 +208,9 @@ const Profile = () => {
           </div>
         </div>
       </div>
-
+      
       <main className="flex-1 container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

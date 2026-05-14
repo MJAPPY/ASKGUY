@@ -45,13 +45,13 @@ const Index = () => {
       result = result.filter(req => 
         req.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
         req.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        req.user.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        req.requestor.toLowerCase().includes(searchQuery.toLowerCase()) ||
         req.category.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
     if (filter === 'my-requests' && address) {
-      result = result.filter(req => req.user === address);
+      result = result.filter(req => req.requestor === address);
     } else if (filter === 'active') {
       result = result.filter(req => req.status === 'Open');
     } else if (filter === 'funded') {

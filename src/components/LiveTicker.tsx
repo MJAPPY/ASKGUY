@@ -1,15 +1,16 @@
 "use client";
 
 import React, { useMemo } from 'react';
-import { useRequests } from '@/hooks/use-requests';
+import { Card, CardContent } from '@/components/ui/card';
 import { Heart, Zap } from 'lucide-react';
+import { useRequests } from '@/hooks/use-requests';
 
 const LiveTicker = () => {
   const { requests } = useRequests();
 
   const recentDonations = useMemo(() => {
     return requests
-      .flatMap(req => req.contributions.map(c => ({ ...c, target: req.user })))
+      .flatMap(req => req.contributions.map(c => ({ ...c, target: req.requestor })))
       .sort((a, b) => b.timestamp - a.timestamp)
       .slice(0, 10);
   }, [requests]);
@@ -34,7 +35,6 @@ const LiveTicker = () => {
         ))}
       </div>
       
-      {/* Duplicate for seamless loop */}
       <div className="inline-block animate-marquee">
         {recentDonations.map((donation, i) => (
           <span key={`dup-${i}`} className="inline-flex items-center gap-2 mx-8 text-[10px] font-black uppercase tracking-widest">

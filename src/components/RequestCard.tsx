@@ -318,17 +318,17 @@ const RequestCard: React.FC<RequestCardProps> = ({
       <DialogContent className="glass-card border-white/10 max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0">
         <DialogHeader className="p-6 border-b border-white/5">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-2xl font-black tracking-tight">{title}</DialogTitle>
+            <DialogTitle className="text-3xl font-black tracking-tight">{title}</DialogTitle>
             <span className={cn("text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest border", getCategoryColor())}>
               {category}
             </span>
           </div>
           <div className="flex items-center gap-2 mt-2">
-            <Avatar className="w-5 h-5 border border-white/10">
+            <Avatar className="w-6 h-6 border border-white/10">
               <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${requestor}`} />
-              <AvatarFallback className="text-[8px] bg-primary text-black font-black">{requestor.substring(0, 2).toUpperCase()}</AvatarFallback>
+              <AvatarFallback className="text-[10px] bg-primary text-black font-black">{requestor.substring(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
-            <span className="text-xs font-black text-muted-foreground uppercase tracking-wider">@{requestor}</span>
+            <span className="text-sm font-black text-white uppercase tracking-wider">@{requestor}</span>
             <span className="text-muted-foreground/30">•</span>
             <span className="text-[10px] text-muted-foreground font-black uppercase tracking-tighter">
               Posted {formatDistanceToNow(timestamp, { addSuffix: true })}
@@ -337,70 +337,83 @@ const RequestCard: React.FC<RequestCardProps> = ({
         </DialogHeader>
 
         <ScrollArea className="flex-1">
-          <div className="p-6 space-y-8">
+          <div className="p-6 space-y-10">
+            {/* The Situation */}
             <div className="space-y-4">
-              <h4 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                <Quote size={12} /> The Situation
+              <h4 className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                <Quote size={14} /> The Situation
               </h4>
-              <p className="text-base font-medium leading-relaxed italic text-foreground/90 bg-white/5 p-6 rounded-2xl border border-white/5">
+              <div className="text-lg font-black leading-relaxed italic text-foreground/90 bg-white/5 p-8 rounded-[24px] border border-white/10 shadow-inner">
                 "{description}"
-              </p>
+              </div>
             </div>
 
+            {/* Proof of Need */}
             {proofUrl && (
               <div className="space-y-4">
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                  <ImageIcon size={12} /> Proof of Need
+                <h4 className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                  <ImageIcon size={14} /> Proof of Need
                 </h4>
-                <div className="rounded-2xl overflow-hidden border border-white/10 bg-black/20 aspect-video relative group">
+                <div className="rounded-[24px] overflow-hidden border border-white/10 bg-black/40 aspect-video relative group shadow-2xl">
                   <img src={proofUrl} alt="Proof of Need" className="w-full h-full object-contain" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
                 </div>
               </div>
             )}
 
-            <div className="space-y-4">
-              <h4 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                <MessageSquare size={12} /> Messages of Support
+            {/* Messages of Support */}
+            <div className="space-y-4 pb-4">
+              <h4 className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                <MessageSquare size={14} /> Messages of Support
               </h4>
               {messagesOfSupport.length > 0 ? (
-                <div className="space-y-3">
+                <div className="grid grid-cols-1 gap-4">
                   {messagesOfSupport.map((msg, idx) => (
-                    <div key={idx} className="p-4 rounded-xl bg-white/5 border border-white/5 space-y-2">
+                    <div key={idx} className="p-5 rounded-[20px] bg-white/5 border border-white/10 space-y-3 hover:bg-white/[0.08] transition-colors">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Avatar className="w-4 h-4">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="w-5 h-5 border border-white/10">
                             <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.user}`} />
-                            <AvatarFallback className="text-[6px] bg-primary text-black">{msg.user.substring(0, 1)}</AvatarFallback>
+                            <AvatarFallback className="text-[8px] bg-primary text-black font-black">{msg.user.substring(0, 1)}</AvatarFallback>
                           </Avatar>
-                          <span className="text-[10px] font-black text-blue-400">@{msg.user}</span>
+                          <span className="text-[11px] font-black text-primary uppercase tracking-widest">@{msg.user}</span>
                         </div>
-                        <span className="text-[9px] font-black text-primary">{msg.amount} {msg.token}</span>
+                        <div className="px-2 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                          <span className="text-[10px] font-black text-emerald-400">+{msg.amount} {msg.token}</span>
+                        </div>
                       </div>
-                      <p className="text-xs font-medium text-foreground/80 leading-relaxed italic">"{msg.message}"</p>
+                      <p className="text-sm font-black text-white/90 leading-relaxed italic">"{msg.message}"</p>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="py-12 text-center border-2 border-dashed border-white/5 rounded-2xl">
-                  <p className="text-xs font-medium text-muted-foreground">No messages yet. Be the first to send a kind word!</p>
+                <div className="py-16 text-center border-2 border-dashed border-white/5 rounded-[24px] bg-white/[0.02]">
+                  <MessageSquare className="mx-auto text-muted-foreground/30 mb-3" size={32} />
+                  <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">No messages yet. Be the first to help!</p>
                 </div>
               )}
             </div>
           </div>
         </ScrollArea>
 
-        <div className="p-6 bg-white/[0.02] border-t border-white/5">
-          <div className="flex items-center justify-between mb-4">
+        <div className="p-8 bg-white/[0.02] border-t border-white/10">
+          <div className="flex items-center justify-between mb-6">
             <div className="space-y-1">
               <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Progress</p>
-              <p className="text-lg font-black text-primary">{raised.toLocaleString()} / {amount.toLocaleString()} {token}</p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-black text-white">{raised.toLocaleString()}</span>
+                <span className="text-lg font-black text-muted-foreground">/ {amount.toLocaleString()} {token}</span>
+              </div>
             </div>
             <div className="text-right">
                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{contributions.length} Supports</p>
-               <p className="text-lg font-black text-emerald-400">{Math.round(progress)}%</p>
+               <p className={cn("text-4xl font-black drop-shadow-sm", isFunded ? "text-emerald-400" : "text-primary")}>
+                {Math.round(progress)}%
+               </p>
             </div>
           </div>
-          <Button asChild className="w-full bg-primary hover:bg-primary/90 text-black font-black h-12 rounded-xl">
+          
+          <Button asChild className="w-full bg-primary hover:bg-primary/90 text-black font-black h-16 rounded-[20px] text-lg shadow-[0_0_30px_rgba(244,201,93,0.2)]">
              <DialogTrigger>Close Details</DialogTrigger>
           </Button>
         </div>

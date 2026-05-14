@@ -49,91 +49,58 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [session, setSession] = useState<LinkSession | null>(null);
   const linkRef = useRef<any>(null);
 
-  // === 2. Enhanced fetchChainBalance implementation ===
+  // === 2. Optimized fetchChainBalance for community tokens ===
   const fetchChainBalance = async (account: string, code: string, symbol: string): Promise<number> => {
     const cleanAccount = String(account).toLowerCase().trim();
-    console.log(`[use-wallet] 🔍 Fetching ${symbol} from ${code} for ${cleanAccount}`);
+    console.log(`[use-wallet] 🔍 Fetching ${symbol} (${code}) for ${cleanAccount}`);
 
-    for (const endpoint of ENDPOINTS) {
+    const BETTER_ENDPOINTS = [
+      'https://api.protonnz.com',
+      'https://api.protonchain.com',
+      'https://proton.eosusa.io'
+    ];
+
+    for (const endpoint of BETTER_ENDPOINTS) {
       try {
         console.log(`[use-wallet] → Trying ${endpoint}`);
 
-        // Try 1: get_currency_balance
-        let res = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code, account: cleanAccount, symbol }),
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          console.log(`[use-wallet] get_currency_balance raw:`, data);
-          if (Array.isArray(data) && data.length > 0) {
-            const val = parseFloat(data[0].split(' ')[0] || '0');
-            console.log(`✅ SUCCESS (currency_balance): ${val} ${symbol}`);
-            return val;
-          }
-        }
-
-        // Try 2: Table rows with user as scope
-        res = await fetch(`${endpoint}/v1/chain/get_table_rows`, {
+        // === MOST IMPORTANT FOR GUY / proton-vtoken: scope = contract ===
+        const res = await fetch(`${endpoint}/v1/chain/get_table_rows`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             json: true,
-            code: code,
-            scope: cleanAccount,
-            table: 'accounts',
-            limit: 50
-          }),
-        });
-
-        if (res.ok) {
-          const { rows } = await res.json();
-          console.log(`[use-wallet] user-scope rows:`, rows);
-          const row = rows?.find((r: any) => 
-            r.balance?.toString().includes(symbol) || JSON.stringify(r).includes(symbol)
-          );
-          if (row) {
-            const bal = row.balance || Object.values(row).find((v: any) => String(v).includes(symbol));
-            const val = parseFloat(String(bal).split(' ')[0] || '0');
-            console.log(`✅ SUCCESS (user scope): ${val} ${symbol}`);
-            return val;
-          }
-        }
-
-        // Try 3: Table rows with CONTRACT as scope (key for tokens like GUY)
-        res = await fetch(`${endpoint}/v1/chain/get_table_rows`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            json: true,
-            code: code,
-            scope: code,                    // e.g. proton-vtoken as scope
+            code: code,           // proton-vtoken
+            scope: code,          // proton-vtoken as scope
             table: 'accounts',
             lower_bound: cleanAccount,
             upper_bound: cleanAccount,
-            limit: 10
+            limit: 5
           }),
         });
 
         if (res.ok) {
           const { rows } = await res.json();
           console.log(`[use-wallet] contract-scope rows:`, rows);
-          const row = rows?.find((r: any) => r.balance?.toString().includes(symbol));
-          if (row) {
-            const val = parseFloat(String(row.balance).split(' ')[0] || '0');
-            console.log(`✅ SUCCESS (contract scope): ${val} ${symbol}`);
-            return val;
+
+          if (rows && rows.length > 0) {
+            const row = rows[0];
+            // Try common field names
+            const balanceField = row.balance || row[symbol] || row[symbol.toLowerCase()] || Object.values(row)[0];
+            
+            if (balanceField) {
+              const val = parseFloat(String(balanceField).split(' ')[0] || '0');
+              console.log(`✅ SUCCESS on ${endpoint}: ${val} ${symbol}`);
+              return val;
+            }
           }
         }
-
       } catch (err: any) {
         console.warn(`[use-wallet] ${endpoint} failed:`, err.message || err);
       }
     }
 
-    console.error(`❌ FAILED to fetch ${symbol} balance on all endpoints`);
+    console.error(`❌ Could not fetch ${symbol} balance - returning 0`);
     return 0;
   };
 

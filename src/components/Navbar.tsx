@@ -11,7 +11,6 @@ import {
   RefreshCw, 
   ChevronDown,
   ExternalLink,
-  AlertCircle,
   Loader2
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
@@ -78,7 +77,6 @@ const Navbar = () => {
         <div className="flex items-center gap-2 md:gap-3 ml-auto">
           {isConnected ? (
             <>
-              {/* Balances - Visible on most screens, slightly smaller on mobile */}
               <div className="flex items-center gap-1.5 md:gap-2">
                 <div className="flex items-center gap-1.5 px-2.5 md:px-4 py-1.5 md:py-2 rounded-full bg-white/5 border border-white/10 text-[10px] md:text-[11px] font-bold hover:bg-white/10 transition-colors cursor-default">
                   {isFetchingBalances ? (
@@ -95,7 +93,7 @@ const Navbar = () => {
                     <Loader2 size={12} className="animate-spin text-primary" />
                   ) : (
                     <>
-                      <span className={`font-black ${guyBalance < 7770 ? "text-red-400" : "text-primary"}`}>
+                      <span className="font-black text-primary">
                         {guyBalance.toLocaleString()}
                       </span>
                       <span className="text-white/40">GUY</span>
@@ -125,18 +123,11 @@ const Navbar = () => {
                         <span className="text-sm font-black">{xprBalance.toLocaleString()} XPR</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className={`text-sm font-black ${guyBalance < 7770 ? 'text-red-400' : 'text-primary'}`}>
+                        <span className="text-sm font-black text-primary">
                           {guyBalance.toLocaleString()} GUY
                         </span>
                       </div>
                     </div>
-
-                    {guyBalance < 7770 && (
-                      <div className="p-2 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center gap-2">
-                        <AlertCircle size={14} className="text-red-400 shrink-0" />
-                        <p className="text-[10px] font-bold text-red-400">Below 7,770 GUY minimum</p>
-                      </div>
-                    )}
 
                     <Button variant="outline" size="sm" className="w-full h-8 text-[10px] font-bold gap-2 border-white/10 hover:bg-white/10 hover:border-primary/30 transition-all" asChild>
                       <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer">

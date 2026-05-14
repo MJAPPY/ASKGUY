@@ -58,11 +58,10 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       if (error) throw error;
 
-      // Map the database 'requestor' column to the 'user' property used in the UI
       const mapped = (data || []).map((r: any) => ({
         ...r,
         user: r.requestor || 'unknown',
-        proofUrl: r.proof_url // Ensure proof_url is mapped correctly too
+        proofUrl: r.proof_url
       }));
       setRequests(mapped);
     } catch (err) {

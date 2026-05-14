@@ -99,7 +99,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!account) return;
     setIsFetchingBalances(true);
     
-    // Non-blocking checks
     checkBanStatus(account);
     checkMembership(account);
 
@@ -141,15 +140,14 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [fetchBalances]);
 
-  // Initial restoration
   useEffect(() => {
     const init = async () => {
       if (linkRef.current) return;
       try {
         const { link, session: restoredSession } = await ProtonWebSDK({
           linkOptions: { chainId: PROTON_CHAIN_ID, endpoints: ENDPOINTS, restoreSession: true },
-          transportOptions: { requestPermission: "active", backButton: true },
-          selectorOptions: { appName: APP_NAME, appLogo: APP_LOGO },
+          transportOptions: { requestPermission: "active", backButton: true } as any,
+          selectorOptions: { appName: APP_NAME, appLogo: APP_LOGO } as any,
         });
 
         linkRef.current = link;
@@ -168,7 +166,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setIsConnecting(true);
     
     try {
-      // If link already exists, use its login method directly
       if (linkRef.current) {
         const { session: newSession } = await linkRef.current.login(APP_NAME);
         if (newSession) {
@@ -176,11 +173,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           showSuccess("Connected!");
         }
       } else {
-        // Fallback to factory initialization
         const { link, session: newSession } = await ProtonWebSDK({
           linkOptions: { chainId: PROTON_CHAIN_ID, endpoints: ENDPOINTS, restoreSession: false },
-          transportOptions: { requestPermission: "active", backButton: true },
-          selectorOptions: { appName: APP_NAME, appLogo: APP_LOGO },
+          transportOptions: { requestPermission: "active", backButton: true } as any,
+          selectorOptions: { appName: APP_NAME, appLogo: APP_LOGO } as any,
         });
 
         if (newSession) {

@@ -20,7 +20,7 @@ import {
   AlertDialogTrigger 
 } from "@/components/ui/alert-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Heart, X, Loader2, CheckCircle2, Zap, Sparkles, Image as ImageIcon, MessageSquare, Quote, AlertTriangle } from 'lucide-react';
+import { Heart, X, Loader2, CheckCircle2, Zap, Sparkles, Image as ImageIcon, MessageSquare, Quote, AlertTriangle, Share2 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useRequests, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
@@ -126,6 +126,28 @@ const RequestCard: React.FC<RequestCardProps> = ({
       showError("Failed to update status");
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const shareData = {
+      title: `Help @${requestor} with ${title}`,
+      text: `Support @${requestor} on AskGuy! They need help with ${category}. ${description.substring(0, 50)}...`,
+      url: `${window.location.origin}/profile/${requestor}`
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareData.url);
+        showSuccess("Profile link copied to clipboard!");
+      }
+    } catch (err) {
+      if ((err as Error).name !== 'AbortError') {
+        showError("Could not share request");
+      }
     }
   };
 
@@ -241,9 +263,19 @@ const RequestCard: React.FC<RequestCardProps> = ({
           <DialogHeader className="p-6 border-b border-white/5 shrink-0">
             <div className="flex items-center justify-between">
               <DialogTitle className="text-3xl font-black tracking-tight leading-tight">{title}</DialogTitle>
-              <span className={cn("text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest border shrink-0 ml-4", getCategoryColor())}>
-                {category}
-              </span>
+              <div className="flex items-center gap-2 shrink-0 ml-4">
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={handleShare}
+                  className="h-8 w-8 rounded-full border-white/10 hover:bg-white/10"
+                >
+                  <Share2 size={14} />
+                </Button>
+                <span className={cn("text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest border", getCategoryColor())}>
+                  {category}
+                </span>
+              </div>
             </div>
             <div className="flex items-center gap-2 mt-2">
               <div className="relative group/user">
@@ -364,90 +396,103 @@ const RequestCard: React.FC<RequestCardProps> = ({
         "flex flex-col gap-3",
         variant === 'list' ? "p-6 border-l border-white/5 shrink-0 justify-center min-w-[160px]" : "p-6 pt-0"
       )}>
-        {!isOwner && status === 'Open' && (
-          <Dialog open={isHelpModalOpen} onOpenChange={setIsHelpModalOpen}>
-            <DialogTrigger asChild>
-              <Button 
-                className={cn(
-                  "w-full bg-primary hover:bg-primary/90 text-black font-black rounded-xl gold-glow uppercase tracking-widest gap-2 transition-all",
-                  variant === 'list' ? "h-12 text-[11px]" : "h-14 text-sm btn-premium"
-                )} 
-              >
-                <Heart size={14} className="fill-current" />
-                Help Now
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="glass-card border-white/10 max-w-sm p-6 space-y-6 shadow-2xl">
-              <DialogHeader>
-                <DialogTitle className="text-2xl font-black tracking-tight">Send Support</DialogTitle>
-                <DialogDescription className="text-muted-foreground font-medium">
-                  Helping <span className="text-primary font-bold">@{requestor}</span> with {title}
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Quick Amounts</p>
-                  <div className="grid grid-cols-4 gap-2">
-                    {quickAmounts.map(amt => (
-                      <Button 
-                        key={amt} 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => setContributionAmount(amt.toString())}
-                        className={cn("h-8 text-[10px] font-black border-white/10 rounded-lg", contributionAmount === amt.toString() ? "bg-primary text-black border-primary shadow-[0_0_10px_rgba(244,201,93,0.2)]" : "hover:bg-white/5")}
-                      >
-                        {amt}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Amount & Token</p>
-                  <div className="flex gap-2">
-                    <Input
-                      type="number"
-                      value={contributionAmount}
-                      onChange={(e) => setContributionAmount(e.target.value)}
-                      className="bg-white/5 border-white/10 h-10 font-black rounded-xl"
-                    />
-                    <Select value={contributionToken} onValueChange={(v: TokenSymbol) => setContributionToken(v)}>
-                      <SelectTrigger className="w-24 h-10 bg-white/5 border-white/10 font-black rounded-xl">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="glass-card">
-                        <SelectItem value="XPR">XPR</SelectItem>
-                        <SelectItem value="GUY">GUY</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Message (Optional)</p>
-                  <Input
-                    placeholder="WAGMI! Stay strong."
-                    value={contributionMessage}
-                    onChange={(e) => setContributionMessage(e.target.value)}
-                    className="bg-white/5 border-white/10 h-10 italic rounded-xl"
-                  />
-                </div>
-              </div>
-
-              <DialogFooter>
+        <div className="flex gap-2">
+          {!isOwner && status === 'Open' && (
+            <Dialog open={isHelpModalOpen} onOpenChange={setIsHelpModalOpen}>
+              <DialogTrigger asChild>
                 <Button 
-                  className="w-full bg-primary hover:bg-primary/90 text-black font-black h-12 rounded-xl gold-glow transition-all shadow-[0_0_20px_rgba(244,201,93,0.2)]" 
-                  onClick={handleContribute}
-                  disabled={isProcessing}
+                  className={cn(
+                    "flex-1 bg-primary hover:bg-primary/90 text-black font-black rounded-xl gold-glow uppercase tracking-widest gap-2 transition-all",
+                    variant === 'list' ? "h-12 text-[11px]" : "h-14 text-sm btn-premium"
+                  )} 
                 >
-                  {isProcessing ? <Loader2 className="animate-spin mr-2" size={16} /> : <Zap size={16} className="mr-2 fill-current" />}
-                  Confirm & Send
+                  <Heart size={14} className="fill-current" />
+                  Help Now
                 </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        )}
+              </DialogTrigger>
+              <DialogContent className="glass-card border-white/10 max-w-sm p-6 space-y-6 shadow-2xl">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl font-black tracking-tight">Send Support</DialogTitle>
+                  <DialogDescription className="text-muted-foreground font-medium">
+                    Helping <span className="text-primary font-bold">@{requestor}</span> with {title}
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Quick Amounts</p>
+                    <div className="grid grid-cols-4 gap-2">
+                      {quickAmounts.map(amt => (
+                        <Button 
+                          key={amt} 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setContributionAmount(amt.toString())}
+                          className={cn("h-8 text-[10px] font-black border-white/10 rounded-lg", contributionAmount === amt.toString() ? "bg-primary text-black border-primary shadow-[0_0_10px_rgba(244,201,93,0.2)]" : "hover:bg-white/5")}
+                        >
+                          {amt}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Amount & Token</p>
+                    <div className="flex gap-2">
+                      <Input
+                        type="number"
+                        value={contributionAmount}
+                        onChange={(e) => setContributionAmount(e.target.value)}
+                        className="bg-white/5 border-white/10 h-10 font-black rounded-xl"
+                      />
+                      <Select value={contributionToken} onValueChange={(v: TokenSymbol) => setContributionToken(v)}>
+                        <SelectTrigger className="w-24 h-10 bg-white/5 border-white/10 font-black rounded-xl">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="glass-card">
+                          <SelectItem value="XPR">XPR</SelectItem>
+                          <SelectItem value="GUY">GUY</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Message (Optional)</p>
+                    <Input
+                      placeholder="WAGMI! Stay strong."
+                      value={contributionMessage}
+                      onChange={(e) => setContributionMessage(e.target.value)}
+                      className="bg-white/5 border-white/10 h-10 italic rounded-xl"
+                    />
+                  </div>
+                </div>
+
+                <DialogFooter>
+                  <Button 
+                    className="w-full bg-primary hover:bg-primary/90 text-black font-black h-12 rounded-xl gold-glow transition-all shadow-[0_0_20px_rgba(244,201,93,0.2)]" 
+                    onClick={handleContribute}
+                    disabled={isProcessing}
+                  >
+                    {isProcessing ? <Loader2 className="animate-spin mr-2" size={16} /> : <Zap size={16} className="mr-2 fill-current" />}
+                    Confirm & Send
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
+
+          {variant === 'grid' && (
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={handleShare}
+              className="h-14 w-14 rounded-xl border-white/10 hover:bg-white/5 shrink-0"
+            >
+              <Share2 size={18} className="text-muted-foreground" />
+            </Button>
+          )}
+        </div>
 
         {isOwner && status !== 'Completed' && (
           <AlertDialog>
@@ -510,6 +555,17 @@ const RequestCard: React.FC<RequestCardProps> = ({
            <span className="text-xs font-black text-muted-foreground/60 uppercase tracking-widest text-center animate-in fade-in">
             Funded
           </span>
+        )}
+        
+        {variant === 'list' && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleShare}
+            className="text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors gap-2"
+          >
+            <Share2 size={12} /> Share Request
+          </Button>
         )}
       </div>
     </Card>

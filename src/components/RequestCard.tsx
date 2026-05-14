@@ -7,8 +7,19 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  AlertDialogTrigger 
+} from "@/components/ui/alert-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Heart, X, Loader2, CheckCircle2, Zap, Sparkles, Image as ImageIcon, MessageSquare, Quote } from 'lucide-react';
+import { Heart, X, Loader2, CheckCircle2, Zap, Sparkles, Image as ImageIcon, MessageSquare, Quote, AlertTriangle } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useRequests, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
@@ -426,17 +437,40 @@ const RequestCard: React.FC<RequestCardProps> = ({
         )}
 
         {isOwner && status !== 'Completed' && (
-          <Button 
-            variant="outline" 
-            className={cn(
-              "w-full border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 font-black rounded-lg gap-1.5 uppercase tracking-widest",
-              variant === 'list' ? "h-9 text-[8px]" : "h-14 text-xs"
-            )}
-            onClick={handleComplete}
-            disabled={isProcessing}
-          >
-            {isProcessing ? <Loader2 className="animate-spin" size={12} /> : <><CheckCircle2 size={12} /> Done</>}
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button 
+                variant="outline" 
+                className={cn(
+                  "w-full border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 font-black rounded-lg gap-1.5 uppercase tracking-widest",
+                  variant === 'list' ? "h-9 text-[8px]" : "h-14 text-xs"
+                )}
+                disabled={isProcessing}
+              >
+                {isProcessing ? <Loader2 className="animate-spin" size={12} /> : <><CheckCircle2 size={12} /> Done</>}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="glass-card border-white/10">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2">
+                  <AlertTriangle className="text-orange-400" size={20} />
+                  Mark as Completed?
+                </AlertDialogTitle>
+                <AlertDialogDescription className="text-muted-foreground">
+                  This will mark your request as <span className="text-emerald-400 font-bold">Completed</span> and hide it from the active browse list. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="bg-white/5 border-white/10 text-muted-foreground hover:text-white">Cancel</AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={handleComplete}
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-black"
+                >
+                  Confirm Completion
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         )}
 
         {status === 'Completed' && variant === 'list' && (

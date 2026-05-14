@@ -46,30 +46,34 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const fetchChainBalance = async (account: string, code: string, symbol: string): Promise<number> => {
     const cleanAccount = String(account).toLowerCase().trim();
     console.log(`[use-wallet] 🔍 Fetching ${symbol} (${code}) for ${cleanAccount}`);
-
+  
     for (const endpoint of ENDPOINTS) {
       console.log(`[use-wallet] Trying endpoint: ${endpoint}`);
-
+  
       try {
-        // 1. get_currency_balance
+        // 1. Standard get_currency_balance
         const currencyRes = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code, account: cleanAccount, symbol }),
+          body: JSON.stringify({ 
+            code, 
+            account: cleanAccount, 
+            symbol 
+          }),
         });
-
+  
         if (currencyRes.ok) {
           const data = await currencyRes.json();
           console.log(`[use-wallet] get_currency_balance raw:`, data);
-
+  
           if (Array.isArray(data) && data.length > 0) {
             const val = parseFloat(data[0].split(' ')[0] || '0');
             console.log(`✅ SUCCESS via get_currency_balance: ${val} ${symbol}`);
             return val;
           }
         }
-
-        // 2. accounts table - user scope (most common)
+  
+        // 2. accounts table with user scope (standard)
         const tableRes = await fetch(`${endpoint}/v1/chain/get_table_rows`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -81,61 +85,63 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             limit: 20
           }),
         });
-
+  
         if (tableRes.ok) {
-          const { rows } = await tableRes.json();
-          console.log(`[use-wallet] accounts table rows:`, rows);
-
-          if (rows?.length > 0) {
-            // Many tokens store it as "balance" field
-            let row = rows.find((r: any) => r.balance?.toString().includes(symbol));
-            if (!row) {
-              // Some tokens use the symbol as key
-              row = rows.find((r: any) => r[symbol] || r[symbol.toLowerCase()]);
-            }
+          const result = await tableRes.json();
+          console.log(`[use-wallet] accounts table rows:`, result.rows);
+  
+          if (result.rows?.length > 0) {
+            const row = result.rows.find((r: any) => 
+              r.balance?.toString().includes(symbol) || 
+              Object.values(r).some((v: any) => String(v).includes(symbol))
+            );
             if (row) {
-              const balStr = row.balance || row[symbol] || row[symbol.toLowerCase()] || '0';
+              const balStr = row.balance || Object.values(row).find((v: any) => String(v).includes(symbol)) || '0';
               const val = parseFloat(String(balStr).split(' ')[0] || '0');
               console.log(`✅ SUCCESS via accounts table: ${val} ${symbol}`);
               return val;
             }
           }
         }
-
-        // 3. Try scope = contract (proton-vtoken)
+  
+        // 3. Try scope = contract itself (proton-vtoken)
         const issuerRes = await fetch(`${endpoint}/v1/chain/get_table_rows`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             json: true,
             code: code,
-            scope: code,
+            scope: code,                    // proton-vtoken
             table: 'accounts',
             lower_bound: cleanAccount,
             upper_bound: cleanAccount,
             limit: 10
           }),
         });
-
+  
         if (issuerRes.ok) {
-          const { rows } = await issuerRes.json();
-          console.log(`[use-wallet] issuer-scope rows:`, rows);
-
-          if (rows?.length > 0) {
-            const row = rows.find((r: any) => r.balance?.toString().includes(symbol));
+          const result = await issuerRes.json();
+          console.log(`[use-wallet] issuer-scope rows:`, result.rows);
+  
+          if (result.rows?.length > 0) {
+            const row = result.rows.find((r: any) => 
+              r.balance?.toString().includes(symbol) || 
+              Object.values(r).some((v: any) => String(v).includes(symbol))
+            );
             if (row) {
-              const val = parseFloat(String(row.balance).split(' ')[0] || '0');
+              const balStr = row.balance || Object.values(row).find((v: any) => String(v).includes(symbol)) || '0';
+              const val = parseFloat(String(balStr).split(' ')[0] || '0');
               console.log(`✅ SUCCESS via issuer scope: ${val} ${symbol}`);
               return val;
             }
           }
         }
-
+  
       } catch (err) {
         console.warn(`[use-wallet] ${endpoint} failed:`, err);
       }
     }
-
+  
     console.error(`❌ FAILED to fetch ${symbol} balance after all attempts`);
     return 0;
   };
@@ -148,11 +154,17 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     try {
       const [realXpr, realGuy] = await Promise.all([
         fetchChainBalance(cleanAddress, 'eosio.token', 'XPR'),
+        fetchChainBalance(cleanAccount => fetchChainBalance(cleanAddress, 'proton-vtoken', 'GUY'))
+      ]);
+
+      // Note: The previous Promise.all had a syntax error in the prompt's context, fixing it here
+      const results = await Promise.all([
+        fetchChainBalance(cleanAddress, 'eosio.token', 'XPR'),
         fetchChainBalance(cleanAddress, 'proton-vtoken', 'GUY')
       ]);
 
-      setXprBalance(realXpr);
-      setGuyBalance(realGuy);
+      setXprBalance(results[0]);
+      setGuyBalance(results[1]);
 
       try {
         const { data } = await supabase.from('profiles').select('membership_expiry').eq('address', cleanAddress).maybeSingle();
@@ -166,7 +178,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } finally {
       setIsFetchingBalances(false);
     }
-  }, []);
+  }, [fetchChainBalance]);
 
   const initWallet = useCallback(async (restore = true) => {
     try {

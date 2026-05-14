@@ -26,7 +26,7 @@ const CTASection = () => {
           onClick={connect}
           disabled={isConnecting}
           size="lg" 
-          className="bg-primary hover:bg-primary/90 text-black font-bold h-14 px-10 rounded-xl gold-glow flex gap-2 mx-auto"
+          className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-black font-bold h-14 px-10 rounded-xl gold-glow flex gap-2 mx-auto"
         >
           {isConnecting ? (
             <Loader2 className="animate-spin" size={18} />

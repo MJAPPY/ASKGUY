@@ -25,7 +25,8 @@ export interface WalletState {
 const WalletContext = createContext<WalletState | undefined>(undefined);
 
 const APP_NAME = 'AskGuy';
-const CHAIN_URL = 'https://proton.greymass.com';
+// Use the official Proton Mainnet API endpoint
+const CHAIN_URL = 'https://mainnet.protonchain.com';
 
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [address, setAddress] = useState('');
@@ -40,23 +41,31 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const fetchChainBalance = async (account: string, code: string, symbol: string): Promise<number> => {
     try {
-      console.log(`[use-wallet] Fetching ${symbol} for ${account} from ${code}`);
+      console.log(`[use-wallet] Fetching ${symbol} for ${account} from ${code}...`);
       const response = await fetch(`${CHAIN_URL}/v1/chain/get_currency_balance`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code, account, symbol })
       });
       
-      if (!response.ok) return 0;
+      if (!response.ok) {
+        console.error(`[use-wallet] ${symbol} fetch failed with status: ${response.status}`);
+        return 0;
+      }
 
       const data = await response.json();
+      console.log(`[use-wallet] ${symbol} raw response:`, data);
+      
       if (Array.isArray(data) && data.length > 0) {
-        const val = parseFloat(data[0].split(' ')[0]);
+        // Proton returns an array like ["7770.0000 GUY"]
+        const amountStr = data[0].split(' ')[0];
+        const val = parseFloat(amountStr);
         return isNaN(val) ? 0 : val;
       }
+      
       return 0;
     } catch (err) {
-      console.error(`[use-wallet] Chain fetch error for ${symbol}:`, err);
+      console.error(`[use-wallet] ${symbol} network error:`, err);
       return 0;
     }
   };
@@ -64,18 +73,22 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const loadBalances = useCallback(async (walletAddress: string) => {
     if (!walletAddress) return;
     const cleanAddress = String(walletAddress).toLowerCase().trim();
+    console.log(`[use-wallet] Loading balances for ${cleanAddress}...`);
     
     setIsFetchingBalances(true);
     try {
+      // Fetch XPR and GUY in parallel
       const [realXpr, realGuy] = await Promise.all([
         fetchChainBalance(cleanAddress, 'eosio.token', 'XPR'),
         fetchChainBalance(cleanAddress, 'token.guy', 'GUY')
       ]);
 
+      console.log(`[use-wallet] FINAL LOADED: ${realXpr} XPR, ${realGuy} GUY`);
+      
       setXprBalance(realXpr);
       setGuyBalance(realGuy);
-      console.log(`[use-wallet] Balances updated: ${realGuy} GUY, ${realXpr} XPR`);
 
+      // Sync with Supabase for the leaderboard and metadata
       const { data } = await supabase
         .from('profiles')
         .select('membership_expiry')
@@ -94,7 +107,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }, { onConflict: 'address' });
 
     } catch (err) {
-      console.error('[use-wallet] loadBalances error:', err);
+      console.error('[use-wallet] loadBalances failure:', err);
     } finally {
       setIsFetchingBalances(false);
     }
@@ -128,13 +141,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setSession(protonSession);
         setAddress(actor);
         setIsConnected(true);
-        // Ensure loading state is active before returning to UI
-        setIsFetchingBalances(true);
+        // Start fetching immediately
         await loadBalances(actor);
       }
       return protonSession;
     } catch (err) {
-      console.error('[use-wallet] Initialization failed:', err);
+      console.error('[use-wallet] Wallet init failed:', err);
       return null;
     }
   }, [loadBalances]);
@@ -148,7 +160,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     try {
       await initWallet(false);
     } catch (err) {
-      console.error('[use-wallet] Connect failed:', err);
+      console.error('[use-wallet] Manual connect failed:', err);
     } finally {
       setIsConnecting(false);
     }
@@ -159,7 +171,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       try {
         await linkRef.current.removeSession(APP_NAME, session.auth);
       } catch (err) {
-        console.error('[use-wallet] Remove session failed:', err);
+        console.error('[use-wallet] Session removal failed:', err);
       }
     }
     setAddress('');
@@ -192,7 +204,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setTimeout(() => refreshBalances(), 1500);
       return true;
     } catch (err) {
-      console.error('[use-wallet] Transfer failed:', err);
+      console.error('[use-wallet] Token transfer failed:', err);
       return false;
     }
   }, [session, refreshBalances]);

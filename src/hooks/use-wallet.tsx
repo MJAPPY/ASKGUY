@@ -28,7 +28,8 @@ const WalletContext = createContext<WalletState | undefined>(undefined);
 const APP_NAME = 'AskGuy';
 const ENDPOINTS = [
   'https://proton.greymass.com',
-  'https://proton.eoscafeblock.com'
+  'https://proton.eoscafeblock.com',
+  'https://api.protonchain.com'
 ];
 
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -42,11 +43,13 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [session, setSession] = useState<LinkSession | null>(null);
   const linkRef = useRef<any>(null);
 
+  // Advanced balance fetcher with table fallback
   const fetchChainBalance = async (account: string, code: string, symbol: string): Promise<number> => {
-    console.log(`[use-wallet] 🔄 Fetching ${symbol} | Contract: ${code} | Account: ${account}`);
+    console.log(`[use-wallet] 🔄 Checking ${symbol} for ${account} on ${code}...`);
 
     for (const endpoint of ENDPOINTS) {
       try {
+        // Method 1: Standard get_currency_balance
         const res = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -55,20 +58,44 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         if (res.ok) {
           const data = await res.json();
-          console.log(`[use-wallet] ${endpoint} response for ${symbol}:`, data);
-
           if (Array.isArray(data) && data.length > 0) {
             const val = parseFloat(data[0].split(' ')[0] || '0');
-            console.log(`[use-wallet] ✅ ${symbol} = ${val}`);
+            console.log(`[use-wallet] ✅ Found via currency_balance: ${val} ${symbol}`);
             return val;
           }
         }
+
+        // Method 2: Fallback to direct table query (more reliable for some community tokens)
+        const tableRes = await fetch(`${endpoint}/v1/chain/get_table_rows`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            json: true,
+            code: code,
+            scope: account,
+            table: 'accounts',
+            limit: 1
+          }),
+        });
+
+        if (tableRes.ok) {
+          const tableData = await tableRes.json();
+          if (tableData.rows && tableData.rows.length > 0) {
+            // Find the row matching the symbol
+            const row = tableData.rows.find((r: any) => r.balance.includes(symbol));
+            if (row) {
+              const val = parseFloat(row.balance.split(' ')[0] || '0');
+              console.log(`[use-wallet] ✅ Found via table_rows: ${val} ${symbol}`);
+              return val;
+            }
+          }
+        }
       } catch (e) {
-        console.warn(`[use-wallet] ${endpoint} failed for ${symbol}`);
+        console.warn(`[use-wallet] ${endpoint} attempt failed:`, e);
       }
     }
 
-    console.log(`[use-wallet] ❌ No ${symbol} balance found on ${code}`);
+    console.log(`[use-wallet] ⚠️ Could not find ${symbol} balance after all attempts.`);
     return 0;
   };
 
@@ -78,26 +105,26 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     setIsFetchingBalances(true);
     try {
+      // Fetching XPR and GUY in parallel
       const [realXpr, realGuy] = await Promise.all([
         fetchChainBalance(cleanAddress, 'eosio.token', 'XPR'),
         fetchChainBalance(cleanAddress, 'proton-vtoken', 'GUY')
       ]);
 
-      console.log(`[use-wallet] 🎯 FINAL → XPR: ${realXpr} | GUY: ${realGuy}`);
+      console.log(`[use-wallet] 🎯 Balances updated: XPR: ${realXpr} | GUY: ${realGuy}`);
 
       setXprBalance(realXpr);
       setGuyBalance(realGuy);
 
-      // Sync with Supabase profiles if possible, but don't block state update
       try {
         const { data } = await supabase.from('profiles').select('membership_expiry').eq('address', cleanAddress).maybeSingle();
         if (data?.membership_expiry) setMembershipExpiry(data.membership_expiry);
       } catch (err) {
-        console.warn('[use-wallet] Supabase profile fetch skipped');
+        console.warn('[use-wallet] Profile sync failed, using default state');
       }
 
     } catch (err) {
-      console.error('[use-wallet] loadBalances error:', err);
+      console.error('[use-wallet] loadBalances crash:', err);
     } finally {
       setIsFetchingBalances(false);
     }
@@ -118,14 +145,13 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       if (result.session) {
         const actor = String(result.session.auth.actor);
-        console.log(`[use-wallet] ✅ Connected as: ${actor}`);
-
         setSession(result.session);
         setAddress(actor);
         setIsConnected(true);
         setIsConnecting(true);
 
-        await new Promise(r => setTimeout(r, 1200));
+        // Allow some time for the chain to settle after potential logins/switches
+        await new Promise(r => setTimeout(r, 1500));
         await loadBalances(actor);
         setIsConnecting(false);
       }

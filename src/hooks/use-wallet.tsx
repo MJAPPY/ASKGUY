@@ -143,6 +143,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setSession(result.session);
         setAddress(actor);
         setIsConnected(true);
+        // Added 1 second delay before loading balances
+        await new Promise(resolve => setTimeout(resolve, 1000));
         await loadBalances(actor);
       }
       return result.session;

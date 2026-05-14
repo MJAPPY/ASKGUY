@@ -25,8 +25,12 @@ export interface WalletState {
 const WalletContext = createContext<WalletState | undefined>(undefined);
 
 const APP_NAME = 'AskGuy';
-// Use the official Proton Mainnet API endpoint
-const CHAIN_URL = 'https://mainnet.protonchain.com';
+// List of reliable Proton Mainnet API endpoints
+const ENDPOINTS = [
+  'https://proton.greymass.com',
+  'https://mainnet.protonchain.com',
+  'https://proton.eoscafeblock.com'
+];
 
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [address, setAddress] = useState('');
@@ -40,55 +44,51 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const linkRef = useRef<any>(null);
 
   const fetchChainBalance = async (account: string, code: string, symbol: string): Promise<number> => {
-    try {
-      console.log(`[use-wallet] Fetching ${symbol} for ${account} from ${code}...`);
-      const response = await fetch(`${CHAIN_URL}/v1/chain/get_currency_balance`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, account, symbol })
-      });
-      
-      if (!response.ok) {
-        console.error(`[use-wallet] ${symbol} fetch failed with status: ${response.status}`);
-        return 0;
-      }
+    // Try multiple endpoints if one fails
+    for (const endpoint of ENDPOINTS) {
+      try {
+        console.log(`[use-wallet] Fetching ${symbol} for ${account} from ${endpoint}...`);
+        const response = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, account, symbol })
+        });
+        
+        if (!response.ok) continue;
 
-      const data = await response.json();
-      console.log(`[use-wallet] ${symbol} raw response:`, data);
-      
-      if (Array.isArray(data) && data.length > 0) {
-        // Proton returns an array like ["7770.0000 GUY"]
-        const amountStr = data[0].split(' ')[0];
-        const val = parseFloat(amountStr);
-        return isNaN(val) ? 0 : val;
+        const data = await response.json();
+        console.log(`[use-wallet] ${symbol} response from ${endpoint}:`, data);
+        
+        if (Array.isArray(data) && data.length > 0) {
+          const amountStr = data[0].split(' ')[0];
+          const val = parseFloat(amountStr);
+          return isNaN(val) ? 0 : val;
+        }
+        return 0; // No balance found
+      } catch (err) {
+        console.error(`[use-wallet] ${symbol} fetch failed on ${endpoint}:`, err);
       }
-      
-      return 0;
-    } catch (err) {
-      console.error(`[use-wallet] ${symbol} network error:`, err);
-      return 0;
     }
+    return 0;
   };
 
   const loadBalances = useCallback(async (walletAddress: string) => {
     if (!walletAddress) return;
     const cleanAddress = String(walletAddress).toLowerCase().trim();
-    console.log(`[use-wallet] Loading balances for ${cleanAddress}...`);
+    console.log(`[use-wallet] Starting balance refresh for ${cleanAddress}`);
     
     setIsFetchingBalances(true);
     try {
-      // Fetch XPR and GUY in parallel
       const [realXpr, realGuy] = await Promise.all([
         fetchChainBalance(cleanAddress, 'eosio.token', 'XPR'),
         fetchChainBalance(cleanAddress, 'token.guy', 'GUY')
       ]);
 
-      console.log(`[use-wallet] FINAL LOADED: ${realXpr} XPR, ${realGuy} GUY`);
+      console.log(`[use-wallet] Updated balances: ${realXpr} XPR, ${realGuy} GUY`);
       
       setXprBalance(realXpr);
       setGuyBalance(realGuy);
 
-      // Sync with Supabase for the leaderboard and metadata
       const { data } = await supabase
         .from('profiles')
         .select('membership_expiry')
@@ -115,9 +115,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const initWallet = useCallback(async (restore = true) => {
     try {
-      const { link, session: protonSession } = await Connect({
+      console.log(`[use-wallet] Initializing Proton SDK (restore: ${restore})...`);
+      const result = await Connect({
         linkOptions: {
-          endpoints: [CHAIN_URL],
+          endpoints: ENDPOINTS,
           restoreSession: restore
         },
         transportOptions: {
@@ -134,19 +135,19 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
       });
 
-      linkRef.current = link;
+      linkRef.current = result.link;
 
-      if (protonSession) {
-        const actor = String(protonSession.auth.actor);
-        setSession(protonSession);
+      if (result.session) {
+        const actor = String(result.session.auth.actor);
+        console.log(`[use-wallet] Logged in as: ${actor}`);
+        setSession(result.session);
         setAddress(actor);
         setIsConnected(true);
-        // Start fetching immediately
         await loadBalances(actor);
       }
-      return protonSession;
+      return result.session;
     } catch (err) {
-      console.error('[use-wallet] Wallet init failed:', err);
+      console.error('[use-wallet] SDK Connect error:', err);
       return null;
     }
   }, [loadBalances]);
@@ -156,18 +157,19 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [initWallet]);
 
   const connect = useCallback(async () => {
+    console.log('[use-wallet] Manual connect requested');
     setIsConnecting(true);
     try {
       await initWallet(false);
     } catch (err) {
-      console.error('[use-wallet] Manual connect failed:', err);
+      console.error('[use-wallet] Connect call failed:', err);
     } finally {
       setIsConnecting(false);
     }
   }, [initWallet]);
 
   const disconnect = useCallback(async () => {
-    if (session) {
+    if (session && linkRef.current) {
       try {
         await linkRef.current.removeSession(APP_NAME, session.auth);
       } catch (err) {
@@ -195,7 +197,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         data: {
           from: session.auth.actor,
           to,
-          quantity: `${amount.toFixed(token === 'XPR' ? 4 : 0)} ${token}`,
+          // GUY and XPR both use 4 decimals on mainnet
+          quantity: `${amount.toFixed(4)} ${token}`,
           memo: memo || ''
         }
       };

@@ -36,13 +36,13 @@ const HowItWorks = () => {
     },
     {
       number: "02",
-      title: "Browse Requests",
-      description: "Look through active community needs or post your own."
+      title: "Browse or Post Requests",
+      description: "Look through active community needs or post your own maybe even someone you know needs help, just get them to provide some proof for trust."
     },
     {
       number: "03",
       title: "Trusted Member",
-      description: "Only 4,777 XPR to become a trusted member and and pay a 25 GUY per request posting."
+      description: "Only 4,777 XPR to become a trusted member and pay 25 GUY per request posting."
     },
     {
       number: "04",

@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import Connect, { LinkSession } from '@proton/web-sdk';
 import { supabase } from '@/integrations/supabase/client';
+import { ApiClass } from '@proton/api';
 
 export interface WalletState {
   address: string;
@@ -32,6 +33,8 @@ const ENDPOINTS = [
   'https://api.protonchain.com'
 ];
 
+const protonApi = new ApiClass('proton');
+
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [address, setAddress] = useState('');
   const [isConnected, setIsConnected] = useState(false);
@@ -44,88 +47,84 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const linkRef = useRef<any>(null);
 
   const fetchChainBalance = async (account: string, code: string, symbol: string): Promise<number> => {
-    console.log(`[use-wallet] 🔄 Checking ${symbol} for ${account} on ${code}...`);
-  
-    const cleanAccount = account.toLowerCase().trim();
-  
-    for (const endpoint of ENDPOINTS) {
-      try {
-        // === Primary: get_currency_balance (fastest when it works) ===
-        const currencyRes = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code, account: cleanAccount, symbol }),
-        });
-  
-        if (currencyRes.ok) {
-          const data = await currencyRes.json();
-          if (Array.isArray(data) && data.length > 0) {
-            const val = parseFloat(data[0].split(' ')[0] || '0');
-            console.log(`[use-wallet] ✅ ${symbol} via get_currency_balance: ${val}`);
+    const cleanAccount = String(account).toLowerCase().trim();
+    console.log(`[use-wallet] 🔄 Fetching ${symbol} from ${code} for ${cleanAccount}`);
+
+    try {
+      // === Best method: Official Proton API ===
+      if (symbol === 'GUY' && code === 'proton-vtoken') {
+        try {
+          const balanceArray = await protonApi.getTokenBalance(code, cleanAccount, symbol);
+          if (Array.isArray(balanceArray) && balanceArray.length > 0) {
+            const val = parseFloat(balanceArray[0].split(' ')[0] || '0');
+            console.log(`[use-wallet] ✅ GUY via @proton/api: ${val}`);
             return val;
           }
+        } catch (e) {
+          console.warn('[use-wallet] protonApi.getTokenBalance failed, falling back...', e);
         }
-  
-        // === Fallback 1: Standard accounts table ===
-        const tableRes = await fetch(`${endpoint}/v1/chain/get_table_rows`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            json: true,
-            code,
-            scope: cleanAccount,
-            table: 'accounts',
-            limit: 10
-          }),
-        });
-  
-        if (tableRes.ok) {
-          const { rows } = await tableRes.json();
-          if (rows?.length > 0) {
-            const row = rows.find((r: any) => r.balance?.includes(symbol));
-            if (row) {
-              const val = parseFloat(row.balance.split(' ')[0] || '0');
-              console.log(`[use-wallet] ✅ ${symbol} via accounts table: ${val}`);
-              return val;
-            }
-          }
-        }
-  
-        // === Fallback 2: Try issuer as scope (common pattern) ===
-        const issuerTableRes = await fetch(`${endpoint}/v1/chain/get_table_rows`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            json: true,
-            code,
-            scope: code,           // try contract itself as scope
-            table: 'accounts',
-            limit: 10,
-            lower_bound: cleanAccount,
-            upper_bound: cleanAccount,
-            index_position: 2,     // secondary index on owner
-            key_type: 'name'
-          }),
-        });
-  
-        if (issuerTableRes.ok) {
-          const { rows } = await issuerTableRes.json();
-          if (rows?.length > 0) {
-            const row = rows.find((r: any) => r.balance?.includes?.(symbol) || r.balance === `${symbol}`);
-            if (row) {
-              const val = parseFloat((row.balance || '').split(' ')[0] || '0');
-              console.log(`[use-wallet] ✅ ${symbol} via issuer scope: ${val}`);
-              return val;
-            }
-          }
-        }
-  
-      } catch (e) {
-        console.warn(`[use-wallet] ${endpoint} failed:`, e);
       }
+
+      // === Standard get_currency_balance (good for XPR) ===
+      for (const endpoint of ENDPOINTS) {
+        try {
+          const res = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code, account: cleanAccount, symbol }),
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data) && data.length > 0) {
+              const val = parseFloat(data[0].split(' ')[0] || '0');
+              console.log(`[use-wallet] ✅ ${symbol} via get_currency_balance: ${val}`);
+              return val;
+            }
+          }
+        } catch (e) {
+          console.warn(`[use-wallet] ${endpoint} currency_balance failed`);
+        }
+      }
+
+      // === Last resort: Table query with more variations ===
+      for (const endpoint of ENDPOINTS) {
+        try {
+          const tableRes = await fetch(`${endpoint}/v1/chain/get_table_rows`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              json: true,
+              code: code,
+              scope: cleanAccount,
+              table: 'accounts',
+              limit: 10
+            }),
+          });
+
+          if (tableRes.ok) {
+            const { rows } = await tableRes.json();
+            const row = rows?.find((r: any) => 
+              r.balance?.includes(symbol) || 
+              r[symbol.toLowerCase()] !== undefined
+            );
+            if (row) {
+              const balanceStr = row.balance || row[symbol.toLowerCase()] || '';
+              const val = parseFloat(balanceStr.split(' ')[0] || '0');
+              console.log(`[use-wallet] ✅ ${symbol} via table fallback: ${val}`);
+              return val;
+            }
+          }
+        } catch (e) {
+          console.warn(`[use-wallet] Table fallback failed on ${endpoint}`);
+        }
+      }
+
+    } catch (err) {
+      console.error('[use-wallet] Balance fetch error:', err);
     }
-  
-    console.warn(`[use-wallet] ❌ Could not find ${symbol} balance after all attempts`);
+
+    console.warn(`[use-wallet] ⚠️ ${symbol} balance not found, returning 0`);
     return 0;
   };
 

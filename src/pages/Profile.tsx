@@ -242,7 +242,7 @@ const Profile = () => {
                   Requests ({profileRequests.length})
                 </TabsTrigger>
                 <TabsTrigger value="contributions" className="rounded-xl px-8 font-black text-xs uppercase tracking-widest h-full data-[state=active]:bg-primary data-[state=active]:text-black transition-all">
-                  Impact ({profileContributions.length})
+                  Gifts Given ({profileContributions.length})
                 </TabsTrigger>
                 {isOwnProfile && (
                   <TabsTrigger value="messages" className="rounded-xl px-8 font-black text-xs uppercase tracking-widest h-full data-[state=active]:bg-primary data-[state=active]:text-black flex gap-2.5 transition-all">
@@ -261,7 +261,7 @@ const Profile = () => {
                     <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-muted-foreground/30">
                       <LayoutGrid size={32} />
                     </div>
-                    <p className="text-muted-foreground font-black uppercase tracking-widest text-xs">No requests found for this member.</p>
+                    <p className="text-muted-foreground font-black uppercase tracking-widest text-xs">No active needs posted yet.</p>
                   </div>
                 )}
               </TabsContent>
@@ -276,7 +276,10 @@ const Profile = () => {
                     <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-muted-foreground/30">
                       <Heart size={32} />
                     </div>
-                    <p className="text-muted-foreground font-black uppercase tracking-widest text-xs">No contributions recorded yet.</p>
+                    <div className="space-y-2">
+                      <p className="text-muted-foreground font-black uppercase tracking-widest text-xs">No gifts shared yet.</p>
+                      <p className="text-[10px] text-muted-foreground/60 font-medium">Every contribution makes a massive difference in someone's life.</p>
+                    </div>
                   </div>
                 )}
               </TabsContent>

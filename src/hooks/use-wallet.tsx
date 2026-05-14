@@ -1,7 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import Connect from '@proton/web-sdk';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import Connect, { LinkSession } from '@proton/web-sdk';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface WalletState {
@@ -24,6 +24,8 @@ export interface WalletState {
 
 const WalletContext = createContext<WalletState | undefined>(undefined);
 
+const APP_NAME = 'AskGuy';
+
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [address, setAddress] = useState('');
   const [isConnected, setIsConnected] = useState(false);
@@ -32,14 +34,13 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [xprBalance, setXprBalance] = useState(0);
   const [membershipExpiry, setMembershipExpiry] = useState(0);
   const [isFetchingBalances, setIsFetchingBalances] = useState(false);
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<LinkSession | null>(null);
+  const linkRef = useRef<any>(null);
 
   const loadBalances = useCallback(async (walletAddress: string) => {
     if (!walletAddress) return;
     setIsFetchingBalances(true);
     try {
-      // In a real app, you would fetch actual on-chain balances here
-      // For this demo, we use the profiles table in Supabase
       const { data, error } = await supabase
         .from('profiles')
         .select('guy_balance, xpr_balance, membership_expiry')
@@ -52,26 +53,25 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setXprBalance(data?.xpr_balance ?? 0);
       setMembershipExpiry(data?.membership_expiry ?? 0);
     } catch (err) {
-      console.error('Load balances failed:', err);
+      console.error('[use-wallet] Load balances failed:', err);
     } finally {
       setIsFetchingBalances(false);
     }
   }, []);
 
-  const connect = useCallback(async () => {
-    setIsConnecting(true);
+  const initWallet = useCallback(async (restore = true) => {
     try {
       const { link, session: protonSession } = await Connect({
         linkOptions: {
           endpoints: ['https://proton.greymass.com'],
-          restoreSession: true
+          restoreSession: restore
         },
         transportOptions: {
-          requestAccount: 'askguy', // Resolves "Unknown Requestor"
+          requestAccount: 'askguy',
           backButton: true
         },
         selectorOptions: {
-          appName: 'AskGuy', // Resolves "Unknown Requestor"
+          appName: APP_NAME,
           customStyleOptions: {
             modalBackgroundColor: '#0A1428',
             logoBackgroundColor: '#0A1428',
@@ -80,6 +80,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
       });
 
+      linkRef.current = link;
+
       if (protonSession) {
         const actor = protonSession.auth.actor;
         setSession(protonSession);
@@ -87,16 +89,39 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setIsConnected(true);
         await loadBalances(actor);
       }
+      return protonSession;
     } catch (err) {
-      console.error('Connect failed:', err);
-    } finally {
-      setIsConnecting(false);
+      console.error('[use-wallet] Initialization failed:', err);
+      return null;
     }
   }, [loadBalances]);
 
+  // Auto-restore on mount
+  useEffect(() => {
+    initWallet(true);
+  }, [initWallet]);
+
+  const connect = useCallback(async () => {
+    setIsConnecting(true);
+    try {
+      const protonSession = await initWallet(false);
+      if (!protonSession) {
+        console.warn('[use-wallet] No session returned from Connect');
+      }
+    } catch (err) {
+      console.error('[use-wallet] Connect failed:', err);
+    } finally {
+      setIsConnecting(false);
+    }
+  }, [initWallet]);
+
   const disconnect = useCallback(async () => {
-    if (session && session.link) {
-      await session.link.removeSession('AskGuy', session.auth);
+    if (session) {
+      try {
+        await linkRef.current.removeSession(APP_NAME, session.auth);
+      } catch (err) {
+        console.error('[use-wallet] Remove session failed:', err);
+      }
     }
     setAddress('');
     setSession(null);
@@ -128,7 +153,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       await refreshBalances();
       return true;
     } catch (err) {
-      console.error('Transfer failed:', err);
+      console.error('[use-wallet] Transfer failed:', err);
       return false;
     }
   }, [session, refreshBalances]);
@@ -136,7 +161,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const payMembership = useCallback(async () => {
     const success = await transferTokens('askguy', 1, 'XPR', 'AskGuy Membership Fee');
     if (success) {
-      // In a real app, a webhook or oracle would update the Supabase profile
       await refreshBalances();
     }
   }, [transferTokens, refreshBalances]);

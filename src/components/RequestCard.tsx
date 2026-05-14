@@ -164,8 +164,8 @@ const RequestCard: React.FC<RequestCardProps> = ({
           <div className="flex items-center gap-2 mt-2 group/user">
             <div className="relative">
               <div className="absolute -inset-0.5 bg-primary/30 rounded-full blur-[2px] opacity-0 group-hover/user:opacity-100 transition-opacity" />
-              <Avatar className="w-6 h-6 border border-white/20 relative z-10 transition-transform group-hover/user:scale-110">
-                <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${requestor}&backgroundColor=b6e3f4,c0aede,d1d4f9&mood=happy`} />
+              <Avatar className="w-6 h-6 border border-white/20 relative z-10 transition-transform group-hover/user:scale-110 p-0.5 bg-black/20">
+                <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${requestor}`} />
                 <AvatarFallback className="text-[8px] bg-primary text-black font-black">{requestor.substring(0, 2).toUpperCase()}</AvatarFallback>
               </Avatar>
             </div>
@@ -248,8 +248,8 @@ const RequestCard: React.FC<RequestCardProps> = ({
             <div className="flex items-center gap-2 mt-2">
               <div className="relative group/user">
                 <div className="absolute -inset-1 bg-primary/20 rounded-full blur-[2px] opacity-0 group-hover/user:opacity-100 transition-opacity" />
-                <Avatar className="w-8 h-8 border border-white/20 relative z-10 transition-all group-hover/user:border-primary/50">
-                  <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${requestor}&backgroundColor=b6e3f4,c0aede,d1d4f9&mood=happy`} />
+                <Avatar className="w-8 h-8 border border-white/20 relative z-10 transition-all group-hover/user:border-primary/50 p-0.5 bg-black/20">
+                  <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${requestor}`} />
                   <AvatarFallback className="text-[10px] bg-primary text-black font-black">{requestor.substring(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
               </div>
@@ -296,8 +296,8 @@ const RequestCard: React.FC<RequestCardProps> = ({
                           <div className="flex items-center gap-3">
                             <div className="relative">
                               <div className="absolute -inset-0.5 bg-primary/20 rounded-full blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity" />
-                              <Avatar className="w-8 h-8 border border-white/20 relative z-10 transition-all group-hover:border-primary/50">
-                                <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.user}&backgroundColor=b6e3f4,c0aede,d1d4f9&mood=happy`} />
+                              <Avatar className="w-8 h-8 border border-white/20 relative z-10 transition-all group-hover:border-primary/50 p-0.5 bg-black/20">
+                                <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${msg.user}`} />
                                 <AvatarFallback className="text-[8px] bg-primary text-black font-black">{msg.user.substring(0, 1)}</AvatarFallback>
                               </Avatar>
                             </div>

@@ -112,8 +112,8 @@ const Profile = () => {
             <div className="flex items-center gap-8">
               <div className="relative group">
                 <div className="absolute -inset-2 bg-gradient-to-tr from-primary/40 to-emerald-400/40 rounded-full blur-xl opacity-50 group-hover:opacity-100 transition-opacity duration-700" />
-                <Avatar className="h-28 w-28 border-4 border-white/20 shadow-2xl relative z-10 transition-transform duration-500 group-hover:scale-105 group-hover:border-primary/50">
-                  <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${targetAddress}&backgroundColor=b6e3f4,c0aede,d1d4f9&mood=happy`} />
+                <Avatar className="h-28 w-28 border-4 border-white/20 shadow-2xl relative z-10 transition-transform duration-500 group-hover:scale-105 group-hover:border-primary/50 p-1.5 bg-black/20">
+                  <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${targetAddress}`} />
                   <AvatarFallback className="bg-primary text-black font-black text-2xl">
                     {targetAddress?.substring(0, 2).toUpperCase()}
                   </AvatarFallback>
@@ -282,8 +282,8 @@ const Profile = () => {
                             <div className="flex justify-between items-start">
                               <div className="space-y-1">
                                 <Link to={`/profile/${m.user}`} className="text-lg font-black text-blue-400 hover:underline flex items-center gap-2 group/link">
-                                  <Avatar className="w-5 h-5 border border-white/20 group-hover/link:border-blue-400 transition-colors">
-                                    <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${m.user}&mood=happy`} />
+                                  <Avatar className="w-5 h-5 border border-white/20 group-hover/link:border-blue-400 transition-colors p-0.5 bg-black/20">
+                                    <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${m.user}`} />
                                   </Avatar>
                                   @{m.user}
                                 </Link>

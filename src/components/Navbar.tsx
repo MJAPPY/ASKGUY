@@ -109,8 +109,8 @@ const Navbar = () => {
                   <Button variant="ghost" className="h-10 md:h-12 gap-2 md:gap-3 px-1 md:px-2 hover:bg-white/5 rounded-xl group transition-all duration-300">
                     <div className="relative">
                       <div className="absolute -inset-1 bg-gradient-to-tr from-primary/40 to-emerald-400/40 rounded-full blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                      <Avatar className="h-7 w-7 md:h-8 md:w-8 border border-white/20 group-hover:border-primary/50 transition-all duration-300 relative z-10 shadow-lg">
-                        <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${displayAddress}&backgroundColor=b6e3f4,c0aede,d1d4f9&mood=happy`} />
+                      <Avatar className="h-7 w-7 md:h-8 md:w-8 border border-white/20 group-hover:border-primary/50 transition-all duration-300 relative z-10 shadow-lg p-1 bg-black/20">
+                        <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${displayAddress}`} />
                         <AvatarFallback className="bg-primary text-black font-bold text-[10px]">
                           {displayAddress.substring(0, 2).toUpperCase() || '??'}
                         </AvatarFallback>

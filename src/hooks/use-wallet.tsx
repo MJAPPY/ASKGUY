@@ -46,34 +46,30 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const fetchChainBalance = async (account: string, code: string, symbol: string): Promise<number> => {
     const cleanAccount = String(account).toLowerCase().trim();
     console.log(`[use-wallet] 🔍 Fetching ${symbol} (${code}) for ${cleanAccount}`);
-  
+
     for (const endpoint of ENDPOINTS) {
       console.log(`[use-wallet] Trying endpoint: ${endpoint}`);
-  
+
       try {
-        // 1. Standard get_currency_balance
+        // 1. get_currency_balance
         const currencyRes = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            code,
-            account: cleanAccount,
-            symbol
-          }),
+          body: JSON.stringify({ code, account: cleanAccount, symbol }),
         });
-  
+
         if (currencyRes.ok) {
           const data = await currencyRes.json();
           console.log(`[use-wallet] get_currency_balance raw:`, data);
-  
+
           if (Array.isArray(data) && data.length > 0) {
             const val = parseFloat(data[0].split(' ')[0] || '0');
             console.log(`✅ SUCCESS via get_currency_balance: ${val} ${symbol}`);
             return val;
           }
         }
-  
-        // 2. Standard accounts table (scope = user)
+
+        // 2. accounts table - user scope (most common)
         const tableRes = await fetch(`${endpoint}/v1/chain/get_table_rows`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -85,59 +81,61 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             limit: 20
           }),
         });
-  
+
         if (tableRes.ok) {
           const { rows } = await tableRes.json();
           console.log(`[use-wallet] accounts table rows:`, rows);
-  
+
           if (rows?.length > 0) {
-            const row = rows.find((r: any) => 
-              r.balance?.toString().includes(symbol) ||
-              r[symbol.toLowerCase()] !== undefined
-            );
+            // Many tokens store it as "balance" field
+            let row = rows.find((r: any) => r.balance?.toString().includes(symbol));
+            if (!row) {
+              // Some tokens use the symbol as key
+              row = rows.find((r: any) => r[symbol] || r[symbol.toLowerCase()]);
+            }
             if (row) {
-              const balStr = row.balance || row[symbol.toLowerCase()] || '0';
-              const val = parseFloat(balStr.toString().split(' ')[0] || '0');
+              const balStr = row.balance || row[symbol] || row[symbol.toLowerCase()] || '0';
+              const val = parseFloat(String(balStr).split(' ')[0] || '0');
               console.log(`✅ SUCCESS via accounts table: ${val} ${symbol}`);
               return val;
             }
           }
         }
-  
-        // 3. Try contract as scope (common for some tokens)
+
+        // 3. Try scope = contract (proton-vtoken)
         const issuerRes = await fetch(`${endpoint}/v1/chain/get_table_rows`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             json: true,
             code: code,
-            scope: code,                    // proton-vtoken as scope
+            scope: code,
             table: 'accounts',
             lower_bound: cleanAccount,
             upper_bound: cleanAccount,
             limit: 10
           }),
         });
-  
+
         if (issuerRes.ok) {
           const { rows } = await issuerRes.json();
           console.log(`[use-wallet] issuer-scope rows:`, rows);
-  
+
           if (rows?.length > 0) {
             const row = rows.find((r: any) => r.balance?.toString().includes(symbol));
             if (row) {
-              const val = parseFloat(row.balance.toString().split(' ')[0] || '0');
+              const val = parseFloat(String(row.balance).split(' ')[0] || '0');
               console.log(`✅ SUCCESS via issuer scope: ${val} ${symbol}`);
               return val;
             }
           }
         }
-  
+
       } catch (err) {
         console.warn(`[use-wallet] ${endpoint} failed:`, err);
       }
     }
-  
+
     console.error(`❌ FAILED to fetch ${symbol} balance after all attempts`);
     return 0;
   };

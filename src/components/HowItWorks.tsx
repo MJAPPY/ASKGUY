@@ -37,7 +37,7 @@ const HowItWorks = () => {
     {
       number: "02",
       title: "Browse or Post Requests",
-      description: "Look through active community needs or post your own maybe even someone you know needs help, just get them to provide some proof for trust."
+      description: "Look through active community needs or post your own maybe even someone you know needs help."
     },
     {
       number: "03",

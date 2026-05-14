@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useWallet } from '@/hooks/use-wallet';
 import { useRequests } from '@/hooks/use-requests';
@@ -10,20 +10,79 @@ import RequestCard from '@/components/RequestCard';
 import TransactionHistory from '@/components/TransactionHistory';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Heart, Send, Receipt, ArrowLeft, Calendar, MessageSquare, Quote, Wallet, Loader2, ShieldCheck, User } from 'lucide-react';
+import { Heart, Send, Receipt, ArrowLeft, Calendar, MessageSquare, Quote, Wallet, Loader2, ShieldCheck, User, Coins } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
+const ENDPOINTS = [
+  'https://proton.greymass.com',
+  'https://api.protonnz.com',
+  'https://api.protonchain.com',
+  'https://proton.eosusa.io',
+  'https://proton.protonuk.io',
+];
+
 const Profile = () => {
   const { userAddress: routeAddress } = useParams();
-  const { address: myAddress, isConnected, isConnecting, guyBalance: myGuyBalance, isMember: isMyMembershipActive, membershipExpiry: myExpiry, payMembership, connect } = useWallet();
+  const { address: myAddress, isConnected, isConnecting, guyBalance: myGuyBalance, xprBalance: myXprBalance, isMember: isMyMembershipActive, membershipExpiry: myExpiry, payMembership, connect } = useWallet();
   const { requests } = useRequests();
 
-  // If no route param, we are looking at our own profile
   const targetAddress = routeAddress || myAddress;
   const isOwnProfile = !routeAddress || routeAddress === myAddress;
+
+  const [onChainGuy, setOnChainGuy] = useState<number | null>(null);
+  const [onChainXpr, setOnChainXpr] = useState<number | null>(null);
+  const [loadingBalances, setLoadingBalances] = useState(false);
+
+  useEffect(() => {
+    const fetchBalance = async (account: string, code: string, symbol: string): Promise<number> => {
+      for (const endpoint of ENDPOINTS) {
+        try {
+          const res = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: code.toLowerCase(), account: account.toLowerCase(), symbol }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data) && data.length > 0) return parseFloat(data[0].split(' ')[0]);
+          }
+        } catch (e) { continue; }
+      }
+      return 0;
+    };
+
+    const loadTargetBalances = async () => {
+      if (!targetAddress) return;
+      if (isOwnProfile) {
+        setOnChainGuy(myGuyBalance);
+        setOnChainXpr(myXprBalance);
+        return;
+      }
+
+      setLoadingBalances(true);
+      try {
+        const xpr = await fetchBalance(targetAddress, 'eosio.token', 'XPR');
+        setOnChainXpr(xpr);
+
+        const contracts = ['proton-vtoken', 'xtokens', 'token.777'];
+        let guy = 0;
+        for (const c of contracts) {
+          const val = await fetchBalance(targetAddress, c, 'GUY');
+          if (val > 0) { guy = val; break; }
+        }
+        setOnChainGuy(guy);
+      } catch (err) {
+        console.error("Failed to load profile balances", err);
+      } finally {
+        setLoadingBalances(false);
+      }
+    };
+
+    loadTargetBalances();
+  }, [targetAddress, isOwnProfile, myGuyBalance, myXprBalance]);
 
   const stats = useMemo(() => {
     if (!targetAddress) return { given: 0, received: 0, count: 0 };
@@ -175,37 +234,37 @@ const Profile = () => {
       <main className="flex-1 container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <Card className="glass-card border-primary/20 bg-primary/5 group">
+                <CardContent className="p-6 flex items-center justify-between">
+                  <div className="flex items-center gap-5">
+                    <div className="w-14 h-14 rounded-2xl bg-primary/20 flex items-center justify-center border border-primary/30">
+                      <Coins className="text-primary" size={28} />
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-0.5">GUY Balance</p>
+                      <p className="text-2xl font-black">
+                        {loadingBalances ? <Loader2 size={20} className="animate-spin text-primary" /> : onChainGuy?.toLocaleString() || '0'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-0.5">XPR Balance</p>
+                    <p className="text-lg font-black">
+                      {loadingBalances ? '...' : onChainXpr?.toLocaleString() || '0'}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
               <Card className="glass-card border-white/5 bg-white/[0.02] group">
                 <CardContent className="p-6 flex items-center gap-5">
-                  <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
-                    <Heart className="text-primary fill-primary/20" size={28} />
+                  <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                    <Heart className="text-emerald-400 fill-emerald-400/20" size={28} />
                   </div>
                   <div>
                     <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-0.5">Total Given</p>
                     <p className="text-2xl font-black">{stats.given.toLocaleString()} <span className="text-xs text-muted-foreground">XPR</span></p>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="glass-card border-white/5 bg-white/[0.02] group">
-                <CardContent className="p-6 flex items-center gap-5">
-                  <div className="w-14 h-14 rounded-2xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
-                    <Receipt className="text-blue-400" size={28} />
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-0.5">Total Received</p>
-                    <p className="text-2xl font-black">{stats.received.toLocaleString()} <span className="text-xs text-muted-foreground">XPR</span></p>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="glass-card border-white/5 bg-white/[0.02] group">
-                <CardContent className="p-6 flex items-center gap-5">
-                  <div className="w-14 h-14 rounded-2xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
-                    <Send className="text-purple-400" size={28} />
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-0.5">Donations</p>
-                    <p className="text-2xl font-black">{stats.count}</p>
                   </div>
                 </CardContent>
               </Card>

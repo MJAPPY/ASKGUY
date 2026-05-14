@@ -1,10 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
-import Connect, { LinkSession } from '@proton/web-sdk';
-import { supabase } from '@/integrations/supabase/client';
-
-export interface WalletState {
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'export interface WalletState {
   address: string;
   isConnected: boolean;
   isConnecting: boolean;
@@ -44,7 +40,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const linkRef = useRef<any>(null);
 
   const fetchChainBalance = async (account: string, code: string, symbol: string): Promise<number> => {
-    // Try multiple endpoints if one fails
     for (const endpoint of ENDPOINTS) {
       try {
         console.log(`[use-wallet] Fetching ${symbol} for ${account} from ${endpoint}...`);
@@ -64,7 +59,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           const val = parseFloat(amountStr);
           return isNaN(val) ? 0 : val;
         }
-        return 0; // No balance found
+        return 0;
       } catch (err) {
         console.error(`[use-wallet] ${symbol} fetch failed on ${endpoint}:`, err);
       }
@@ -143,13 +138,21 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setSession(result.session);
         setAddress(actor);
         setIsConnected(true);
-        // Added 1 second delay before loading balances
+        
+        // Disable UI during delay
+        setIsConnecting(true);
+        
+        // 1000ms delay before loading balances
         await new Promise(resolve => setTimeout(resolve, 1000));
+        
         await loadBalances(actor);
+        
+        setIsConnecting(false);
       }
       return result.session;
     } catch (err) {
       console.error('[use-wallet] SDK Connect error:', err);
+      setIsConnecting(false);
       return null;
     }
   }, [loadBalances]);
@@ -166,9 +169,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } catch (err) {
       console.error('[use-wallet] Connect call failed:', err);
     } finally {
-      setIsConnecting(false);
+      // Only turn off if not handled inside initWallet
+      if (!session) setIsConnecting(false);
     }
-  }, [initWallet]);
+  }, [initWallet, session]);
 
   const disconnect = useCallback(async () => {
     if (session && linkRef.current) {
@@ -183,6 +187,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setIsConnected(false);
     setGuyBalance(0);
     setXprBalance(0);
+    setIsConnecting(false);
   }, [session]);
 
   const refreshBalances = useCallback(async () => {
@@ -193,13 +198,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!session) return false;
     try {
       const action = {
-        account: token === 'XPR' ? 'eosio.token' : 'token.guy',
+        account: token === 'XPR' ? 'eosio.token' : 'proton-vtoken',
         name: 'transfer',
         authorization: [session.auth],
         data: {
           from: session.auth.actor,
           to,
-          // GUY and XPR both use 4 decimals on mainnet
           quantity: `${amount.toFixed(4)} ${token}`,
           memo: memo || ''
         }

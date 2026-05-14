@@ -14,7 +14,7 @@ const HowItWorks = () => {
     {
       icon: <Zap className="text-primary" size={20} />,
       title: "Instant XPR Transfers",
-      description: "Help flows directly on-chain. No middlemen, no delays — XPR lands in the recipient's wallet immediately."
+      description: "Help flows directly on-chain. No middlemen, no delays — XPR lands in the recipient's wallet immediately & FREE."
     },
     {
       icon: <Users className="text-primary" size={20} />,

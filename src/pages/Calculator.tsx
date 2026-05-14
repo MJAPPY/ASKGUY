@@ -39,25 +39,36 @@ const Calculator = () => {
     { code: 'USD', symbol: '$', name: 'US Dollar' },
     { code: 'EUR', symbol: '€', name: 'Euro' },
     { code: 'GBP', symbol: '£', name: 'British Pound' },
+    { code: 'JPY', symbol: '¥', name: 'Japanese Yen' },
+    { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
     { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' },
     { code: 'NZD', symbol: 'NZ$', name: 'NZ Dollar' },
+    { code: 'CHF', symbol: 'Fr', name: 'Swiss Franc' },
+    { code: 'CNY', symbol: '¥', name: 'Chinese Yuan' },
+    { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
+    { code: 'BRL', symbol: 'R$', name: 'Brazilian Real' },
+    { code: 'ZAR', symbol: 'R', name: 'South African Rand' },
+    { code: 'MXN', symbol: '$', name: 'Mexican Peso' },
+    { code: 'SGD', symbol: 'S$', name: 'Singapore Dollar' },
+    { code: 'HKD', symbol: 'HK$', name: 'Hong Kong Dollar' },
   ];
 
   const fetchPrices = useCallback(async () => {
     setLoading(true);
     try {
+      const vsCurrencies = currencies.map(c => c.code.toLowerCase()).join(',');
       const response = await fetch(
-        'https://api.coingecko.com/api/v3/simple/price?ids=proton&vs_currencies=usd,eur,gbp,aud,nzd'
+        `https://api.coingecko.com/api/v3/simple/price?ids=proton&vs_currencies=${vsCurrencies}`
       );
       const data = await response.json();
       const protonPrices = data.proton;
-      setPrices({
-        USD: protonPrices.usd,
-        EUR: protonPrices.eur,
-        GBP: protonPrices.gbp,
-        AUD: protonPrices.aud,
-        NZD: protonPrices.nzd,
+      
+      const newPrices: Record<string, number> = {};
+      currencies.forEach(c => {
+        newPrices[c.code] = protonPrices[c.code.toLowerCase()];
       });
+      
+      setPrices(newPrices);
     } catch (error) {
       console.error('Failed to fetch XPR prices:', error);
     } finally {
@@ -190,7 +201,7 @@ const Calculator = () => {
                       <SelectTrigger className="h-20 bg-white/5 border-white/10 text-xl font-black rounded-3xl focus:ring-primary/20">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="glass-card border-white/10">
+                      <SelectContent className="glass-card border-white/10 max-h-[300px]">
                         {currencies.map(c => (
                           <SelectItem key={c.code} value={c.code} className="font-black py-4 hover:bg-white/5 focus:bg-white/10 rounded-2xl m-1 transition-colors">
                             <div className="flex items-center gap-3">

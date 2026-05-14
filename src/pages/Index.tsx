@@ -78,27 +78,27 @@ const Index = () => {
         <div className="absolute bottom-[20%] right-[-10%] w-[50%] h-[50%] bg-primary/10 blur-[120px] rounded-full pointer-events-none" />
 
         <div className="flex-1 relative z-10 flex flex-col justify-center">
-          <div className="container mx-auto px-4 py-20 lg:py-32">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-              <div className="space-y-10 animate-in fade-in slide-in-from-left-8 duration-1000">
+          <div className="container mx-auto px-4 py-12 lg:py-24">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <div className="space-y-8 animate-in fade-in slide-in-from-left-8 duration-1000">
                 <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/5 text-emerald-400 text-sm font-black uppercase tracking-widest">
                   <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                   Built on XPR Network
                 </div>
-                <h1 className="text-6xl md:text-8xl font-black tracking-tight leading-none">
+                <h1 className="text-5xl md:text-7xl font-black tracking-tight leading-none">
                   Real Help, <br />
                   <span className="text-emerald-400 drop-shadow-[0_0_20px_rgba(16,185,129,0.4)]">Real People</span>
                 </h1>
-                <p className="text-muted-foreground text-xl md:text-2xl max-w-2xl leading-relaxed font-medium">
+                <p className="text-muted-foreground text-lg md:text-xl max-w-xl leading-relaxed font-medium">
                   AskGuy is a mutual assistance platform where XPR Network members help each other with real-life expenses. Post a need, send tokens, lift each other up.
                 </p>
-                <div className="flex flex-col sm:row gap-4 pt-4">
-                  <Button onClick={connect} size="lg" className="h-16 px-10 text-xl font-black bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl flex gap-3 group transition-all shadow-[0_0_40px_rgba(16,185,129,0.3)] btn-premium uppercase tracking-widest">
-                    <Heart size={24} className="fill-white" />
+                <div className="flex flex-col sm:flex-row gap-4 pt-2">
+                  <Button onClick={connect} size="lg" className="h-14 px-8 text-lg font-black bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl flex gap-3 group transition-all shadow-[0_0_40px_rgba(16,185,129,0.3)] btn-premium uppercase tracking-widest">
+                    <Heart size={20} className="fill-white" />
                     Connect & Join
-                    <ArrowRight size={24} className="group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                   </Button>
-                  <Button asChild variant="outline" size="lg" className="h-16 px-10 text-xl font-black border-primary/20 bg-primary/5 text-primary rounded-2xl flex gap-3 hover:bg-primary/10 transition-all gold-glow uppercase tracking-widest">
+                  <Button asChild variant="outline" size="lg" className="h-14 px-8 text-lg font-black border-primary/20 bg-primary/5 text-primary rounded-2xl flex gap-3 hover:bg-primary/10 transition-all gold-glow uppercase tracking-widest">
                     <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer">
                       Buy GUY Tokens
                     </a>
@@ -106,7 +106,7 @@ const Index = () => {
                 </div>
               </div>
               <div className="relative animate-in fade-in slide-in-from-right-8 duration-1000">
-                <div className="relative z-10 w-full max-w-[600px] mx-auto group">
+                <div className="relative z-10 w-full max-w-[480px] mx-auto group">
                    <div className="absolute -inset-10 bg-emerald-500/10 rounded-full blur-[100px] opacity-50 group-hover:opacity-80 transition-opacity duration-1000" />
                    <img 
                     src={heroGuy} 

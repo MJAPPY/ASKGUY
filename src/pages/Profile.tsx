@@ -10,7 +10,7 @@ import RequestCard from '@/components/RequestCard';
 import TransactionHistory from '@/components/TransactionHistory';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Heart, ArrowLeft, Calendar, MessageSquare, Quote, Wallet, Loader2, ShieldCheck, User } from 'lucide-react';
+import { Heart, ArrowLeft, Calendar, MessageSquare, Quote, Wallet, Loader2, ShieldCheck, User, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -18,7 +18,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 
 const Profile = () => {
   const { userAddress: routeAddress } = useParams();
-  const { address: myAddress, isConnected, isConnecting, isMember: isMyMembershipActive, membershipExpiry: myExpiry, payMembership, connect } = useWallet();
+  const { address: myAddress, isConnected, isConnecting, membershipExpiry: myExpiry, payMembership, connect } = useWallet();
   const { requests } = useRequests();
 
   const targetAddress = routeAddress || myAddress;
@@ -140,28 +140,47 @@ const Profile = () => {
             {isOwnProfile && (
               <div className="p-6 glass-card rounded-2xl border-primary/20 flex items-center gap-8 bg-primary/5">
                 <div>
-                  <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-1">Membership</p>
+                  <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-1">Membership Status</p>
                   <p className="text-lg font-black flex items-center gap-2">
                     <Calendar size={18} className="text-primary" />
-                    {myExpiry > 0 ? new Date(myExpiry).toLocaleDateString() : 'Active'}
+                    {myExpiry > 0 ? (
+                      <span>Expires {new Date(myExpiry).toLocaleDateString()}</span>
+                    ) : (
+                      <span className="text-muted-foreground">Inactive</span>
+                    )}
                   </p>
                 </div>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="secondary" className="h-11 px-6 font-black border-white/10 bg-white/10 hover:bg-white/20 transition-all uppercase tracking-widest text-[11px]">
-                      Renew
+                    <Button variant="secondary" className="h-11 px-6 font-black border-white/10 bg-white/10 hover:bg-white/20 transition-all uppercase tracking-widest text-[11px] gap-2">
+                      <Sparkles size={14} className="text-primary" />
+                      {myExpiry > 0 ? 'Renew' : 'Join'}
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent className="glass-card border-white/10">
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Renew Membership</AlertDialogTitle>
-                      <AlertDialogDescription className="text-muted-foreground">
-                        Extend your membership for another year for <span className="text-white font-bold">1 XPR</span>.
+                      <AlertDialogTitle className="text-2xl font-black">Yearly Membership</AlertDialogTitle>
+                      <AlertDialogDescription className="text-muted-foreground text-sm">
+                        Joining AskGuy as an active member allows you to post up to 3 requests at a time. The membership fee is <span className="text-white font-black">1 XPR</span> and lasts for 365 days.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
+                    <div className="py-4 space-y-4">
+                      <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 space-y-2">
+                        <div className="flex justify-between items-center text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                          <span>Cost</span>
+                          <span>Duration</span>
+                        </div>
+                        <div className="flex justify-between items-center text-lg font-black">
+                          <span className="text-primary">1.00 XPR</span>
+                          <span>365 Days</span>
+                        </div>
+                      </div>
+                    </div>
                     <AlertDialogFooter>
-                      <AlertDialogCancel className="bg-white/5 border-white/10">Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={payMembership} className="bg-primary text-black font-bold">Renew</AlertDialogAction>
+                      <AlertDialogCancel className="bg-white/5 border-white/10 rounded-xl h-12 font-bold">Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={payMembership} className="bg-primary text-black font-black rounded-xl h-12 px-8 gold-glow">
+                        Pay & Activate
+                      </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>

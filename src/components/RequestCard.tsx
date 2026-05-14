@@ -127,77 +127,84 @@ const RequestCard: React.FC<RequestCardProps> = ({
         <div className={cn("h-1 transition-all duration-1000", isFunded ? "bg-emerald-500" : getCategoryColor().split(' ')[1])} style={{ width: `${progress}%` }} />
         
         <DialogTrigger asChild>
-          <CardContent className="p-6 cursor-pointer hover:bg-white/[0.02] transition-colors flex-1">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex flex-wrap gap-2">
-                <span className={cn("text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border", getCategoryColor())}>
-                  {category}
-                </span>
-                {status === 'Completed' ? (
-                  <span className="text-[9px] font-black text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full flex items-center gap-1 border border-emerald-500/20 uppercase tracking-widest">
-                    <CheckCircle2 size={10} /> Completed
-                  </span>
-                ) : isFunded ? (
-                  <span className="text-[9px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-full flex items-center gap-1 border border-primary/20 uppercase tracking-widest animate-pulse">
-                    <Sparkles size={10} /> Fully Funded
-                  </span>
-                ) : null}
+          <CardContent className="p-0 cursor-pointer hover:bg-white/[0.02] transition-colors flex-1">
+            {proofUrl && (
+              <div className="w-full aspect-[21/9] overflow-hidden relative border-b border-white/5">
+                <img src={proofUrl} alt="Request Proof" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+                <div className="absolute bottom-3 left-4 flex items-center gap-1.5 px-2 py-1 rounded-md bg-black/60 backdrop-blur-md border border-white/10 text-[9px] font-black uppercase tracking-widest text-primary">
+                  <ImageIcon size={10} /> Photo Evidence
+                </div>
               </div>
-              <span className="text-[10px] text-muted-foreground font-black uppercase tracking-tighter">
-                {formatDistanceToNow(timestamp, { addSuffix: true })}
-              </span>
-            </div>
-
-            <h3 className="text-xl font-black mb-3 group-hover:text-primary transition-colors line-clamp-1 tracking-tight">{title}</h3>
+            )}
             
-            <div className="flex items-center gap-2 mb-5">
-              <Avatar className="w-6 h-6 border border-white/10">
-                <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${requestor}`} />
-                <AvatarFallback className="text-[10px] bg-primary text-black font-black">{requestor.substring(0, 2).toUpperCase()}</AvatarFallback>
-              </Avatar>
-              <div className="text-xs font-black text-muted-foreground flex items-center gap-1 uppercase tracking-wider">
-                @{requestor}
-              </div>
-            </div>
-
-            <p className="text-sm font-bold text-foreground/90 mb-8 leading-relaxed line-clamp-3 min-h-[60px] italic bg-white/5 p-4 rounded-xl border border-white/5 relative">
-              "{description}"
-              {proofUrl && (
-                <span className="absolute bottom-2 right-2 flex items-center gap-1 text-[9px] font-black uppercase text-primary/60">
-                  <ImageIcon size={10} /> Proof attached
+            <div className="p-6 space-y-4">
+              <div className="flex items-start justify-between">
+                <div className="flex flex-wrap gap-2">
+                  <span className={cn("text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border", getCategoryColor())}>
+                    {category}
+                  </span>
+                  {status === 'Completed' ? (
+                    <span className="text-[9px] font-black text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full flex items-center gap-1 border border-emerald-500/20 uppercase tracking-widest">
+                      <CheckCircle2 size={10} /> Completed
+                    </span>
+                  ) : isFunded ? (
+                    <span className="text-[9px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-full flex items-center gap-1 border border-primary/20 uppercase tracking-widest animate-pulse">
+                      <Sparkles size={10} /> Fully Funded
+                    </span>
+                  ) : null}
+                </div>
+                <span className="text-[10px] text-muted-foreground font-black uppercase tracking-tighter">
+                  {formatDistanceToNow(timestamp, { addSuffix: true })}
                 </span>
-              )}
-            </p>
+              </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-widest">
-                <div className="flex items-center gap-1.5 text-primary">
-                  <Zap size={14} className="fill-primary" />
-                  <span className="text-sm">{raised.toLocaleString()} {token}</span>
-                </div>
-                <span className="text-muted-foreground">Goal: {amount.toLocaleString()}</span>
-              </div>
+              <h3 className="text-xl font-black group-hover:text-primary transition-colors line-clamp-1 tracking-tight">{title}</h3>
               
-              <div className="w-full bg-white/5 rounded-full h-3 overflow-hidden border border-white/5 p-[1px] shadow-inner">
-                <div 
-                  className={cn(
-                    "h-full rounded-full transition-all duration-1000 ease-out relative",
-                    isFunded ? "bg-emerald-500" : "bg-primary"
-                  )} 
-                  style={{ width: `${progress}%` }}
-                >
-                  <div className="absolute inset-0 bg-white/20 animate-pulse" />
+              <div className="flex items-center gap-2">
+                <Avatar className="w-6 h-6 border border-white/10">
+                  <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${requestor}`} />
+                  <AvatarFallback className="text-[10px] bg-primary text-black font-black">{requestor.substring(0, 2).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <div className="text-xs font-black text-muted-foreground flex items-center gap-1 uppercase tracking-wider">
+                  @{requestor}
                 </div>
               </div>
-              
-              <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                <div className="flex items-center gap-1.5">
-                  <Heart size={12} className="text-primary fill-primary" />
-                  <span className="text-foreground">{contributions.length} Supports</span>
+
+              <p className="text-sm font-bold text-foreground/90 leading-relaxed line-clamp-3 min-h-[60px] italic bg-white/5 p-4 rounded-xl border border-white/5">
+                "{description}"
+              </p>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-widest">
+                  <div className="flex items-center gap-1.5 text-primary">
+                    <Zap size={14} className="fill-primary" />
+                    <span className="text-sm">{raised.toLocaleString()} {token}</span>
+                  </div>
+                  <span className="text-muted-foreground">Goal: {amount.toLocaleString()}</span>
                 </div>
-                <span className={cn("text-sm", progress >= 100 ? "text-emerald-400" : "text-primary")}>
-                  {Math.round(progress)}% Complete
-                </span>
+                
+                <div className="w-full bg-white/5 rounded-full h-3 overflow-hidden border border-white/5 p-[1px] shadow-inner">
+                  <div 
+                    className={cn(
+                      "h-full rounded-full transition-all duration-1000 ease-out relative",
+                      isFunded ? "bg-emerald-500" : "bg-primary"
+                    )} 
+                    style={{ width: `${progress}%` }}
+                  >
+                    <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                  <div className="flex items-center gap-1.5">
+                    <Heart size={12} className="text-primary fill-primary" />
+                    <span className="text-foreground">{contributions.length} Supports</span>
+                  </div>
+                  <span className={cn("text-sm", progress >= 100 ? "text-emerald-400" : "text-primary")}>
+                    {Math.round(progress)}% Complete
+                  </span>
+                </div>
               </div>
             </div>
           </CardContent>

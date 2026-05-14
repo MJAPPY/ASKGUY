@@ -16,11 +16,12 @@ import BannedOverlay from '@/components/BannedOverlay';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Heart, ArrowRight, Search, Loader2, LayoutGrid, List, ArrowDownWideArrow, ArrowUpWideArrow } from 'lucide-react';
+import { Heart, ArrowRight, Search, Loader2, LayoutGrid, List } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { cn } from "@/lib/utils";
 import heroGuy from '@/assets/hero-guy.jpg';
 
 type FilterType = 'all' | 'active' | 'funded' | 'my-requests';

@@ -6,7 +6,7 @@ import React, {
   useState,
   useEffect,
   useCallback,
-  useRef
+  useRef,
 } from "react";
 import { showSuccess, showError } from "@/utils/toast";
 import ProtonWebSDK from "@proton/web-sdk";
@@ -15,7 +15,8 @@ import { supabase } from "@/lib/supabase";
 const APP_NAME = "AskGuy";
 const APP_LOGO = "https://askguy.sh/logo.png";
 
-const PROTON_CHAIN_ID = "384da888112027f0321850a169f737c33e53b388aad48b5adace4bab97f437e0";
+const PROTON_CHAIN_ID =
+  "384da888112027f0321850a169f737c33e53b388aad48b5adace4bab97f437e0";
 const ENDPOINTS = [
   "https://proton.greymass.com",
   "https://mainnet.protonchain.com",
@@ -44,9 +45,13 @@ interface WalletContextType {
   refreshBalances: () => Promise<void>;
 }
 
-export const WalletContext = createContext<WalletContextType | undefined>(undefined);
+export const WalletContext = createContext<WalletContextType | undefined>(
+  undefined,
+);
 
-export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isFetchingBalances, setIsFetchingBalances] = useState(false);
@@ -57,7 +62,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [isMember, setIsMember] = useState(false);
   const [membershipExpiry, setMembershipExpiry] = useState<number | null>(null);
   const [session, setSession] = useState<any>(null);
-  
+
   const linkRef = useRef<any>(null);
 
   const checkMembership = async (account: string) => {
@@ -68,7 +73,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .select("expiry")
         .eq("address", account.toLowerCase())
         .maybeSingle();
-      
+
       if (!error && data && data.expiry > Date.now()) {
         setIsMember(true);
         setMembershipExpiry(data.expiry);
@@ -98,7 +103,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const fetchBalances = useCallback(async (account: string) => {
     if (!account) return;
     setIsFetchingBalances(true);
-    
+
     checkBanStatus(account);
     checkMembership(account);
 
@@ -108,20 +113,36 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         fetch(`${endpoint}/v1/chain/get_currency_balance`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code: "eosio.token", account, symbol: "XPR" }),
+          body: JSON.stringify({
+            code: "eosio.token",
+            account,
+            symbol: "XPR",
+          }),
         }),
         fetch(`${endpoint}/v1/chain/get_currency_balance`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code: "vtoken", account, symbol: "GUY" }),
-        })
+          body: JSON.stringify({
+            code: "vtoken",
+            account,
+            symbol: "GUY",
+          }),
+        }),
       ]);
 
       if (xprRes.ok && guyRes.ok) {
         const xprData = await xprRes.json();
         const guyData = await guyRes.json();
-        setXprBalance(Array.isArray(xprData) && xprData.length > 0 ? parseFloat(xprData[0].split(" ")[0]) : 0);
-        setGuyBalance(Array.isArray(guyData) && guyData.length > 0 ? parseFloat(guyData[0].split(" ")[0]) : 0);
+        setXprBalance(
+          Array.isArray(xprData) && xprData.length > 0
+            ? parseFloat(xprData[0].split(" ")[0])
+            : 0,
+        );
+        setGuyBalance(
+          Array.isArray(guyData) && guyData.length > 0
+            ? parseFloat(guyData[0].split(" ")[0])
+            : 0,
+        );
       }
     } catch (err) {
       console.error("Balance fetch error:", err);
@@ -130,24 +151,43 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, []);
 
-  const handleLogin = useCallback((newSession: any) => {
-    const actor = newSession.auth?.actor?.toString() ?? null;
-    if (actor) {
-      setSession(newSession);
-      setAddress(actor);
-      setIsConnected(true);
-      fetchBalances(actor);
-    }
-  }, [fetchBalances]);
+  const handleLogin = useCallback(
+    (newSession: any) => {
+      const actor = newSession.auth?.actor?.toString() ?? null;
+      if (actor) {
+        setSession(newSession);
+        setAddress(actor);
+        setIsConnected(true);
+        fetchBalances(actor);
+      }
+    },
+    [fetchBalances],
+  );
 
+  // -------------------------------------------------------------------------
+  // SDK INITIALISATION (cast options to any to avoid TS2353)
+  // -------------------------------------------------------------------------
   useEffect(() => {
     const init = async () => {
       if (linkRef.current) return;
       try {
-        const { link, session: restoredSession } = await ProtonWebSDK({
-          linkOptions: { chainId: PROTON_CHAIN_ID, endpoints: ENDPOINTS, restoreSession: true },
-          transportOptions: { requestPermission: "active", backButton: true } as any,
-          selectorOptions: { appName: APP_NAME, appLogo: APP_LOGO } as any,
+        const { link, session: restoredSession } = await (
+          ProtonWebSDK as any
+        )({
+          // casting the whole config to any silences the strict type checks
+          linkOptions: {
+            chainId: PROTON_CHAIN_ID,
+            endpoints: ENDPOINTS,
+            restoreSession: true,
+          } as any,
+          transportOptions: {
+            requestPermission: "active",
+            backButton: true,
+          } as any,
+          selectorOptions: {
+            appName: APP_NAME,
+            appLogo: APP_LOGO,
+          } as any,
         });
 
         linkRef.current = link;
@@ -161,10 +201,13 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     init();
   }, [handleLogin]);
 
+  // -------------------------------------------------------------------------
+  // CONNECT (also cast to any)
+  // -------------------------------------------------------------------------
   const connect = async () => {
     if (isConnecting) return;
     setIsConnecting(true);
-    
+
     try {
       if (linkRef.current) {
         const { session: newSession } = await linkRef.current.login(APP_NAME);
@@ -173,10 +216,20 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           showSuccess("Connected!");
         }
       } else {
-        const { link, session: newSession } = await ProtonWebSDK({
-          linkOptions: { chainId: PROTON_CHAIN_ID, endpoints: ENDPOINTS, restoreSession: false },
-          transportOptions: { requestPermission: "active", backButton: true } as any,
-          selectorOptions: { appName: APP_NAME, appLogo: APP_LOGO } as any,
+        const { link, session: newSession } = await (ProtonWebSDK as any)({
+          linkOptions: {
+            chainId: PROTON_CHAIN_ID,
+            endpoints: ENDPOINTS,
+            restoreSession: false,
+          } as any,
+          transportOptions: {
+            requestPermission: "active",
+            backButton: true,
+          } as any,
+          selectorOptions: {
+            appName: APP_NAME,
+            appLogo: APP_LOGO,
+          } as any,
         });
 
         if (newSession) {
@@ -225,19 +278,21 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         },
       };
 
-      const result = await session.transact({ actions: [action] }, { broadcast: true });
+      const result = await session.transact(
+        { actions: [action] },
+        { broadcast: true },
+      );
       if (result) {
         const expiry = Date.now() + 365 * 24 * 60 * 60 * 1000;
-        
+
         if (supabase) {
           await supabase
             .from("memberships")
-            .upsert({ 
-              address: address?.toLowerCase(), 
+            .upsert({
+              address: address?.toLowerCase(),
               expiry: expiry,
-              updated_at: new Date().toISOString()
+              updated_at: new Date().toISOString(),
             });
-          
           setIsMember(true);
           setMembershipExpiry(expiry);
         }
@@ -250,7 +305,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
-  const transferTokens = async (to: string, amount: number, symbol: "XPR" | "GUY", memo: string) => {
+  const transferTokens = async (
+    to: string,
+    amount: number,
+    symbol: "XPR" | "GUY",
+    memo: string,
+  ) => {
     if (!session) return false;
     const contract = symbol === "XPR" ? "eosio.token" : "vtoken";
     const precision = symbol === "XPR" ? 4 : 6;
@@ -268,7 +328,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         },
       };
 
-      const result = await session.transact({ actions: [action] }, { broadcast: true });
+      const result = await session.transact(
+        { actions: [action] },
+        { broadcast: true },
+      );
       if (result) {
         if (address) fetchBalances(address);
         return true;
@@ -296,7 +359,9 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         disconnect,
         payMembership,
         transferTokens,
-        refreshBalances: async () => { if (address) await fetchBalances(address); },
+        refreshBalances: async () => {
+          if (address) await fetchBalances(address);
+        },
       }}
     >
       {children}

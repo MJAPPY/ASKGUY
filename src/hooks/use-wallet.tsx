@@ -57,13 +57,13 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ code: cleanCode, account: cleanAccount, symbol }),
-          signal: AbortSignal.timeout(3000) // Don't hang on slow nodes
+          signal: AbortSignal.timeout(3000)
         });
 
         if (balanceRes.ok) {
           const data = await balanceRes.json();
           if (Array.isArray(data)) {
-            if (data.length === 0) return 0; // Return 0 immediately if confirmed empty
+            if (data.length === 0) return 0;
             const val = parseFloat(data[0].split(' ')[0] || '0');
             return val;
           }
@@ -81,12 +81,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const cleanAddress = walletAddress.toLowerCase();
     
     try {
-      // Run Supabase and Chain fetches in parallel
       const [banCheck, profileCheck, xprVal, guyCheck] = await Promise.all([
         supabase.from('banned_users').select('*').eq('address', cleanAddress).maybeSingle(),
         supabase.from('profiles').select('membership_expiry').eq('address', cleanAddress).maybeSingle(),
         fetchChainBalance(cleanAddress, 'eosio.token', 'XPR'),
-        // Parallelize GUY checks across common contracts
         Promise.all([
           fetchChainBalance(cleanAddress, 'proton-vtoken', 'GUY'),
           fetchChainBalance(cleanAddress, 'xtokens', 'GUY'),
@@ -159,7 +157,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const precision = token === 'XPR' ? 4 : 6;
       let account = token === 'XPR' ? 'eosio.token' : 'proton-vtoken';
       
-      // Quick check for GUY contract
       if (token === 'GUY') {
         const xtokensVal = await fetchChainBalance(address, 'xtokens', 'GUY');
         if (xtokensVal > 0) account = 'xtokens';
@@ -189,8 +186,9 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [transferTokens, address]);
 
+  // Everyone connected is a member for now
+  const isMember = isConnected; 
   const hasGuyThreshold = true;
-  const isMember = membershipExpiry > Date.now();
 
   return (
     <WalletContext.Provider value={{

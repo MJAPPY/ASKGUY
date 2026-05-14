@@ -16,12 +16,10 @@ import BannedOverlay from '@/components/BannedOverlay';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ShieldAlert, Search, User, ExternalLink, Heart, ArrowRight, ShieldCheck, Calendar, LayoutGrid, Zap, CheckCircle2, ArrowUpDown, List, Lock, Loader2 } from 'lucide-react';
+import { Heart, ArrowRight, Search, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import heroGuy from '@/assets/hero-guy.jpg';
 
 type FilterType = 'all' | 'active' | 'funded' | 'my-requests';
@@ -29,7 +27,7 @@ type SortType = 'newest' | 'oldest';
 type ViewMode = 'grid' | 'list';
 
 const Index = () => {
-  const { isConnected, isMember, membershipExpiry, payMembership, address, connect, isFetchingBalances, isConnecting, isBanned } = useWallet();
+  const { isConnected, address, connect, isFetchingBalances, isConnecting, isBanned } = useWallet();
   const { requests, loading: requestsLoading } = useRequests();
   const [filter, setFilter] = useState<FilterType>('active');
   const [sortBy, setSortBy] = useState<SortType>('oldest');
@@ -125,76 +123,12 @@ const Index = () => {
               <Card className="glass-card flex items-center justify-center p-12">
                 <Loader2 className="animate-spin text-primary" size={32} />
               </Card>
-            ) : !isMember ? (
-              <Card className="border-primary/50 bg-primary/5 overflow-hidden relative glass-card">
-                <CardContent className="p-6 space-y-4">
-                  <div className="flex gap-4">
-                    <ShieldAlert className="text-primary shrink-0" />
-                    <div className="space-y-2">
-                      <p className="font-bold text-primary text-lg">Unlock Posting Rights</p>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        To post a request, a yearly membership fee of <span className="text-primary font-bold">1 XPR</span> is required. This supports platform hosting and moderation.
-                      </p>
-                    </div>
-                  </div>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button className="w-full bg-primary hover:bg-primary/90 text-black font-bold h-12 shadow-primary/20 text-base btn-premium gold-glow">
-                        Pay 1 XPR to Post
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent className="glass-card border-white/10">
-                      <AlertDialogHeader>
-                        <AlertDialogTitle className="flex items-center gap-2">
-                          <ShieldCheck className="text-primary" size={20} />
-                          Unlock Membership
-                        </AlertDialogTitle>
-                        <AlertDialogDescription className="text-muted-foreground">
-                          Pay <span className="text-white font-bold">1 XPR</span> to unlock posting rights for one year.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel className="bg-white/5 border-white/10">Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={payMembership} className="bg-primary text-black font-bold">Confirm & Pay</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                  <p className="text-xs text-center text-muted-foreground italic">
-                    Anyone can browse and contribute without a fee.
-                  </p>
-                </CardContent>
-              </Card>
             ) : (
               <div className="space-y-6">
-                <Card className="glass-card border-emerald-500/20 bg-emerald-500/5">
-                  <CardContent className="p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                        <ShieldCheck className="text-emerald-400" size={20} />
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold">Active Member</p>
-                        <p className="text-[10px] text-muted-foreground">Expires: {new Date(membershipExpiry!).toLocaleDateString()}</p>
-                      </div>
-                    </div>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="sm" className="text-[10px] font-bold uppercase text-emerald-400 hover:bg-emerald-500/10">Renew</Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent className="glass-card border-white/10">
-                        <AlertDialogHeader><AlertDialogTitle>Renew Membership</AlertDialogTitle></AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel className="bg-white/5 border-white/10">Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={payMembership} className="bg-primary text-black font-bold">Renew</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </CardContent>
-                </Card>
                 <RequestForm />
+                <ActivityFeed />
               </div>
             )}
-            <ActivityFeed />
           </div>
           <div className="lg:col-span-8 space-y-6">
             <div id="browse-requests" className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -214,7 +148,17 @@ const Index = () => {
               </div>
             </div>
             <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 gap-6" : "flex flex-col gap-4"}>
-              {requestsLoading ? <div className="col-span-full text-center py-20"><Loader2 className="animate-spin mx-auto text-primary" size={32} /></div> : filteredRequests.map((req) => <RequestCard key={req.id} {...req} variant={viewMode} />)}
+              {requestsLoading ? (
+                <div className="col-span-full text-center py-20">
+                  <Loader2 className="animate-spin mx-auto text-primary" size={32} />
+                </div>
+              ) : filteredRequests.length > 0 ? (
+                filteredRequests.map((req) => <RequestCard key={req.id} {...req} variant={viewMode} />)
+              ) : (
+                <div className="col-span-full py-20 text-center glass-card border-dashed border-white/10">
+                  <p className="text-muted-foreground">No requests found matching your filters.</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

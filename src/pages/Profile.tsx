@@ -10,7 +10,19 @@ import RequestCard from '@/components/RequestCard';
 import TransactionHistory from '@/components/TransactionHistory';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Heart, ArrowLeft, Calendar, MessageSquare, Quote, Wallet, Loader2, ShieldCheck, User, Sparkles } from 'lucide-react';
+import { 
+  Heart, 
+  ArrowLeft, 
+  Calendar, 
+  MessageSquare, 
+  Quote, 
+  Wallet, 
+  Loader2, 
+  ShieldCheck, 
+  User, 
+  Sparkles,
+  LayoutGrid 
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";

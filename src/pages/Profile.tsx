@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useWallet } from '@/hooks/use-wallet';
 import { useRequests } from '@/hooks/use-requests';
@@ -10,7 +10,7 @@ import RequestCard from '@/components/RequestCard';
 import TransactionHistory from '@/components/TransactionHistory';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Heart, Send, Receipt, ArrowLeft, Calendar, MessageSquare, Quote, Wallet, Loader2, ShieldCheck, Coins } from 'lucide-react';
+import { Heart, Send, Receipt, ArrowLeft, Calendar, MessageSquare, Quote, Wallet, Loader2, ShieldCheck, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -18,55 +18,12 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 
 const Profile = () => {
   const { userAddress: routeAddress } = useParams();
-  const { address: myAddress, isConnected, isConnecting, payMembership, membershipExpiry: myExpiry, connect } = useWallet();
+  const { address: myAddress, isConnected, isConnecting, guyBalance: myGuyBalance, isMember: isMyMembershipActive, membershipExpiry: myExpiry, payMembership, connect } = useWallet();
   const { requests } = useRequests();
 
+  // If no route param, we are looking at our own profile
   const targetAddress = routeAddress || myAddress;
   const isOwnProfile = !routeAddress || routeAddress === myAddress;
-
-  const [balances, setBalances] = useState({ xpr: 0, guy: 0 });
-  const [loadingBalances, setLoadingBalances] = useState(false);
-
-  // Fetch balances for the target user
-  useEffect(() => {
-    const fetchTargetBalances = async () => {
-      if (!targetAddress) return;
-      setLoadingBalances(true);
-      
-      const endpoints = [
-        'https://proton.greymass.com',
-        'https://api.protonnz.com',
-        'https://api.protonchain.com'
-      ];
-
-      const getBalance = async (code: string, symbol: string) => {
-        for (const endpoint of endpoints) {
-          try {
-            const res = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
-              method: 'POST',
-              body: JSON.stringify({ code, account: targetAddress, symbol })
-            });
-            if (res.ok) {
-              const data = await res.json();
-              if (data?.[0]) return parseFloat(data[0].split(' ')[0]);
-            }
-          } catch (e) {}
-        }
-        return 0;
-      };
-
-      const xpr = await getBalance('eosio.token', 'XPR');
-      // Check multiple GUY contracts
-      let guy = await getBalance('proton-vtoken', 'GUY');
-      if (guy === 0) guy = await getBalance('xtokens', 'GUY');
-      if (guy === 0) guy = await getBalance('token.777', 'GUY');
-
-      setBalances({ xpr, guy });
-      setLoadingBalances(false);
-    };
-
-    fetchTargetBalances();
-  }, [targetAddress]);
 
   const stats = useMemo(() => {
     if (!targetAddress) return { given: 0, received: 0, count: 0 };
@@ -172,62 +129,45 @@ const Profile = () => {
                 </h1>
                 <div className="flex flex-wrap gap-2">
                   <Badge variant="outline" className="bg-white/5 border-white/10 text-white font-bold px-3 py-1">
-                    {balances.guy >= 7770 ? 'Elite Holder' : 'Verified Holder'}
+                    Verified Holder
                   </Badge>
                   <Badge className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold px-3 py-1">
-                    {loadingBalances ? 'Scanning...' : `${balances.guy.toLocaleString()} GUY`}
+                    Community Member
                   </Badge>
                 </div>
               </div>
             </div>
 
-            <div className="flex gap-4 flex-wrap">
-              <div className="p-4 px-6 glass-card rounded-2xl border-white/5 bg-white/5 flex flex-col items-start gap-1">
-                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">On-Chain Balance</p>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg font-black text-primary">{loadingBalances ? '...' : balances.guy.toLocaleString()}</span>
-                    <span className="text-[10px] font-bold text-muted-foreground">GUY</span>
-                  </div>
-                  <div className="w-px h-4 bg-white/10" />
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg font-black text-white">{loadingBalances ? '...' : balances.xpr.toLocaleString()}</span>
-                    <span className="text-[10px] font-bold text-muted-foreground">XPR</span>
-                  </div>
+            {isOwnProfile && (
+              <div className="p-6 glass-card rounded-2xl border-primary/20 flex items-center gap-8 bg-primary/5">
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-1">Membership</p>
+                  <p className="text-lg font-black flex items-center gap-2">
+                    <Calendar size={18} className="text-primary" />
+                    {myExpiry > 0 ? new Date(myExpiry).toLocaleDateString() : 'Active'}
+                  </p>
                 </div>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="secondary" className="h-11 px-6 font-black border-white/10 bg-white/10 hover:bg-white/20 transition-all uppercase tracking-widest text-[11px]">
+                      Renew
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="glass-card border-white/10">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Renew Membership</AlertDialogTitle>
+                      <AlertDialogDescription className="text-muted-foreground">
+                        Extend your membership for another year for <span className="text-white font-bold">1 XPR</span>.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel className="bg-white/5 border-white/10">Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={payMembership} className="bg-primary text-black font-bold">Renew</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
-
-              {isOwnProfile && (
-                <div className="p-4 px-6 glass-card rounded-2xl border-primary/20 flex items-center gap-8 bg-primary/5">
-                  <div>
-                    <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-1">Membership</p>
-                    <p className="text-lg font-black flex items-center gap-2">
-                      <Calendar size={18} className="text-primary" />
-                      {myExpiry > 0 ? new Date(myExpiry).toLocaleDateString() : 'Active'}
-                    </p>
-                  </div>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="secondary" className="h-10 px-4 font-black border-white/10 bg-white/10 hover:bg-white/20 transition-all uppercase tracking-widest text-[10px]">
-                        Renew
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent className="glass-card border-white/10">
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Renew Membership</AlertDialogTitle>
-                        <AlertDialogDescription className="text-muted-foreground">
-                          Extend your membership for another year for <span className="text-white font-bold">1 XPR</span>.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel className="bg-white/5 border-white/10">Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={payMembership} className="bg-primary text-black font-bold">Renew</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              )}
-            </div>
+            )}
           </div>
         </div>
       </div>

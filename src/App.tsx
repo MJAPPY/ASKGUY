@@ -11,7 +11,6 @@ import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import { WalletProvider } from "./hooks/use-wallet";
 import { RequestsProvider } from "./hooks/use-requests";
-import { supabase } from "@/integrations/supabase/client";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +25,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/profile/:userAddress" element={<Profile />} />
               <Route path="/leaderboard" element={<LeaderboardPage />} />
               <Route path="/guidelines" element={<Guidelines />} />
               <Route path="/admin" element={<Admin />} />

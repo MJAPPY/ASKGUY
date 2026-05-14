@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { useWallet } from '@/hooks/use-wallet';
 import { useRequests } from '@/hooks/use-requests';
 import Navbar from '@/components/Navbar';
@@ -9,30 +10,34 @@ import RequestCard from '@/components/RequestCard';
 import TransactionHistory from '@/components/TransactionHistory';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Heart, Send, Receipt, Award, ArrowLeft, Calendar, MessageSquare, Quote, Wallet, Loader2, ShieldCheck } from 'lucide-react';
+import { Heart, Send, Receipt, ArrowLeft, Calendar, MessageSquare, Quote, Wallet, Loader2, ShieldCheck, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const Profile = () => {
-  const { address, isConnected, isConnecting, guyBalance, isMember, membershipExpiry, payMembership, connect } = useWallet();
+  const { userAddress: routeAddress } = useParams();
+  const { address: myAddress, isConnected, isConnecting, guyBalance: myGuyBalance, isMember: isMyMembershipActive, membershipExpiry: myExpiry, payMembership, connect } = useWallet();
   const { requests } = useRequests();
 
+  // If no route param, we are looking at our own profile
+  const targetAddress = routeAddress || myAddress;
+  const isOwnProfile = !routeAddress || routeAddress === myAddress;
+
   const stats = useMemo(() => {
-    if (!address) return { given: 0, received: 0, count: 0 };
+    if (!targetAddress) return { given: 0, received: 0, count: 0 };
     
     let given = 0;
     let received = 0;
     let count = 0;
 
     requests.forEach(req => {
-      if (req.requestor === address) {
+      if (req.requestor === targetAddress) {
         received += req.raised;
       }
       req.contributions.forEach(c => {
-        if (c.user === address) {
+        if (c.user === targetAddress) {
           given += c.amount;
           count++;
         }
@@ -40,16 +45,16 @@ const Profile = () => {
     });
 
     return { given, received, count };
-  }, [requests, address]);
+  }, [requests, targetAddress]);
 
-  const myRequests = requests.filter(req => req.requestor === address);
-  const myContributions = requests.filter(req => 
-    req.contributions.some(c => c.user === address)
+  const profileRequests = requests.filter(req => req.requestor === targetAddress);
+  const profileContributions = requests.filter(req => 
+    req.contributions.some(c => c.user === targetAddress)
   );
 
   const receivedMessages = useMemo(() => {
     const messages: { user: string, message: string, timestamp: number, requestTitle: string }[] = [];
-    myRequests.forEach(req => {
+    profileRequests.forEach(req => {
       req.contributions.forEach(c => {
         if (c.message) {
           messages.push({
@@ -62,9 +67,9 @@ const Profile = () => {
       });
     });
     return messages.sort((a, b) => b.timestamp - a.timestamp);
-  }, [myRequests]);
+  }, [profileRequests]);
 
-  if (!isConnected) {
+  if (!targetAddress && !isConnected) {
     return (
       <div className="min-h-screen bg-background text-foreground flex flex-col">
         <Navbar />
@@ -76,30 +81,11 @@ const Profile = () => {
             <div className="space-y-2">
               <h1 className="text-2xl font-black tracking-tight">Connect Your Wallet</h1>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Please connect your XPR Network wallet to view your profile, track your contributions, and manage your requests.
+                Connect your wallet to see your impact or search for other community members.
               </p>
             </div>
-            <Button 
-              onClick={connect} 
-              disabled={isConnecting}
-              className="w-full h-14 bg-primary hover:bg-primary/90 text-black font-black rounded-xl gold-glow btn-premium text-base gap-3"
-            >
-              {isConnecting ? (
-                <>
-                  <Loader2 size={20} className="animate-spin" />
-                  Connecting...
-                </>
-              ) : (
-                <>
-                  <Wallet size={20} />
-                  Connect WebAuth
-                </>
-              )}
-            </Button>
-            <Button variant="ghost" asChild className="text-muted-foreground hover:text-white">
-              <Link to="/" className="flex items-center gap-2">
-                <ArrowLeft size={16} /> Back to Home
-              </Link>
+            <Button onClick={connect} disabled={isConnecting} className="w-full h-14 bg-primary hover:bg-primary/90 text-black font-black rounded-xl gold-glow btn-premium text-base gap-3">
+              {isConnecting ? <Loader2 size={20} className="animate-spin" /> : <><Wallet size={20} /> Connect WebAuth</>}
             </Button>
           </div>
         </main>
@@ -108,13 +94,10 @@ const Profile = () => {
     );
   }
 
-  const displayAddress = typeof address === 'string' ? address : '';
-
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Navbar />
       
-      {/* Profile Header */}
       <div className="relative border-b border-white/5 bg-white/[0.02] py-12 overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
         
@@ -129,44 +112,39 @@ const Profile = () => {
             <div className="flex items-center gap-6">
               <div className="relative">
                 <Avatar className="h-24 w-24 border-2 border-primary/30 shadow-2xl">
-                  <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${displayAddress}`} />
+                  <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${targetAddress}`} />
                   <AvatarFallback className="bg-primary text-black font-black text-xl">
-                    {displayAddress.substring(0, 2).toUpperCase()}
+                    {targetAddress?.substring(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                {isMember && (
-                  <div className="absolute -bottom-2 -right-2 bg-primary text-black p-1.5 rounded-xl border-4 border-background shadow-lg">
-                    <ShieldCheck size={18} />
-                  </div>
-                )}
+                <div className="absolute -bottom-2 -right-2 bg-primary text-black p-1.5 rounded-xl border-4 border-background shadow-lg">
+                  <ShieldCheck size={18} />
+                </div>
               </div>
               
               <div className="space-y-2">
-                <h1 className="text-4xl font-black tracking-tight">{displayAddress}</h1>
+                <h1 className="text-4xl font-black tracking-tight flex items-center gap-3">
+                  {targetAddress}
+                  {isOwnProfile && <Badge className="bg-white/10 text-white border-white/10">You</Badge>}
+                </h1>
                 <div className="flex flex-wrap gap-2">
                   <Badge variant="outline" className="bg-white/5 border-white/10 text-white font-bold px-3 py-1">
-                    {guyBalance.toLocaleString()} GUY
+                    Verified Holder
                   </Badge>
-                  {isMember ? (
-                    <Badge className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold px-3 py-1">
-                      Verified Member
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline" className="bg-red-500/10 border-red-500/20 text-red-400 font-bold px-3 py-1">
-                      Unverified
-                    </Badge>
-                  )}
+                  <Badge className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold px-3 py-1">
+                    Community Member
+                  </Badge>
                 </div>
               </div>
             </div>
 
-            {isMember && (
+            {isOwnProfile && (
               <div className="p-6 glass-card rounded-2xl border-primary/20 flex items-center gap-8 bg-primary/5">
                 <div>
-                  <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-1">Membership Expiry</p>
+                  <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-1">Membership</p>
                   <p className="text-lg font-black flex items-center gap-2">
                     <Calendar size={18} className="text-primary" />
-                    {new Date(membershipExpiry!).toLocaleDateString()}
+                    {myExpiry > 0 ? new Date(myExpiry).toLocaleDateString() : 'Active'}
                   </p>
                 </div>
                 <AlertDialog>
@@ -183,10 +161,8 @@ const Profile = () => {
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel className="bg-white/5 border-white/10 hover:bg-white/10">Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={payMembership} className="bg-primary hover:bg-primary/90 text-black font-bold">
-                        Confirm & Renew
-                      </AlertDialogAction>
+                      <AlertDialogCancel className="bg-white/5 border-white/10">Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={payMembership} className="bg-primary text-black font-bold">Renew</AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
@@ -199,11 +175,10 @@ const Profile = () => {
       <main className="flex-1 container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
-            {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="glass-card border-white/5 bg-white/[0.02] overflow-hidden group">
+              <Card className="glass-card border-white/5 bg-white/[0.02] group">
                 <CardContent className="p-6 flex items-center gap-5">
-                  <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 group-hover:scale-110 transition-transform">
+                  <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
                     <Heart className="text-primary fill-primary/20" size={28} />
                   </div>
                   <div>
@@ -212,10 +187,9 @@ const Profile = () => {
                   </div>
                 </CardContent>
               </Card>
-              
-              <Card className="glass-card border-white/5 bg-white/[0.02] overflow-hidden group">
+              <Card className="glass-card border-white/5 bg-white/[0.02] group">
                 <CardContent className="p-6 flex items-center gap-5">
-                  <div className="w-14 h-14 rounded-2xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:scale-110 transition-transform">
+                  <div className="w-14 h-14 rounded-2xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
                     <Receipt className="text-blue-400" size={28} />
                   </div>
                   <div>
@@ -224,107 +198,87 @@ const Profile = () => {
                   </div>
                 </CardContent>
               </Card>
-
-              <Card className="glass-card border-white/5 bg-white/[0.02] overflow-hidden group">
+              <Card className="glass-card border-white/5 bg-white/[0.02] group">
                 <CardContent className="p-6 flex items-center gap-5">
-                  <div className="w-14 h-14 rounded-2xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20 group-hover:scale-110 transition-transform">
+                  <div className="w-14 h-14 rounded-2xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
                     <Send className="text-purple-400" size={28} />
                   </div>
                   <div>
-                    <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-0.5">Donations Made</p>
+                    <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-0.5">Donations</p>
                     <p className="text-2xl font-black">{stats.count}</p>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            <Tabs defaultValue="my-requests" className="space-y-8">
+            <Tabs defaultValue="requests" className="space-y-8">
               <TabsList className="bg-white/5 border border-white/10 p-1 h-12 rounded-xl">
-                <TabsTrigger value="my-requests" className="rounded-lg px-6 font-bold data-[state=active]:bg-primary data-[state=active]:text-black">
-                  My Requests ({myRequests.length})
+                <TabsTrigger value="requests" className="rounded-lg px-6 font-bold data-[state=active]:bg-primary data-[state=active]:text-black">
+                  Requests ({profileRequests.length})
                 </TabsTrigger>
-                <TabsTrigger value="my-contributions" className="rounded-lg px-6 font-bold data-[state=active]:bg-primary data-[state=active]:text-black">
-                  Contributions ({myContributions.length})
+                <TabsTrigger value="contributions" className="rounded-lg px-6 font-bold data-[state=active]:bg-primary data-[state=active]:text-black">
+                  Contributions ({profileContributions.length})
                 </TabsTrigger>
-                <TabsTrigger value="messages" className="rounded-lg px-6 font-bold data-[state=active]:bg-primary data-[state=active]:text-black flex gap-2">
-                  <MessageSquare size={16} /> Messages ({receivedMessages.length})
-                </TabsTrigger>
+                {isOwnProfile && (
+                  <TabsTrigger value="messages" className="rounded-lg px-6 font-bold data-[state=active]:bg-primary data-[state=active]:text-black flex gap-2">
+                    <MessageSquare size={16} /> Messages ({receivedMessages.length})
+                  </TabsTrigger>
+                )}
               </TabsList>
 
-              <TabsContent value="my-requests" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                {myRequests.length > 0 ? (
+              <TabsContent value="requests" className="space-y-6">
+                {profileRequests.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {myRequests.map(req => (
-                      <RequestCard key={req.id} {...req} />
-                    ))}
+                    {profileRequests.map(req => <RequestCard key={req.id} {...req} />)}
                   </div>
                 ) : (
-                  <div className="text-center py-24 glass-card rounded-[32px] border-dashed border-white/10 bg-white/[0.01]">
-                    <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
-                      <Receipt className="text-muted-foreground" size={32} />
-                    </div>
-                    <p className="text-muted-foreground font-medium">You haven't posted any requests yet.</p>
-                    <Button asChild variant="link" className="text-primary mt-2">
-                      <Link to="/">Post your first request</Link>
-                    </Button>
+                  <div className="text-center py-24 glass-card border-dashed border-white/10">
+                    <p className="text-muted-foreground font-medium">No requests found for this member.</p>
                   </div>
                 )}
               </TabsContent>
 
-              <TabsContent value="my-contributions" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                {myContributions.length > 0 ? (
+              <TabsContent value="contributions" className="space-y-6">
+                {profileContributions.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {myContributions.map(req => (
-                      <RequestCard key={req.id} {...req} />
-                    ))}
+                    {profileContributions.map(req => <RequestCard key={req.id} {...req} />)}
                   </div>
                 ) : (
-                  <div className="text-center py-24 glass-card rounded-[32px] border-dashed border-white/10 bg-white/[0.01]">
-                    <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
-                      <Heart className="text-muted-foreground" size={32} />
-                    </div>
-                    <p className="text-muted-foreground font-medium">You haven't made any contributions yet.</p>
-                    <Button asChild variant="link" className="text-primary mt-2">
-                      <Link to="/">Browse requests to help</Link>
-                    </Button>
+                  <div className="text-center py-24 glass-card border-dashed border-white/10">
+                    <p className="text-muted-foreground font-medium">No contributions recorded yet.</p>
                   </div>
                 )}
               </TabsContent>
 
-              <TabsContent value="messages" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                {receivedMessages.length > 0 ? (
-                  <div className="space-y-4">
-                    {receivedMessages.map((m, i) => (
-                      <Card key={i} className="glass-card border-blue-500/10 bg-blue-500/5 hover:bg-blue-500/10 transition-colors rounded-2xl">
-                        <CardContent className="p-6 flex gap-5">
+              {isOwnProfile && (
+                <TabsContent value="messages" className="space-y-4">
+                  {receivedMessages.length > 0 ? (
+                    receivedMessages.map((m, i) => (
+                      <Card key={i} className="glass-card border-blue-500/10 bg-blue-500/5 p-6">
+                        <div className="flex gap-5">
                           <div className="w-12 h-12 rounded-2xl bg-blue-500/20 flex items-center justify-center shrink-0 border border-blue-500/20">
                             <Quote className="text-blue-400" size={20} />
                           </div>
                           <div className="space-y-3 flex-1">
                             <div className="flex justify-between items-start">
                               <div>
-                                <p className="text-base font-black text-blue-400">{m.user}</p>
+                                <Link to={`/profile/${m.user}`} className="text-base font-black text-blue-400 hover:underline">{m.user}</Link>
                                 <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">on "{m.requestTitle}"</p>
                               </div>
-                              <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest bg-white/5 px-2 py-1 rounded-md">
-                                {new Date(m.timestamp).toLocaleDateString()}
-                              </p>
+                              <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">{new Date(m.timestamp).toLocaleDateString()}</p>
                             </div>
                             <p className="text-sm italic text-foreground/90 leading-relaxed font-medium">"{m.message}"</p>
                           </div>
-                        </CardContent>
+                        </div>
                       </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-24 glass-card rounded-[32px] border-dashed border-white/10 bg-white/[0.01]">
-                    <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
-                      <MessageSquare className="text-muted-foreground" size={32} />
+                    ))
+                  ) : (
+                    <div className="text-center py-24 glass-card border-dashed border-white/10">
+                      <p className="text-muted-foreground font-medium">No messages received yet.</p>
                     </div>
-                    <p className="text-muted-foreground font-medium">No messages received yet.</p>
-                  </div>
-                )}
-              </TabsContent>
+                  )}
+                </TabsContent>
+              )}
             </Tabs>
           </div>
 

@@ -48,22 +48,31 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     
     for (const endpoint of ENDPOINTS) {
       try {
-        const response = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
+        // Query the accounts table directly as it's the source of truth on-chain
+        const response = await fetch(`${endpoint}/v1/chain/get_table_rows`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code, account, symbol }),
+          body: JSON.stringify({
+            json: true,
+            code: code,
+            scope: account,
+            table: 'accounts',
+            limit: 10
+          }),
           cache: 'no-cache'
         });
 
         if (response.ok) {
           const data = await response.json();
-          if (Array.isArray(data) && data.length > 0) {
-            const amount = parseFloat(data[0].split(' ')[0]);
-            console.log(`[use-wallet] ✅ ${symbol} found: ${amount}`);
-            return amount;
+          if (data.rows && Array.isArray(data.rows)) {
+            // Find the row that contains our symbol in the "balance" string
+            const row = data.rows.find((r: any) => r.balance && r.balance.includes(symbol));
+            if (row) {
+              const amount = parseFloat(row.balance.split(' ')[0]);
+              console.log(`[use-wallet] ✅ ${symbol} found: ${amount}`);
+              return amount;
+            }
           }
-          // If array is empty, it means 0 balance on this contract
-          return 0;
         }
       } catch (err) {
         console.warn(`[use-wallet] ⚠️ Endpoint ${endpoint} failed for ${symbol}`);
@@ -79,7 +88,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setIsFetchingBalances(true);
 
     try {
-      // Fetch both XPR and GUY using the same standard method
+      // Fetch both XPR and GUY
       const [realXpr, realGuy] = await Promise.all([
         fetchChainBalance(cleanAddress, 'eosio.token', 'XPR'),
         fetchChainBalance(cleanAddress, 'proton-vtoken', 'GUY')
@@ -88,7 +97,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setXprBalance(realXpr);
       setGuyBalance(realGuy);
 
-      // Use maybeSingle to avoid errors if profile doesn't exist yet
+      // Attempt to fetch profile info
       const { data } = await supabase
         .from('profiles')
         .select('membership_expiry')
@@ -99,13 +108,17 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setMembershipExpiry(data.membership_expiry ?? 0);
       }
 
-      // Update Supabase with current balances
-      await supabase.from('profiles').upsert({
-        address: cleanAddress,
-        xpr_balance: realXpr,
-        guy_balance: realGuy,
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'address' });
+      // Sync with DB
+      try {
+        await supabase.from('profiles').upsert({
+          address: cleanAddress,
+          xpr_balance: realXpr,
+          guy_balance: realGuy,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'address' });
+      } catch (upsertErr) {
+        console.warn('[use-wallet] Supabase sync failed (likely missing columns):', upsertErr);
+      }
 
     } catch (err) {
       console.error('[use-wallet] Load failed:', err);

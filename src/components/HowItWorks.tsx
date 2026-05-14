@@ -46,7 +46,7 @@ const HowItWorks = () => {
     },
     {
       number: "04",
-      title: "Send or Recieve XPR Directly",
+      title: "Send or Recieve Tokens Directly",
       description: "One click and XPR or GUY is on its way. Transparent, Free, Fast on-chain."
     }
   ];

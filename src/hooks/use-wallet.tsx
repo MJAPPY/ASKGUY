@@ -39,7 +39,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [xprBalance, setXprBalance] = useState(0);
   const [membershipExpiry, setMembershipExpiry] = useState(0);
   const [isFetchingBalances, setIsFetchingBalances] = useState(false);
-  const [isBanned, setIsBanned] = useState(false);
   const [session, setSession] = useState<LinkSession | null>(null);
   const linkRef = useRef<any>(null);
 
@@ -56,6 +55,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         if (res.ok) {
           const data = await res.json();
+          console.log(`[use-wallet] ${endpoint} response for ${symbol}:`, data);
+
           if (Array.isArray(data) && data.length > 0) {
             const val = parseFloat(data[0].split(' ')[0] || '0');
             console.log(`[use-wallet] ✅ ${symbol} = ${val}`);
@@ -87,25 +88,13 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setXprBalance(realXpr);
       setGuyBalance(realGuy);
 
-      // Fetch profile and ban status
-      const [profileRes, banRes] = await Promise.all([
-        supabase.from('profiles').select('membership_expiry').eq('address', cleanAddress).maybeSingle(),
-        supabase.from('banned_users').select('address').eq('address', cleanAddress).maybeSingle()
-      ]);
-      
-      if (profileRes.data) {
-        setMembershipExpiry(profileRes.data.membership_expiry ?? 0);
+      // Sync with Supabase profiles if possible, but don't block state update
+      try {
+        const { data } = await supabase.from('profiles').select('membership_expiry').eq('address', cleanAddress).maybeSingle();
+        if (data?.membership_expiry) setMembershipExpiry(data.membership_expiry);
+      } catch (err) {
+        console.warn('[use-wallet] Supabase profile fetch skipped');
       }
-
-      setIsBanned(!!banRes.data);
-
-      // Sync stats to database
-      await supabase.from('profiles').upsert({
-        address: cleanAddress,
-        xpr_balance: realXpr,
-        guy_balance: realGuy,
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'address' });
 
     } catch (err) {
       console.error('[use-wallet] loadBalances error:', err);
@@ -129,6 +118,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       if (result.session) {
         const actor = String(result.session.auth.actor);
+        console.log(`[use-wallet] ✅ Connected as: ${actor}`);
+
         setSession(result.session);
         setAddress(actor);
         setIsConnected(true);
@@ -162,7 +153,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       try { await linkRef.current.removeSession(APP_NAME, session.auth); } catch {}
     }
     setAddress(''); setSession(null); setIsConnected(false);
-    setGuyBalance(0); setXprBalance(0); setIsBanned(false);
+    setGuyBalance(0); setXprBalance(0); setIsConnecting(false);
   }, [session]);
 
   const refreshBalances = useCallback(async () => {
@@ -204,6 +195,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const hasGuyThreshold = guyBalance >= 7770;
   const isMember = (membershipExpiry > Date.now()) || hasGuyThreshold;
+  const isBanned = false;
 
   return (
     <WalletContext.Provider value={{

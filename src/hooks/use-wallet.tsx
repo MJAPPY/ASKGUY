@@ -26,8 +26,8 @@ const WalletContext = createContext<WalletState | undefined>(undefined);
 
 const APP_NAME = 'AskGuy';
 const ENDPOINTS = [
-  'https://proton.greymass.com',
   'https://mainnet.protonchain.com',
+  'https://proton.greymass.com',
   'https://proton.eoscafeblock.com'
 ];
 
@@ -44,95 +44,99 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const fetchChainBalance = async (account: string, code: string, symbol: string): Promise<number> => {
     console.log(`[use-wallet] 🔍 Fetching ${symbol} from ${code} for ${account}...`);
+    
     for (const endpoint of ENDPOINTS) {
       try {
+        // Use get_currency_balance first
         const response = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code, account, symbol })
+          body: JSON.stringify({ code, account, symbol }),
+          cache: 'no-cache'
         });
 
-        if (!response.ok) {
-          console.warn(`[use-wallet] ⚠️ ${endpoint} returned status ${response.status}`);
-          continue;
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data) && data.length > 0) {
+            const val = parseFloat(data[0].split(' ')[0]);
+            console.log(`[use-wallet] ✅ ${symbol} Balance found via API: ${val}`);
+            return isNaN(val) ? 0 : val;
+          }
         }
 
-        const data = await response.json();
-        console.log(`[use-wallet] 📡 ${symbol} raw response from ${endpoint}:`, data);
+        // Fallback: Check the accounts table directly if the above returns []
+        // This is often more reliable for specific tokens
+        const tableResponse = await fetch(`${endpoint}/v1/chain/get_table_rows`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            json: true,
+            code: code,
+            scope: account,
+            table: 'accounts',
+            limit: 10
+          }),
+          cache: 'no-cache'
+        });
 
-        if (Array.isArray(data) && data.length > 0) {
-          const parts = data[0].split(' ');
-          const val = parseFloat(parts[0]);
-          console.log(`[use-wallet] ✅ Success! ${account} has ${val} ${symbol}`);
-          return isNaN(val) ? 0 : val;
-        } else {
-          console.log(`[use-wallet] ℹ️ ${endpoint} reports 0 ${symbol} for ${account}`);
+        if (tableResponse.ok) {
+          const tableData = await tableResponse.json();
+          const row = tableData.rows?.find((r: any) => r.balance?.includes(symbol));
+          if (row) {
+            const val = parseFloat(row.balance.split(' ')[0]);
+            console.log(`[use-wallet] ✅ ${symbol} Balance found via Table: ${val}`);
+            return isNaN(val) ? 0 : val;
+          }
         }
       } catch (err) {
-        console.warn(`[use-wallet] ❌ ${endpoint} error for ${symbol}:`, err);
+        console.warn(`[use-wallet] ⚠️ Failed on ${endpoint} for ${symbol}`);
       }
     }
-    console.warn(`[use-wallet] ‼️ Failed to get a definitive positive balance for ${symbol}. Returning 0.`);
+    
+    console.log(`[use-wallet] ℹ️ Final balance for ${symbol}: 0`);
     return 0;
   };
 
   const loadBalances = useCallback(async (walletAddress: string) => {
     if (!walletAddress) return;
     const cleanAddress = String(walletAddress).toLowerCase().trim();
-    console.log(`[use-wallet] 🚀 loadBalances initiated for ${cleanAddress}`);
-
+    
     setIsFetchingBalances(true);
     try {
-      // Parallel fetch for speed and reliability
+      // Fetch in parallel
       const [realXpr, realGuy] = await Promise.all([
         fetchChainBalance(cleanAddress, 'eosio.token', 'XPR'),
         fetchChainBalance(cleanAddress, 'proton-vtoken', 'GUY')
       ]);
 
-      console.log(`[use-wallet] 📊 Final sync → XPR: ${realXpr}, GUY: ${realGuy}`);
-
-      // Update state immediately to trigger re-renders
       setXprBalance(realXpr);
       setGuyBalance(realGuy);
 
-      if (realGuy >= 7770) {
-        console.log(`[use-wallet] 💎 Verification Success: ${realGuy} GUY meets 7770 threshold.`);
-      } else {
-        console.log(`[use-wallet] 🔒 Verification Failed: ${realGuy} GUY is below 7770.`);
-      }
-
-      // Fetch membership data
       const { data } = await supabase
         .from('profiles')
         .select('membership_expiry')
         .eq('address', cleanAddress)
         .single();
       
-      if (data) {
-        setMembershipExpiry(data.membership_expiry ?? 0);
-      }
+      if (data) setMembershipExpiry(data.membership_expiry ?? 0);
 
-      // Update backend profile (non-blocking)
-      supabase.from('profiles').upsert({
+      // Sync profile to database
+      await supabase.from('profiles').upsert({
         address: cleanAddress,
         xpr_balance: realXpr,
         guy_balance: realGuy,
         updated_at: new Date().toISOString()
-      }, { onConflict: 'address' }).then(({ error }) => {
-        if (error) console.error("[use-wallet] Profile sync error:", error);
-      });
+      }, { onConflict: 'address' });
 
     } catch (err) {
-      console.error('[use-wallet] 💥 loadBalances fatal error:', err);
+      console.error('[use-wallet] loadBalances error:', err);
     } finally {
       setIsFetchingBalances(false);
-      console.log(`[use-wallet] ✅ loadBalances completed`);
     }
   }, []);
 
   const initWallet = useCallback(async (restore = true) => {
     try {
-      console.log(`[use-wallet] InitWallet (restore=${restore})`);
       const result = await Connect({
         linkOptions: { endpoints: ENDPOINTS, restoreSession: restore },
         transportOptions: { requestAccount: 'askguy', backButton: true },
@@ -146,24 +150,18 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       if (result.session) {
         const actor = String(result.session.auth.actor);
-        console.log(`[use-wallet] 👤 Wallet Connected: ${actor}`);
-
         setSession(result.session);
         setAddress(actor);
         setIsConnected(true);
-        setIsConnecting(true); // Keep "connecting" status during balance load
+        setIsConnecting(true);
 
-        console.log(`[use-wallet] ⏱️ Waiting 1000ms for chain synchronization...`);
+        // Mandatory wait for chain state
         await new Promise(r => setTimeout(r, 1000));
-        
-        console.log(`[use-wallet] 🔄 Refreshing balances and membership status...`);
         await loadBalances(actor);
-        
         setIsConnecting(false);
-        console.log(`[use-wallet] ✨ Connection process complete for ${actor}`);
       }
     } catch (err) {
-      console.error('[use-wallet] SDK Connect error:', err);
+      console.error('[use-wallet] Connect error:', err);
       setIsConnecting(false);
     }
   }, [loadBalances]);
@@ -182,7 +180,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [initWallet]);
 
   const disconnect = useCallback(async () => {
-    console.log(`[use-wallet] 🔌 Disconnecting...`);
     if (session && linkRef.current) {
       try { await linkRef.current.removeSession(APP_NAME, session.auth); } catch {}
     }
@@ -201,7 +198,13 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         account: token === 'XPR' ? 'eosio.token' : 'proton-vtoken',
         name: 'transfer',
         authorization: [session.auth],
-        data: { from: session.auth.actor, to, quantity: `${amount.toFixed(token === 'XPR' ? 4 : 6)} ${token}`, memo: memo || '' }
+        // XPR: 4 decimals, GUY: 6 decimals
+        data: { 
+          from: session.auth.actor, 
+          to, 
+          quantity: `${amount.toFixed(token === 'XPR' ? 4 : 6)} ${token}`, 
+          memo: memo || '' 
+        }
       };
       await session.transact({ actions: [action] }, { broadcast: true });
       setTimeout(refreshBalances, 2500);

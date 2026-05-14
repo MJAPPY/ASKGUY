@@ -31,7 +31,7 @@ type SortType = 'newest' | 'oldest';
 type ViewMode = 'grid' | 'list';
 
 const Index = () => {
-  const { isConnected, guyBalance, isMember, membershipExpiry, payMembership, address, connect, isFetchingBalances, isBanned } = useWallet();
+  const { isConnected, guyBalance, isMember, membershipExpiry, payMembership, address, connect, isFetchingBalances, isConnecting, isBanned } = useWallet();
   const { requests, loading: requestsLoading } = useRequests();
   const [filter, setFilter] = useState<FilterType>('active');
   const [sortBy, setSortBy] = useState<SortType>('oldest');
@@ -70,6 +70,7 @@ const Index = () => {
     return <BannedOverlay />;
   }
 
+  // If not connected, show landing page
   if (!isConnected) {
     return (
       <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
@@ -167,9 +168,12 @@ const Index = () => {
     );
   }
 
+  // If connected, handle loading states and gated access
   const hasGuyBalance = guyBalance >= 7770;
 
-  if (!isFetchingBalances && !hasGuyBalance) {
+  // IMPORTANT: Only show AccessDenied if we are NOT currently connecting OR fetching balances
+  // This prevents the flicker during the 1s delay and initial fetch
+  if (!isConnecting && !isFetchingBalances && !hasGuyBalance) {
     return <AccessDenied />;
   }
 
@@ -187,11 +191,13 @@ const Index = () => {
         
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-4 space-y-6">
-            {isFetchingBalances ? (
+            {isConnecting || isFetchingBalances ? (
               <Card className="glass-card flex items-center justify-center p-12">
                 <div className="flex flex-col items-center gap-4">
                   <Loader2 className="animate-spin text-primary" size={32} />
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Verifying Balance...</p>
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                    {isConnecting ? "Connecting..." : "Verifying Balance..."}
+                  </p>
                 </div>
               </Card>
             ) : !isMember ? (

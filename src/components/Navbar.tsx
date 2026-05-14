@@ -11,7 +11,8 @@ import {
   RefreshCw, 
   ChevronDown,
   ExternalLink,
-  Loader2
+  Loader2,
+  Calculator
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -31,6 +32,7 @@ const Navbar = () => {
   const navItems = [
     { label: 'Dashboard', icon: <LayoutGrid size={18} />, path: '/', private: true },
     { label: 'Leaderboard', icon: <Trophy size={18} />, path: '/leaderboard', private: false },
+    { label: 'Calculator', icon: <Calculator size={18} />, path: '/calculator', private: false },
   ];
 
   const isActive = (path: string) => {

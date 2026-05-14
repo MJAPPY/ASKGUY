@@ -122,54 +122,54 @@ const RequestCard: React.FC<RequestCardProps> = ({
       {proofUrl && (
         <div className={cn(
           "overflow-hidden relative border-white/5 shrink-0",
-          variant === 'grid' ? "w-full aspect-[21/9] border-b" : "hidden md:block w-32 h-32 border-r"
+          variant === 'grid' ? "w-full aspect-[21/9] border-b" : "hidden md:block w-28 h-28 border-r"
         )}>
           <img src={proofUrl} alt="Request Proof" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
           <div className="absolute bottom-2 left-2 flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-black/60 backdrop-blur-md border border-white/10 text-[8px] font-black uppercase tracking-widest text-primary">
             <ImageIcon size={8} /> Proof
           </div>
         </div>
       )}
       
-      <div className={cn("p-6 flex-1", variant === 'list' ? "grid grid-cols-1 md:grid-cols-12 gap-6 items-center" : "space-y-4")}>
+      <div className={cn("p-5 flex-1", variant === 'list' ? "grid grid-cols-1 md:grid-cols-12 gap-4 items-center" : "space-y-4")}>
         {/* Basic Info Column */}
         <div className={cn(variant === 'list' ? "md:col-span-5" : "space-y-4")}>
-          <div className="flex items-center gap-2 mb-2">
-            <span className={cn("text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border", getCategoryColor())}>
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className={cn("text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-widest border", getCategoryColor())}>
               {category}
             </span>
-            <span className="text-[9px] text-muted-foreground font-black uppercase tracking-tighter">
+            <span className="text-[8px] text-muted-foreground font-black uppercase tracking-tighter">
               {formatDistanceToNow(timestamp, { addSuffix: true })}
             </span>
           </div>
 
-          <h3 className={cn("font-black group-hover:text-primary transition-colors line-clamp-1 tracking-tight", variant === 'list' ? "text-lg" : "text-xl")}>
+          <h3 className={cn("font-black group-hover:text-primary transition-colors line-clamp-1 tracking-tight", variant === 'list' ? "text-base" : "text-xl")}>
             {title}
           </h3>
 
-          <div className="flex items-center gap-2 mt-1">
-            <Avatar className="w-5 h-5 border border-white/10">
+          <div className="flex items-center gap-1.5 mt-1">
+            <Avatar className="w-4 h-4 border border-white/10">
               <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${requestor}`} />
-              <AvatarFallback className="text-[8px] bg-primary text-black font-black">{requestor.substring(0, 2).toUpperCase()}</AvatarFallback>
+              <AvatarFallback className="text-[6px] bg-primary text-black font-black">{requestor.substring(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
-            <div className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">
+            <div className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">
               @{requestor}
             </div>
           </div>
         </div>
 
         {/* Progress Column */}
-        <div className={cn(variant === 'list' ? "md:col-span-4" : "space-y-4")}>
-          <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-widest mb-2">
-            <div className="flex items-center gap-1.5 text-primary">
-              <Zap size={14} className="fill-primary" />
-              <span className="text-sm">{raised.toLocaleString()} {token}</span>
+        <div className={cn(variant === 'list' ? "md:col-span-4" : "space-y-3")}>
+          <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest mb-1.5">
+            <div className="flex items-center gap-1 text-primary">
+              <Zap size={12} className="fill-primary" />
+              <span className="text-xs">{raised.toLocaleString()} {token}</span>
             </div>
-            <span className="text-muted-foreground text-[10px]">/ {amount.toLocaleString()}</span>
+            <span className="text-muted-foreground opacity-50">/ {amount.toLocaleString()}</span>
           </div>
           
-          <div className="w-full bg-white/5 rounded-full h-2.5 overflow-hidden border border-white/5 p-[1px]">
+          <div className="w-full bg-white/5 rounded-full h-2 overflow-hidden border border-white/5 p-[1px]">
             <div 
               className={cn(
                 "h-full rounded-full transition-all duration-1000 ease-out relative",
@@ -177,7 +177,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
               )} 
               style={{ width: `${progress}%` }}
             >
-              <div className="absolute inset-0 bg-white/20 animate-pulse" />
+              <div className="absolute inset-0 bg-white/10 animate-pulse" />
             </div>
           </div>
         </div>
@@ -186,15 +186,15 @@ const RequestCard: React.FC<RequestCardProps> = ({
         {variant === 'list' && (
            <div className="md:col-span-3 flex flex-wrap gap-2 justify-end">
               {status === 'Completed' ? (
-                <span className="text-[9px] font-black text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-full flex items-center gap-1 border border-emerald-500/20 uppercase tracking-widest">
-                  <CheckCircle2 size={10} /> Completed
+                <span className="text-[8px] font-black text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full flex items-center gap-1 border border-emerald-500/20 uppercase tracking-widest">
+                  <CheckCircle2 size={10} /> Done
                 </span>
               ) : isFunded ? (
-                <span className="text-[9px] font-black text-primary bg-primary/10 px-2 py-1 rounded-full flex items-center gap-1 border border-primary/20 uppercase tracking-widest animate-pulse">
+                <span className="text-[8px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-full flex items-center gap-1 border border-primary/20 uppercase tracking-widest animate-pulse">
                   <Sparkles size={10} /> Funded
                 </span>
               ) : (
-                <span className="text-[9px] font-black text-blue-400 bg-blue-500/10 px-2 py-1 rounded-full flex items-center gap-1 border border-blue-500/20 uppercase tracking-widest">
+                <span className="text-[8px] font-black text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full flex items-center gap-1 border border-blue-500/20 uppercase tracking-widest">
                   Open
                 </span>
               )}
@@ -215,7 +215,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
     <Dialog>
       <Card className={cn(
         "glass-card overflow-hidden group hover:border-primary/40 transition-all duration-500 flex flex-col h-full",
-        variant === 'list' ? "flex-row h-auto min-h-[140px]" : "h-full",
+        variant === 'list' ? "flex-row h-auto min-h-[110px]" : "h-full",
         isUrgent && status === 'Open' ? 'border-red-500/40 shadow-[0_0_30px_rgba(239,68,68,0.1)]' : '',
         isFunded && status !== 'Completed' ? 'border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.1)]' : ''
       )}>
@@ -227,32 +227,32 @@ const RequestCard: React.FC<RequestCardProps> = ({
 
         {/* Action Section on right for List, bottom for Grid */}
         <div className={cn(
-          "flex flex-col gap-3",
-          variant === 'list' ? "p-6 border-l border-white/5 shrink-0 justify-center min-w-[160px]" : "p-6 pt-0"
+          "flex flex-col gap-2.5",
+          variant === 'list' ? "p-5 border-l border-white/5 shrink-0 justify-center min-w-[140px]" : "p-6 pt-0"
         )}>
           {!isOwner && status === 'Open' && (
             <>
               {!showContribute ? (
                 <Button 
                   className={cn(
-                    "w-full bg-primary hover:bg-primary/90 text-black font-black rounded-xl gold-glow uppercase tracking-widest gap-2",
-                    variant === 'list' ? "h-11 text-[10px]" : "h-14 text-sm btn-premium"
+                    "w-full bg-primary hover:bg-primary/90 text-black font-black rounded-lg gold-glow uppercase tracking-widest gap-1.5",
+                    variant === 'list' ? "h-9 text-[9px]" : "h-14 text-sm btn-premium"
                   )} 
                   onClick={(e) => {
                     e.stopPropagation();
                     setShowContribute(true);
                   }}
                 >
-                  <Heart size={14} className="fill-current" />
+                  <Heart size={12} className="fill-current" />
                   Help
                 </Button>
               ) : (
                 <div className={cn(
-                  "space-y-4 bg-white/5 p-4 rounded-xl border border-primary/20 animate-in zoom-in-95 duration-200",
-                  variant === 'list' ? "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 z-50 shadow-2xl" : "w-full"
+                  "space-y-3 bg-[#0a0a0c] p-4 rounded-xl border border-primary/30 animate-in zoom-in-95 duration-200 shadow-2xl",
+                  variant === 'list' ? "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 z-[100]" : "w-full"
                 )}>
                   <div className="flex items-center justify-between">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-primary">Quick Help</p>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-primary">Quick Gift</p>
                     <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={(e) => {
                       e.stopPropagation();
                       setShowContribute(false);
@@ -271,23 +271,23 @@ const RequestCard: React.FC<RequestCardProps> = ({
                           e.stopPropagation();
                           setContributionAmount(amt.toString());
                         }}
-                        className={cn("h-7 px-1 text-[9px] font-black", contributionAmount === amt.toString() ? "bg-primary text-black" : "")}
+                        className={cn("h-6 px-0 text-[8px] font-black", contributionAmount === amt.toString() ? "bg-primary text-black" : "")}
                       >
                         {amt}
                       </Button>
                     ))}
                   </div>
 
-                  <div className="flex gap-1.5">
+                  <div className="flex gap-1">
                     <Input
                       type="number"
                       value={contributionAmount}
                       onClick={(e) => e.stopPropagation()}
                       onChange={(e) => setContributionAmount(e.target.value)}
-                      className="bg-white/5 border-white/10 h-9 text-xs font-black"
+                      className="bg-white/5 border-white/10 h-8 text-[11px] font-black px-2"
                     />
                     <Select value={contributionToken} onValueChange={(v: TokenSymbol) => setContributionToken(v)}>
-                      <SelectTrigger className="w-16 h-9 bg-white/5 border-white/10 text-[9px] font-black">
+                      <SelectTrigger className="w-14 h-8 bg-white/5 border-white/10 text-[8px] font-black px-1.5">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="glass-card">
@@ -298,20 +298,20 @@ const RequestCard: React.FC<RequestCardProps> = ({
                   </div>
 
                   <Button 
-                    className="w-full bg-primary hover:bg-primary/90 text-black font-black h-10 rounded-lg text-xs" 
+                    className="w-full bg-primary hover:bg-primary/90 text-black font-black h-9 rounded-lg text-[10px] uppercase tracking-widest" 
                     onClick={(e) => {
                       e.stopPropagation();
                       handleContribute();
                     }}
                     disabled={isProcessing}
                   >
-                    {isProcessing ? <Loader2 className="animate-spin" size={14} /> : `Confirm Send`}
+                    {isProcessing ? <Loader2 className="animate-spin" size={12} /> : `Send XPR`}
                   </Button>
                 </div>
               )}
-              {variant === 'list' && (
+              {variant === 'list' && !showContribute && (
                 <DialogTrigger asChild>
-                  <Button variant="ghost" className="w-full h-10 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-white">
+                  <Button variant="ghost" className="w-full h-8 text-[9px] font-black uppercase tracking-widest text-muted-foreground hover:text-white">
                     Details
                   </Button>
                 </DialogTrigger>
@@ -323,8 +323,8 @@ const RequestCard: React.FC<RequestCardProps> = ({
             <Button 
               variant="outline" 
               className={cn(
-                "w-full border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 font-black rounded-xl gap-2 uppercase tracking-widest",
-                variant === 'list' ? "h-11 text-[9px]" : "h-14 text-xs"
+                "w-full border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 font-black rounded-lg gap-1.5 uppercase tracking-widest",
+                variant === 'list' ? "h-9 text-[8px]" : "h-14 text-xs"
               )}
               onClick={(e) => {
                 e.stopPropagation();
@@ -332,21 +332,29 @@ const RequestCard: React.FC<RequestCardProps> = ({
               }}
               disabled={isProcessing}
             >
-              {isProcessing ? <Loader2 className="animate-spin" size={14} /> : <><CheckCircle2 size={14} /> Complete</>}
+              {isProcessing ? <Loader2 className="animate-spin" size={12} /> : <><CheckCircle2 size={12} /> Done</>}
             </Button>
           )}
 
           {status === 'Completed' && variant === 'list' && (
             <DialogTrigger asChild>
-              <Button variant="ghost" className="w-full h-11 text-[10px] font-black uppercase tracking-widest text-emerald-400/60">
+              <Button variant="ghost" className="w-full h-9 text-[9px] font-black uppercase tracking-widest text-emerald-400/60 hover:text-emerald-400">
                 View Proof
+              </Button>
+            </DialogTrigger>
+          )}
+
+          {status !== 'Open' && !isOwner && variant === 'list' && (
+             <DialogTrigger asChild>
+              <Button variant="ghost" className="w-full h-9 text-[9px] font-black uppercase tracking-widest text-muted-foreground hover:text-white">
+                View
               </Button>
             </DialogTrigger>
           )}
         </div>
       </Card>
 
-      {/* Reusing the existing Dialog Content as is */}
+      {/* Reusing existing Dialog Content */}
       <DialogContent className="glass-card border-white/10 max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0">
         <DialogHeader className="p-6 border-b border-white/5 shrink-0">
           <div className="flex items-center justify-between">

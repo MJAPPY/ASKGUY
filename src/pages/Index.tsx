@@ -133,32 +133,41 @@ const Index = () => {
             )}
           </div>
           <div className="lg:col-span-8 space-y-6">
-            <div id="browse-requests" className="flex flex-col space-y-4">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <h2 className="text-2xl font-black tracking-tight">Browse Requests</h2>
-                <div className="flex items-center gap-2">
-                  <div className="relative w-full sm:w-48">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
-                    <Input placeholder="Search..." className="pl-9 h-10 bg-white/5 border-white/10 rounded-xl" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+            <div id="browse-requests" className="flex flex-col space-y-6">
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div className="space-y-1">
+                  <h2 className="text-3xl font-black tracking-tight">Browse Requests</h2>
+                  <p className="text-xs text-muted-foreground font-black uppercase tracking-widest">Supporting the community</p>
+                </div>
+                
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="relative w-full sm:w-56">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/50" size={16} />
+                    <Input 
+                      placeholder="Search needs..." 
+                      className="pl-10 h-11 bg-white/5 border-white/10 rounded-2xl focus:border-primary/50 transition-all font-medium" 
+                      value={searchQuery} 
+                      onChange={(e) => setSearchQuery(e.target.value)} 
+                    />
                   </div>
                   
-                  <div className="flex bg-white/5 border border-white/10 p-1 rounded-xl">
+                  <div className="flex bg-white/5 border border-white/10 p-1.5 rounded-2xl">
                     <ToggleGroup type="single" value={viewMode} onValueChange={(v) => v && setViewMode(v as ViewMode)}>
-                      <ToggleGroupItem value="grid" className="h-8 w-8 p-0 rounded-lg data-[state=on]:bg-primary data-[state=on]:text-black">
+                      <ToggleGroupItem value="grid" className="h-8 px-3 rounded-xl data-[state=on]:bg-primary data-[state=on]:text-black transition-all">
                         <LayoutGrid size={16} />
                       </ToggleGroupItem>
-                      <ToggleGroupItem value="list" className="h-8 w-8 p-0 rounded-lg data-[state=on]:bg-primary data-[state=on]:text-black">
+                      <ToggleGroupItem value="list" className="h-8 px-3 rounded-xl data-[state=on]:bg-primary data-[state=on]:text-black transition-all">
                         <List size={16} />
                       </ToggleGroupItem>
                     </ToggleGroup>
                   </div>
 
-                  <div className="flex bg-white/5 border border-white/10 p-1 rounded-xl">
+                  <div className="flex bg-white/5 border border-white/10 p-1.5 rounded-2xl">
                     <ToggleGroup type="single" value={sortBy} onValueChange={(v) => v && setSortBy(v as SortType)}>
-                      <ToggleGroupItem value="oldest" className="h-8 px-3 text-[10px] font-black uppercase tracking-widest rounded-lg data-[state=on]:bg-primary data-[state=on]:text-black">
+                      <ToggleGroupItem value="oldest" className="h-8 px-4 text-[9px] font-black uppercase tracking-widest rounded-xl data-[state=on]:bg-primary data-[state=on]:text-black transition-all">
                         Oldest
                       </ToggleGroupItem>
-                      <ToggleGroupItem value="newest" className="h-8 px-3 text-[10px] font-black uppercase tracking-widest rounded-lg data-[state=on]:bg-primary data-[state=on]:text-black">
+                      <ToggleGroupItem value="newest" className="h-8 px-4 text-[9px] font-black uppercase tracking-widest rounded-xl data-[state=on]:bg-primary data-[state=on]:text-black transition-all">
                         Newest
                       </ToggleGroupItem>
                     </ToggleGroup>
@@ -167,10 +176,10 @@ const Index = () => {
               </div>
 
               <Tabs value={filter} onValueChange={(v: any) => setFilter(v)} className="w-full">
-                <TabsList className="bg-white/5 border border-white/10 h-11 p-1 w-full justify-start overflow-x-auto no-scrollbar rounded-xl">
-                  <TabsTrigger value="active" className="text-xs font-black uppercase tracking-widest rounded-lg px-6 data-[state=active]:bg-primary data-[state=active]:text-black">Active</TabsTrigger>
-                  <TabsTrigger value="all" className="text-xs font-black uppercase tracking-widest rounded-lg px-6 data-[state=active]:bg-primary data-[state=active]:text-black">All Requests</TabsTrigger>
-                  <TabsTrigger value="funded" className="text-xs font-black uppercase tracking-widest rounded-lg px-6 data-[state=active]:bg-primary data-[state=active]:text-black">History</TabsTrigger>
+                <TabsList className="bg-white/5 border border-white/10 h-12 p-1.5 w-full justify-start overflow-x-auto no-scrollbar rounded-2xl">
+                  <TabsTrigger value="active" className="text-[10px] font-black uppercase tracking-widest rounded-xl px-8 h-full data-[state=active]:bg-primary data-[state=active]:text-black transition-all">Active</TabsTrigger>
+                  <TabsTrigger value="all" className="text-[10px] font-black uppercase tracking-widest rounded-xl px-8 h-full data-[state=active]:bg-primary data-[state=active]:text-black transition-all">All</TabsTrigger>
+                  <TabsTrigger value="funded" className="text-[10px] font-black uppercase tracking-widest rounded-xl px-8 h-full data-[state=active]:bg-primary data-[state=active]:text-black transition-all">Archive</TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>
@@ -182,14 +191,14 @@ const Index = () => {
               {requestsLoading ? (
                 <div className="col-span-full text-center py-24">
                   <Loader2 className="animate-spin mx-auto text-primary" size={32} />
-                  <p className="mt-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Loading community needs...</p>
+                  <p className="mt-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Syncing Blockchain Data...</p>
                 </div>
               ) : filteredRequests.length > 0 ? (
                 filteredRequests.map((req) => <RequestCard key={req.id} {...req} variant={viewMode} />)
               ) : (
                 <div className="col-span-full py-24 text-center glass-card border-dashed border-white/10 rounded-[32px]">
                   <Heart className="mx-auto text-muted-foreground/20 mb-4" size={48} />
-                  <p className="text-muted-foreground font-black uppercase tracking-widest text-xs">No requests found matching your filters.</p>
+                  <p className="text-muted-foreground font-black uppercase tracking-widest text-xs">No needs found matching your filters.</p>
                 </div>
               )}
             </div>

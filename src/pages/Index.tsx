@@ -105,8 +105,8 @@ const Index = () => {
                   </Button>
                 </div>
               </div>
-              <div className="relative animate-in fade-in slide-in-from-right-8 duration-1000 lg:-translate-y-6">
-                <div className="relative z-10 w-full max-w-[480px] mx-auto group">
+              <div className="relative animate-in fade-in slide-in-from-right-8 duration-1000 lg:-translate-y-6 lg:-translate-x-12">
+                <div className="relative z-10 w-full max-w-[480px] mx-auto lg:mr-auto lg:ml-0 group">
                    <div className="absolute -inset-10 bg-emerald-500/10 rounded-full blur-[100px] opacity-50 group-hover:opacity-80 transition-opacity duration-1000" />
                    <img 
                     src={heroGuy} 

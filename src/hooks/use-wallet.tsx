@@ -81,7 +81,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     try {
       const [realXpr, realGuy] = await Promise.all([
         fetchChainBalance(cleanAddress, 'eosio.token', 'XPR'),
-        fetchChainBalance(cleanAddress, 'token.guy', 'GUY')
+        fetchChainBalance(cleanAddress, 'proton-vtoken', 'GUY')
       ]);
 
       console.log(`[use-wallet] Updated balances: ${realXpr} XPR, ${realGuy} GUY`);

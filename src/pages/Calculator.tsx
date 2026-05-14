@@ -107,7 +107,6 @@ const Calculator = () => {
       <Navbar />
       <main className="flex-1 container mx-auto px-4 py-12 md:py-20 flex flex-col items-center">
         <div className="max-w-3xl w-full space-y-12">
-          {/* Header Section */}
           <div className="text-center space-y-4 animate-in fade-in slide-in-from-top-4 duration-700">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-black uppercase tracking-widest text-primary mb-2">
               <Sparkles size={12} className="animate-pulse" /> Community Utility
@@ -120,9 +119,7 @@ const Calculator = () => {
             </p>
           </div>
 
-          {/* Main Interface */}
           <div className="grid grid-cols-1 gap-8 animate-in fade-in zoom-in-95 duration-1000 delay-200">
-            {/* Mode Switcher */}
             <div className="flex justify-center">
               <div className="bg-white/5 border border-white/10 p-1 rounded-2xl flex gap-1">
                 <Button 
@@ -155,7 +152,6 @@ const Calculator = () => {
               
               <CardContent className="p-8 md:p-14 space-y-12 relative z-10">
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-end">
-                  {/* Input Side */}
                   <div className="md:col-span-7 space-y-4">
                     <div className="flex items-center justify-between">
                       <label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">
@@ -174,7 +170,7 @@ const Calculator = () => {
                     </div>
                     
                     <div className="relative group">
-                      <div className="absolute left-6 top-1/2 -translate-y-1/2 text-3xl font-black text-primary/50 group-focus-within:text-primary transition-colors">
+                      <div className="absolute left-0 top-0 bottom-0 w-24 flex items-center justify-center text-3xl font-black text-primary/50 group-focus-within:text-primary transition-colors pointer-events-none">
                         {mode === 'fiat-to-xpr' ? currentSymbol : '⚡'}
                       </div>
                       <Input 
@@ -183,12 +179,11 @@ const Calculator = () => {
                         value={inputValue}
                         onChange={handleInputChange}
                         placeholder="0.00"
-                        className="h-20 bg-white/5 border-white/10 focus:border-primary/50 text-3xl font-black pl-16 transition-all rounded-3xl"
+                        className="h-20 bg-white/5 border-white/10 focus:border-primary/50 text-3xl font-black pl-24 transition-all rounded-3xl"
                       />
                     </div>
                   </div>
 
-                  {/* Currency Side */}
                   <div className="md:col-span-5 space-y-4">
                     <label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Select Currency</label>
                     <Select value={currency} onValueChange={setCurrency}>
@@ -210,7 +205,6 @@ const Calculator = () => {
                   </div>
                 </div>
 
-                {/* Conversion Logic Visual */}
                 <div className="flex items-center gap-6 py-4">
                   <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-white/10 to-white/10" />
                   <div className="w-16 h-16 rounded-[24px] bg-white/5 border border-white/10 flex items-center justify-center text-muted-foreground shadow-inner group-hover:border-primary/30 transition-colors">
@@ -219,7 +213,6 @@ const Calculator = () => {
                   <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent via-white/10 to-white/10" />
                 </div>
 
-                {/* Result Block */}
                 <div className="relative group">
                   <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-transparent blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                   <div className="relative p-10 md:p-14 rounded-[40px] bg-white/[0.03] border border-white/10 text-center space-y-6 shadow-2xl overflow-hidden group">
@@ -261,7 +254,6 @@ const Calculator = () => {
                   </div>
                 </div>
 
-                {/* Rates & Info */}
                 <div className="flex flex-col md:flex-row items-center justify-between gap-8 pt-8 border-t border-white/5">
                   <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5">
                     <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
@@ -307,7 +299,6 @@ const Calculator = () => {
               </CardContent>
             </Card>
 
-            {/* Bottom Insight Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
               <div className="glass-card p-10 rounded-[40px] border-white/5 flex gap-6 hover:border-primary/20 transition-all group">
                 <div className="w-14 h-14 rounded-3xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 group-hover:scale-110 transition-transform">

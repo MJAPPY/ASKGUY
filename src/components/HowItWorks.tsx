@@ -42,12 +42,12 @@ const HowItWorks = () => {
     {
       number: "03",
       title: "Trusted Member",
-      description: "Only 4,777 XPR and pay a 25 GUY fee to become a member and unlock request posting."
+      description: "Only 4,777 XPR to become a trusted member and and pay a 25 GUY per request posting."
     },
     {
       number: "04",
-      title: "Send XPR Directly",
-      description: "One click and XPR is on its way. Transparent, on-chain."
+      title: "Send or Recieve XPR Directly",
+      description: "One click and XPR or GUY is on its way. Transparent, Free, Fast on-chain."
     }
   ];
 

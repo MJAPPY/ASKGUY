@@ -67,7 +67,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .from("memberships")
         .select("expiry")
         .eq("address", account.toLowerCase())
-        .single();
+        .maybeSingle();
       
       if (!error && data && data.expiry > Date.now()) {
         setIsMember(true);
@@ -88,7 +88,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .from("banned_users")
         .select("address")
         .eq("address", account.toLowerCase())
-        .single();
+        .maybeSingle();
       setIsBanned(!error && !!data);
     } catch (err) {
       setIsBanned(false);
@@ -99,8 +99,9 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!account) return;
     setIsFetchingBalances(true);
     
-    checkBanStatus(account).catch(() => {});
-    checkMembership(account).catch(() => {});
+    // Non-blocking checks
+    checkBanStatus(account);
+    checkMembership(account);
 
     try {
       const endpoint = ENDPOINTS[0];
@@ -140,8 +141,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [fetchBalances]);
 
+  // Initial restoration
   useEffect(() => {
     const init = async () => {
+      if (linkRef.current) return;
       try {
         const { link, session: restoredSession } = await ProtonWebSDK({
           linkOptions: { chainId: PROTON_CHAIN_ID, endpoints: ENDPOINTS, restoreSession: true },
@@ -165,20 +168,30 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setIsConnecting(true);
     
     try {
-      const { link, session: newSession } = await ProtonWebSDK({
-        linkOptions: { chainId: PROTON_CHAIN_ID, endpoints: ENDPOINTS, restoreSession: false },
-        transportOptions: { requestPermission: "active", backButton: true },
-        selectorOptions: { appName: APP_NAME, appLogo: APP_LOGO },
-      });
+      // If link already exists, use its login method directly
+      if (linkRef.current) {
+        const { session: newSession } = await linkRef.current.login(APP_NAME);
+        if (newSession) {
+          handleLogin(newSession);
+          showSuccess("Connected!");
+        }
+      } else {
+        // Fallback to factory initialization
+        const { link, session: newSession } = await ProtonWebSDK({
+          linkOptions: { chainId: PROTON_CHAIN_ID, endpoints: ENDPOINTS, restoreSession: false },
+          transportOptions: { requestPermission: "active", backButton: true },
+          selectorOptions: { appName: APP_NAME, appLogo: APP_LOGO },
+        });
 
-      if (newSession) {
-        linkRef.current = link;
-        handleLogin(newSession);
-        showSuccess("Connected!");
+        if (newSession) {
+          linkRef.current = link;
+          handleLogin(newSession);
+          showSuccess("Connected!");
+        }
       }
     } catch (err) {
       console.error("Connection error:", err);
-      showError("Connection failed.");
+      showError("Connection failed or cancelled.");
     } finally {
       setIsConnecting(false);
     }
@@ -221,16 +234,16 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const expiry = Date.now() + 365 * 24 * 60 * 60 * 1000;
         
         if (supabase) {
-          supabase
+          await supabase
             .from("memberships")
             .upsert({ 
               address: address?.toLowerCase(), 
               expiry: expiry,
               updated_at: new Date().toISOString()
-            }).then(() => {
-              setIsMember(true);
-              setMembershipExpiry(expiry);
-            }).catch(() => {});
+            });
+          
+          setIsMember(true);
+          setMembershipExpiry(expiry);
         }
 
         if (address) fetchBalances(address);
@@ -287,7 +300,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         disconnect,
         payMembership,
         transferTokens,
-        refreshBalances: () => address ? fetchBalances(address) : Promise.resolve(),
+        refreshBalances: async () => { if (address) await fetchBalances(address); },
       }}
     >
       {children}

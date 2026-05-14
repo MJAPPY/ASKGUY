@@ -19,7 +19,7 @@ interface RequestCardProps extends AidRequest {
   variant?: 'grid' | 'list';
 }
 
-const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, amount, token, raised, description, status, proofUrl, isUrgent, contributions, timestamp, variant = 'grid' }) => {
+const RequestCard: React.FC<RequestCardProps> = ({ id, requestor, title, category, amount, token, raised, description, status, proofUrl, isUrgent, contributions, timestamp, variant = 'grid' }) => {
   const { contribute, markCompleted } = useRequests();
   const { address, transferTokens } = useWallet();
   const [contributionAmount, setContributionAmount] = useState("10");
@@ -29,7 +29,7 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
   const [isProcessing, setIsProcessing] = useState(false);
 
   const progress = Math.min((raised / amount) * 100, 100);
-  const isOwner = address === user;
+  const isOwner = address === requestor; // Changed from user to requestor
   const messageCount = contributions.filter(c => c.message).length;
 
   const totalGuyBonus = useMemo(() => {
@@ -46,7 +46,7 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
     setIsProcessing(true);
     
     const success = await transferTokens(
-      user, 
+      requestor, // Changed from user to requestor
       val, 
       contributionToken as 'XPR' | 'GUY', 
       contributionMessage || `AskGuy: ${title}`
@@ -56,9 +56,9 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
       contribute(id, address, val, contributionToken, contributionMessage);
       
       if (contributionToken === 'GUY' && token !== 'GUY') {
-        showSuccess(`Sent ${val} GUY as a bonus gift to ${user}!`);
+        showSuccess(`Sent ${val} GUY as a bonus gift to ${requestor}!`); // Changed from user to requestor
       } else {
-        showSuccess(`Contributed ${val} ${contributionToken} to ${user}'s request!`);
+        showSuccess(`Contributed ${val} ${contributionToken} to ${requestor}'s request!`); // Changed from user to requestor
       }
       
       setIsContributing(false);
@@ -71,7 +71,7 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
   const handleShare = async () => {
     const shareData = {
       title: `AskGuy: ${title}`,
-      text: `Help ${user} with "${title}" on AskGuy XPR Network.`,
+      text: `Help ${requestor} with "${title}" on AskGuy XPR Network.`, // Changed from user to requestor
       url: window.location.origin
     };
 
@@ -110,7 +110,7 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white/5 border border-white/10">
                 <User size={12} className="text-muted-foreground" />
-                <span className="text-[11px] font-bold text-foreground/90">{user}</span>
+                <span className="text-[11px] font-bold text-foreground/90">{requestor}</span> {/* Changed from user to requestor */}
               </div>
               {isOwner && <Badge className="bg-primary text-black text-[9px] font-black h-4 px-1.5">YOU</Badge>}
               <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">
@@ -208,7 +208,7 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
                   </div>
                   <DialogTitle className="text-3xl font-black tracking-tight leading-tight">{title}</DialogTitle>
                   <div className="flex items-center gap-6 text-[11px] font-bold text-muted-foreground">
-                    <span className="flex items-center gap-2"><User size={14} className="text-emerald-400" /> {user}</span>
+                    <span className="flex items-center gap-2"><User size={14} className="text-emerald-400" /> {requestor}</span> {/* Changed from user to requestor */}
                     <span className="flex items-center gap-2"><Calendar size={14} /> {new Date(timestamp).toLocaleDateString()}</span>
                     <span className="flex items-center gap-2"><Target size={14} className="text-primary" /> {amount.toLocaleString()} {token} Goal</span>
                   </div>
@@ -335,7 +335,7 @@ const RequestCard: React.FC<RequestCardProps> = ({ id, user, title, category, am
                       Confirm Contribution
                     </AlertDialogTitle>
                     <AlertDialogDescription className="text-muted-foreground">
-                      You are about to send <span className="text-white font-bold">{contributionAmount} {contributionToken}</span> directly to <span className="text-white font-bold">{user}</span>. This action cannot be undone.
+                      You are about to send <span className="text-white font-bold">{contributionAmount} {contributionToken}</span> directly to <span className="text-white font-bold">{requestor}</span>. This action cannot be undone. {/* Changed from user to requestor */}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>

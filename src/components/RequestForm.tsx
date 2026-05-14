@@ -19,7 +19,7 @@ const RequestForm = () => {
   const [skipProof, setSkipProof] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { requests, addRequest } = useRequests();
-  const { address } = useWallet();
+  const { address, requestor } = useWallet();
   
   const [formData, setFormData] = useState({
     title: '',
@@ -31,7 +31,7 @@ const RequestForm = () => {
   });
 
   const activeRequestsCount = useMemo(() => {
-    return requests.filter(req => req.user === address && (req.status === 'Open' || req.status === 'Funded')).length;
+    return requests.filter(req => req.requestor === address && (req.status === 'Open' || req.status === 'Funded')).length;
   }, [requests, address]);
 
   const isLimitReached = activeRequestsCount >= 3;
@@ -60,7 +60,7 @@ const RequestForm = () => {
       : formData.category;
 
     const success = await addRequest({
-      requestor: address, // Correctly pass address to the requestor column
+      requestor: requestor,
       title: formData.title,
       category: categoryToSubmit,
       amount: parseFloat(formData.amount),

@@ -33,6 +33,7 @@ interface WalletContextType {
   xprBalance: number;
   isMember: boolean;
   membershipExpiry: number | null;
+  requestor: string; // Added requestor field
   connect: () => Promise<void>;
   disconnect: () => void;
   payMembership: () => Promise<void>;
@@ -61,6 +62,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
   const [xprBalance, setXprBalance] = useState(0);
   const [isMember, setIsMember] = useState(false);
   const [membershipExpiry, setMembershipExpiry] = useState<number | null>(null);
+  const [requestor, setRequestor] = useState("askguy"); // Fixed requestor
   const [session, setSession] = useState<any>(null);
 
   const linkRef = useRef<any>(null);
@@ -159,6 +161,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
         setAddress(actor);
         setIsConnected(true);
         fetchBalances(actor);
+        // Always set requestor to "askguy" regardless of user's address
+        setRequestor("askguy");
       }
     },
     [fetchBalances],
@@ -260,6 +264,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
     setIsBanned(false);
     setIsMember(false);
     setMembershipExpiry(null);
+    setRequestor("askguy"); // Reset to default requestor
     showSuccess("Disconnected");
   };
 
@@ -355,6 +360,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
         xprBalance,
         isMember,
         membershipExpiry,
+        requestor, // Expose requestor in context
         connect,
         disconnect,
         payMembership,

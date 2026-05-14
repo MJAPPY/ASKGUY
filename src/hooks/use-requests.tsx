@@ -18,7 +18,7 @@ export interface Contribution {
 
 export interface AidRequest {
   id: string;
-  user: string;
+  requestor: string; // Changed from user to requestor
   title: string;
   category: string;
   amount: number;
@@ -60,7 +60,7 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       const mapped = (data || []).map((r: any) => ({
         ...r,
-        user: r.requestor || 'unknown',
+        requestor: r.requestor || 'askguy', // Use requestor field
         proofUrl: r.proof_url
       }));
       setRequests(mapped);

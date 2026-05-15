@@ -145,7 +145,7 @@ const Index = () => {
                     </div>
                     <div className="text-left">
                       <p className="text-sm uppercase tracking-widest leading-none mb-1">Post New Request</p>
-                      <p className="text-[10px] text-emerald-100/60 uppercase font-bold tracking-tight">Ask for community aid</p>
+                      <p className="text-[10px] text-emerald-100/60 uppercase font-bold tracking-tight">Ask for community help</p>
                     </div>
                     <Sparkles size={16} className="ml-auto opacity-40 group-hover:opacity-100 transition-opacity" />
                   </Button>

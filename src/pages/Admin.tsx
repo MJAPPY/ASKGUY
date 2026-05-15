@@ -2,17 +2,38 @@
 
 import React, { useState, useEffect } from 'react';
 import { useWallet } from '@/hooks/use-wallet';
+import { useRequests } from '@/hooks/use-requests';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ShieldAlert, UserX, UserCheck, Loader2, ShieldCheck } from 'lucide-react';
+import { 
+  ShieldAlert, 
+  UserX, 
+  UserCheck, 
+  Loader2, 
+  ShieldCheck, 
+  Trash2,
+  AlertTriangle 
+} from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const Admin = () => {
   const { isConnected, isAdmin } = useWallet();
+  const { clearAllRequests } = useRequests();
   const [bannedUsers, setBannedUsers] = useState<{ address: string, created_at: string }[]>([]);
   const [newBanAddress, setNewBanAddress] = useState('');
   const [loading, setLoading] = useState(true);
@@ -82,6 +103,12 @@ const Admin = () => {
     }
   };
 
+  const handleWipeRequests = async () => {
+    setProcessing(true);
+    await clearAllRequests();
+    setProcessing(false);
+  };
+
   if (!isConnected || !isAdmin) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -101,14 +128,14 @@ const Admin = () => {
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Navbar />
       <main className="flex-1 container mx-auto px-4 py-12">
-        <div className="max-w-4xl mx-auto space-y-8">
+        <div className="max-w-4xl mx-auto space-y-12">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center border border-primary/30">
               <ShieldCheck className="text-primary" size={28} />
             </div>
             <div>
               <h1 className="text-4xl font-black tracking-tight">Admin Dashboard</h1>
-              <p className="text-muted-foreground">Manage community safety and blacklists.</p>
+              <p className="text-muted-foreground">Manage community safety and platform data.</p>
             </div>
           </div>
 
@@ -187,6 +214,61 @@ const Admin = () => {
               </CardContent>
             </Card>
           </div>
+
+          {/* Danger Zone */}
+          <Card className="border-red-500/50 bg-red-500/5 overflow-hidden">
+            <CardHeader className="bg-red-500/10 border-b border-red-500/20">
+              <div className="flex items-center gap-3 text-red-400">
+                <AlertTriangle size={24} />
+                <CardTitle className="text-xl font-black uppercase tracking-tight">Danger Zone</CardTitle>
+              </div>
+              <CardDescription className="text-red-200/60">
+                These actions are irreversible. Please proceed with extreme caution.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-8">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="space-y-1">
+                  <h3 className="text-lg font-bold text-white">Wipe All Platform Data</h3>
+                  <p className="text-sm text-muted-foreground max-w-lg">
+                    This will permanently delete every single request and contribution record from the database. This cannot be undone.
+                  </p>
+                </div>
+                
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button 
+                      variant="destructive" 
+                      className="h-14 px-8 font-black rounded-xl gap-3 shadow-[0_0_20px_rgba(239,68,68,0.2)]"
+                      disabled={processing}
+                    >
+                      <Trash2 size={20} />
+                      Wipe All Requests
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="glass-card border-red-500/30 p-8 rounded-[32px]">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="text-3xl font-black tracking-tight text-white">Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogDescription className="text-muted-foreground text-base font-medium leading-relaxed">
+                        This action will <span className="text-white font-black underline decoration-red-500 underline-offset-4">permanently delete</span> all request cards and contribution history. There is no recovery once this is done.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="gap-3 pt-6">
+                      <AlertDialogCancel className="bg-white/5 border-white/10 rounded-2xl h-14 font-black uppercase tracking-widest text-xs px-8">
+                        Cancel
+                      </AlertDialogCancel>
+                      <AlertDialogAction 
+                        onClick={handleWipeRequests}
+                        className="bg-red-600 hover:bg-red-500 text-white font-black rounded-2xl h-14 px-10 shadow-xl uppercase tracking-widest text-xs"
+                      >
+                        Yes, Wipe Everything
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </main>
       <Footer />

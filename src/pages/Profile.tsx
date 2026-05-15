@@ -482,35 +482,6 @@ const Profile = () => {
                 </div>
               </CardContent>
             </Card>
-
-            <Card className={cn(
-              "glass-card rounded-[32px] overflow-hidden group",
-              isVerified ? "border-emerald-500/20 bg-emerald-500/5" : "border-white/5 bg-white/[0.01]"
-            )}>
-              <CardContent className="p-8 space-y-6">
-                <div className={cn(
-                  "flex items-center gap-3",
-                  isVerified ? "text-emerald-400" : "text-muted-foreground"
-                )}>
-                  {isVerified ? <ShieldCheck size={20} /> : <AlertCircle size={20} />}
-                  <h4 className="text-sm font-black uppercase tracking-widest">Verification Status</h4>
-                </div>
-                <p className="text-[11px] font-medium leading-relaxed">
-                  {isVerified 
-                    ? "This account is a verified member of the AskGuy community on the XPR Network."
-                    : (isOwnProfile 
-                        ? "Verify your account to post community requests and unlock all platform features."
-                        : "This user has not yet completed the community verification process.")
-                  }
-                </p>
-                <div className={cn(
-                  "flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[9px] font-black uppercase tracking-widest w-fit",
-                  isVerified ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-white/5 border-white/10 text-muted-foreground"
-                )}>
-                  {isVerified ? "Verified Member" : "Unverified"}
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </main>

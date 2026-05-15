@@ -302,7 +302,7 @@ const Profile = () => {
           <div className="lg:col-span-8 space-y-12">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {isOwnProfile && (
-                <Card className="glass-card border-[#1565C0]/20 bg-[#1565C0]/5 group rounded-[32px] transition-all hover:scale-[1.02]">
+                <Card className="glass-card border-[#1565C0]/20 bg-[#1565C0]/5 group rounded-[32px] transition-all duration-300 hover:translate-y-[-4px] will-change-transform transform-gpu">
                   <CardContent className="p-8 space-y-6">
                     <div className="flex items-center justify-between">
                       <div className="w-12 h-12 rounded-2xl bg-[#1565C0]/10 flex items-center justify-center border border-[#1565C0]/20 group-hover:scale-110 transition-transform">
@@ -312,9 +312,9 @@ const Profile = () => {
                         <ExternalLink size={14} />
                       </Link>
                     </div>
-                    <div>
-                      <p className="text-[10px] text-[#1565C0] uppercase font-black tracking-widest mb-1.5">Your GUY Assets</p>
-                      <h3 className="text-3xl font-black text-white leading-none">
+                    <div className="overflow-hidden">
+                      <p className="text-[10px] text-[#1565C0] uppercase font-black tracking-widest mb-1.5 truncate">Your GUY Assets</p>
+                      <h3 className="text-2xl sm:text-3xl font-black text-white leading-none tabular-nums break-words">
                         {guyBalance.toLocaleString()}
                       </h3>
                     </div>
@@ -322,29 +322,29 @@ const Profile = () => {
                 </Card>
               )}
               
-              <Card className="glass-card border-emerald-500/10 bg-emerald-500/[0.02] group rounded-[32px] transition-all hover:scale-[1.02]">
+              <Card className="glass-card border-emerald-500/10 bg-emerald-500/[0.02] group rounded-[32px] transition-all duration-300 hover:translate-y-[-4px] will-change-transform transform-gpu">
                 <CardContent className="p-8 space-y-6">
                   <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:scale-110 transition-transform">
                     <Heart className="text-emerald-400" size={24} />
                   </div>
-                  <div>
-                    <p className="text-[10px] text-emerald-400 uppercase font-black tracking-widest mb-1.5">Total Contributions</p>
-                    <h3 className="text-3xl font-black text-white leading-none">
-                      {stats.given.toLocaleString()} <span className="text-xs text-muted-foreground font-medium">XPR</span>
+                  <div className="overflow-hidden">
+                    <p className="text-[10px] text-emerald-400 uppercase font-black tracking-widest mb-1.5 truncate">Total Contributions</p>
+                    <h3 className="text-2xl sm:text-3xl font-black text-white leading-none tabular-nums break-words">
+                      {stats.given.toLocaleString()} <span className="text-xs text-muted-foreground font-medium uppercase">XPR</span>
                     </h3>
                   </div>
                 </CardContent>
               </Card>
               
-              <Card className="glass-card border-blue-500/10 bg-blue-500/[0.02] group rounded-[32px] transition-all hover:scale-[1.02]">
+              <Card className="glass-card border-blue-500/10 bg-blue-500/[0.02] group rounded-[32px] transition-all duration-300 hover:translate-y-[-4px] will-change-transform transform-gpu">
                 <CardContent className="p-8 space-y-6">
                   <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:scale-110 transition-transform">
                     <History className="text-blue-400" size={24} />
                   </div>
-                  <div>
-                    <p className="text-[10px] text-blue-400 uppercase font-black tracking-widest mb-1.5">Community Support Received</p>
-                    <h3 className="text-3xl font-black text-white leading-none">
-                      {stats.received.toLocaleString()} <span className="text-xs text-muted-foreground font-medium">XPR</span>
+                  <div className="overflow-hidden">
+                    <p className="text-[10px] text-blue-400 uppercase font-black tracking-widest mb-1.5 truncate">Community Support Received</p>
+                    <h3 className="text-2xl sm:text-3xl font-black text-white leading-none tabular-nums break-words">
+                      {stats.received.toLocaleString()} <span className="text-xs text-muted-foreground font-medium uppercase">XPR</span>
                     </h3>
                   </div>
                 </CardContent>

@@ -189,7 +189,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const transferTokens = useCallback(async (to: string, amount: number, token: 'XPR' | 'GUY', memo?: string) => {
     if (!session) return false;
     try {
-      const precision = token === 'XPR' ? 4 : 6;
+      // FIX: Standard Proton/XPR tokens like GUY (on vtoken) use 4 decimals.
+      const precision = 4;
       let account = token === 'XPR' ? 'eosio.token' : 'vtoken';
       
       // Dynamic contract selection for GUY transfer

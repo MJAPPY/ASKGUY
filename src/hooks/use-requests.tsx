@@ -139,6 +139,15 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const deleteRequest = async (id: string) => {
     try {
+      // First delete associated contributions to avoid FK constraint errors
+      const { error: contribError } = await supabase
+        .from('contributions')
+        .delete()
+        .eq('request_id', id);
+      
+      if (contribError) throw contribError;
+
+      // Then delete the request
       const { error } = await supabase
         .from('aid_requests')
         .delete()
@@ -148,11 +157,21 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       await fetchRequests();
     } catch (err) {
       console.error('[use-requests] Delete request failed:', err);
+      throw err; // Propagate error so UI can handle it
     }
   };
 
   const batchDeleteRequests = async (ids: string[]) => {
     try {
+      // Delete all contributions for these requests first
+      const { error: contribError } = await supabase
+        .from('contributions')
+        .delete()
+        .in('request_id', ids);
+      
+      if (contribError) throw contribError;
+
+      // Then delete the requests themselves
       const { error } = await supabase
         .from('aid_requests')
         .delete()

@@ -514,10 +514,13 @@ const RequestCard: React.FC<RequestCardProps> = ({
                   </div>
                   
                   {contributionToken !== token && (
-                    <div className="flex gap-2 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
-                      <Info size={14} className="text-blue-400 shrink-0" />
-                      <p className="text-[9px] leading-tight text-blue-100/70 font-bold uppercase tracking-tight">
-                        Note: Gifts in {contributionToken} won't update the progress bar, but will be sent directly to @{requestor}.
+                    <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 space-y-2 group transition-all hover:bg-primary/10">
+                      <div className="flex items-center gap-2 text-primary">
+                        <Sparkles size={14} className="animate-pulse" />
+                        <span className="text-[10px] font-black uppercase tracking-widest">Bonus Gift Info</span>
+                      </div>
+                      <p className="text-[11px] leading-relaxed text-foreground/80 font-bold uppercase tracking-tight">
+                        Gifts in <span className="text-primary font-black underline decoration-primary/30 underline-offset-4">{contributionToken}</span> are sent directly to @{requestor}. Note that these separate contributions do not update the {token} goal bar.
                       </p>
                     </div>
                   )}

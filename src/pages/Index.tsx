@@ -139,15 +139,21 @@ const Index = () => {
             <div className="space-y-6">
               <Dialog open={isRequestModalOpen} onOpenChange={setIsRequestModalOpen}>
                 <DialogTrigger asChild>
-                  <Button className="w-full h-16 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-2xl shadow-[0_4px_20px_rgba(16,185,129,0.15)] flex items-center justify-center gap-3 group transition-all duration-300 border border-emerald-400/20">
-                    <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center transition-transform group-hover:rotate-90 duration-500">
-                      <Plus size={20} className="text-white" />
+                  <Button className="w-full h-20 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-black rounded-[24px] shadow-[0_10px_40px_rgba(16,185,129,0.25)] flex items-center justify-start px-6 gap-5 group transition-all duration-500 border border-emerald-400/20 active:scale-[0.98] relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-full bg-white/10 skew-x-[-20deg] translate-x-16 group-hover:translate-x-[-100%] transition-transform duration-1000 ease-in-out pointer-events-none" />
+                    
+                    <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center transition-all group-hover:rotate-12 duration-500 shadow-inner shrink-0">
+                      <Plus size={24} className="text-white" strokeWidth={3} />
                     </div>
-                    <div className="text-left">
-                      <p className="text-sm uppercase tracking-widest leading-none mb-1">Post New Request</p>
-                      <p className="text-[10px] text-emerald-100/60 uppercase font-bold tracking-tight">Ask for community help</p>
+                    
+                    <div className="text-left flex-1 min-w-0">
+                      <p className="text-lg uppercase tracking-tight leading-none font-black mb-1.5">Post New Request</p>
+                      <p className="text-[10px] text-emerald-50/70 uppercase font-black tracking-widest opacity-80 group-hover:opacity-100 transition-opacity">Request Community Support</p>
                     </div>
-                    <Sparkles size={16} className="ml-auto opacity-40 group-hover:opacity-100 transition-opacity" />
+                    
+                    <div className="w-10 h-10 rounded-full bg-black/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-1">
+                      <ArrowRight size={18} className="text-white" />
+                    </div>
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="glass-card border-white/10 max-w-xl p-8 rounded-[32px] shadow-2xl">

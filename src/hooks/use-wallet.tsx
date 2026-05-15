@@ -74,7 +74,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setIsFetchingBalances(true);
     const cleanAddress = walletAddress.toLowerCase().trim();
     
-    console.log(`[loadBalances] Debugging sync for @${cleanAddress}...`);
+    console.log(`[loadBalances] 🔄 Syncing @${cleanAddress}...`);
 
     try {
       // 1. Fetch native XPR
@@ -83,30 +83,40 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         account: cleanAddress,
         symbol: 'XPR'
       });
-      console.log(`[loadBalances] XPR Response:`, xprData);
       const xprVal = xprData && xprData.length > 0 ? parseFloat(xprData[0].split(' ')[0]) : 0;
+      console.log(`✅ XPR Balance:`, xprVal);
 
-      // 2. Fetch specific GUY from the 'proton' contract
-      const guyData = await rpcCall('/v1/chain/get_currency_balance', {
-        code: 'proton',
-        account: cleanAddress,
-        symbol: 'GUY'
-      });
-      console.log(`[loadBalances] 'proton' GUY Response:`, guyData);
-      const guyProton = guyData && guyData.length > 0 ? parseFloat(guyData[0].split(' ')[0]) : 0;
+      // 2. Fetch GUY using table rows (the method you provided)
+      const fetchTableBalance = async (symbol: string) => {
+        const data = await rpcCall('/v1/chain/get_table_rows', {
+          json: true,
+          code: 'proton',
+          scope: cleanAddress,
+          table: "accounts",
+          lower_bound: symbol,
+          upper_bound: symbol,
+          limit: 1
+        });
+        const balanceStr = data?.rows[0]?.balance || `0.000000 ${symbol}`;
+        console.log(`📊 Raw Table Row (${symbol}):`, balanceStr);
+        return parseFloat(balanceStr.split(' ')[0]);
+      };
 
-      // 3. Fetch ALL tokens for the account (The "Vibrr" check)
-      const allTokensData = await rpcCall('/v1/chain/get_account_tokens', { account: cleanAddress });
-      console.log(`[loadBalances] ALL Account Tokens:`, allTokensData);
+      // Try "GUY" then fallback to "Guy"
+      let guyVal = await fetchTableBalance('GUY');
+      if (guyVal === 0) {
+        guyVal = await fetchTableBalance('Guy');
+      }
 
-      let vTokenBalance = 0;
-      if (allTokensData && allTokensData.tokens) {
-        const foundGuy = allTokensData.tokens.find((t: any) => 
+      // 3. Fallback: Search all tokens if still 0
+      if (guyVal === 0) {
+        const allTokensData = await rpcCall('/v1/chain/get_account_tokens', { account: cleanAddress });
+        const foundGuy = allTokensData?.tokens?.find((t: any) => 
           t.symbol === 'GUY' || t.symbol === 'Guy' || t.symbol === '777 GUY'
         );
         if (foundGuy) {
-          console.log(`[loadBalances] Found GUY in Account Tokens:`, foundGuy);
-          vTokenBalance = parseFloat(foundGuy.amount);
+          guyVal = parseFloat(foundGuy.amount);
+          console.log(`💎 Found in AllTokens search:`, guyVal);
         }
       }
 
@@ -117,17 +127,15 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       ]);
 
       setXprBalance(xprVal);
+      setGuyBalance(guyVal);
       setIsBanned(!!banResult.data);
       if (profileResult.data?.membership_expiry) {
         setMembershipExpiry(profileResult.data.membership_expiry);
       }
       
-      const finalGuy = Math.max(guyProton, vTokenBalance);
-      setGuyBalance(finalGuy);
-      
-      console.log(`[loadBalances] Sync Complete: XPR: ${xprVal} | GUY: ${finalGuy}`);
+      console.log(`✨ Load Complete: XPR: ${xprVal} | GUY: ${guyVal}`);
     } catch (err) {
-      console.error('[loadBalances] Error syncing data:', err);
+      console.error('❌ Error syncing wallet data:', err);
     } finally {
       setIsFetchingBalances(false);
     }

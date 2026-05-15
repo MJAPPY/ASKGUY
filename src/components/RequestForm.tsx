@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Upload, X, AlertCircle, ShieldCheck, Sparkles, AlertTriangle } from 'lucide-react';
+import { Upload, X, AlertCircle, ShieldCheck, Sparkles, AlertTriangle, Coins } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useRequests, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
@@ -23,7 +23,7 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
   const [skipProof, setSkipProof] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { requests, addRequest } = useRequests();
-  const { address, requestor } = useWallet();
+  const { address, requestor, guyBalance, transferTokens } = useWallet();
   
   const [formData, setFormData] = useState({
     title: '',
@@ -39,6 +39,7 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
   }, [requests, address]);
 
   const isLimitReached = activeRequestsCount >= 3;
+  const hasEnoughGuy = guyBalance >= 25;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -61,37 +62,62 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
     e.preventDefault();
     if (!address || isLimitReached) return;
     
+    if (!hasEnoughGuy) {
+      showError("You need at least 25 GUY to post a request.");
+      return;
+    }
+    
     setLoading(true);
     
-    const categoryToSubmit = formData.category === 'Other' 
-      ? formData.customCategory || 'Other' 
-      : formData.category;
+    try {
+      // Step 1: Process the 25 GUY payment
+      const paymentSuccess = await transferTokens(
+        'askguy', 
+        25, 
+        'GUY', 
+        `Request Fee: ${formData.title.substring(0, 50)}`
+      );
 
-    const success = await addRequest({
-      requestor: requestor,
-      title: formData.title,
-      category: categoryToSubmit,
-      amount: parseFloat(formData.amount),
-      token: formData.token,
-      description: formData.description,
-      proofUrl: preview || undefined
-    });
+      if (!paymentSuccess) {
+        showError("Failed to process GUY payment. Please try again.");
+        setLoading(false);
+        return;
+      }
 
-    if (success) {
-      setFormData({ 
-        title: '',
-        category: 'Medical / Healthcare', 
-        customCategory: '',
-        amount: '', 
-        token: 'XPR', 
-        description: '' 
+      // Step 2: Save the request to the database
+      const categoryToSubmit = formData.category === 'Other' 
+        ? formData.customCategory || 'Other' 
+        : formData.category;
+
+      const success = await addRequest({
+        requestor: requestor,
+        title: formData.title,
+        category: categoryToSubmit,
+        amount: parseFloat(formData.amount),
+        token: formData.token,
+        description: formData.description,
+        proofUrl: preview || undefined
       });
-      setPreview(null);
-      setSkipProof(false);
-      showSuccess("Request posted successfully!");
-      if (onSuccess) onSuccess();
+
+      if (success) {
+        setFormData({ 
+          title: '',
+          category: 'Medical / Healthcare', 
+          customCategory: '',
+          amount: '', 
+          token: 'XPR', 
+          description: '' 
+        });
+        setPreview(null);
+        setSkipProof(false);
+        showSuccess("25 GUY Paid & Request posted successfully!");
+        if (onSuccess) onSuccess();
+      }
+    } catch (err) {
+      showError("An error occurred. Please try again.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const categories = [
@@ -119,7 +145,7 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
           </div>
         </div>
         <CardDescription className="text-muted-foreground/80 font-medium">
-          Share your situation with the community.
+          Share your situation. Posting costs <span className="text-primary font-bold">25 GUY</span>.
         </CardDescription>
       </CardHeader>
       
@@ -135,7 +161,17 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
             </div>
           )}
 
-          <div className={`space-y-4 ${isLimitReached ? 'opacity-50 pointer-events-none' : ''}`}>
+          {!hasEnoughGuy && !isLimitReached && (
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-100 text-xs font-semibold leading-normal">
+              <AlertTriangle size={18} className="shrink-0 text-orange-400 mt-0.5" />
+              <p>
+                <span className="text-orange-400 font-black uppercase tracking-widest mr-1">Insufficient GUY:</span> 
+                You need 25 GUY tokens to post. Your current balance is {guyBalance.toLocaleString()} GUY.
+              </p>
+            </div>
+          )}
+
+          <div className={`space-y-4 ${(isLimitReached || !hasEnoughGuy) ? 'opacity-50 pointer-events-none' : ''}`}>
             <div className="space-y-2">
               <Label htmlFor="title" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Request Title</Label>
               <Input 
@@ -167,7 +203,7 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Amount Requested (XPR)</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Amount Requested ({formData.token})</Label>
                 <Input 
                   type="number" 
                   placeholder="0.00" 
@@ -211,13 +247,6 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
                   <ShieldCheck className="text-emerald-400 shrink-0 mt-0.5" size={16} />
                   <p className="text-[11px] leading-relaxed text-emerald-100/70 font-medium">
                     Upload a photo of your bill with your <span className="text-emerald-400 font-black">@{address}</span> handwritten.
-                  </p>
-                </div>
-
-                <div className="flex gap-3 p-3 rounded-xl bg-orange-500/10 border border-orange-500/20">
-                  <AlertTriangle className="text-orange-400 shrink-0 mt-0.5" size={14} />
-                  <p className="text-[10px] leading-tight text-orange-100/70 font-bold uppercase tracking-tight">
-                    Hide sensitive info like address/full name before uploading.
                   </p>
                 </div>
 
@@ -278,10 +307,18 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
         <CardFooter className="px-0 pt-6">
           <Button 
             type="submit" 
-            className="w-full gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black h-14 rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] uppercase tracking-widest text-[11px]" 
-            disabled={loading || isLimitReached}
+            className="w-full gap-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black h-16 rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] uppercase tracking-widest text-[11px]" 
+            disabled={loading || isLimitReached || !hasEnoughGuy}
           >
-            {loading ? "Posting..." : isLimitReached ? "Limit Reached" : "Submit Request"}
+            {loading ? (
+              <><Loader2 className="animate-spin" size={18} /> Processing...</>
+            ) : isLimitReached ? (
+              "Limit Reached (3/3)"
+            ) : !hasEnoughGuy ? (
+              "Insufficient GUY Balance"
+            ) : (
+              <><Coins size={18} /> Pay 25 GUY & Post Request</>
+            )}
           </Button>
         </CardFooter>
       </form>

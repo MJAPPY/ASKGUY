@@ -42,7 +42,6 @@ interface RequestsContextType {
 
 const RequestsContext = createContext<RequestsContextType | undefined>(undefined);
 
-// Helper to map DB snake_case to CamelCase
 const mapRequestFromDB = (data: any): AidRequest => ({
   ...data,
   proofUrl: data.proof_url,
@@ -66,16 +65,13 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       const { data, error } = await supabase
         .from('aid_requests')
-        .select(`
-          *,
-          contributions (*)
-        `)
+        .select(`*, contributions (*)`)
         .order('timestamp', { ascending: false });
       
       if (error) throw error;
       setRequests((data || []).map(mapRequestFromDB));
     } catch (err) {
-      console.error('[use-requests] Fetch requests failed:', err);
+      console.error('[use-requests] Sync error:', err);
     } finally {
       setLoading(false);
     }
@@ -83,33 +79,27 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const addRequest = async (req: any) => {
     try {
-      const dbRequest = {
-        requestor: req.requestor,
-        title: req.title,
-        category: req.category,
-        amount: req.amount,
-        token: req.token,
-        description: req.description,
-        proof_url: req.proofUrl,
-        timestamp: Date.now(),
-        status: 'Open',
-        raised: 0
-      };
-
       const { data, error } = await supabase
         .from('aid_requests')
-        .insert(dbRequest)
+        .insert({
+          requestor: req.requestor,
+          title: req.title,
+          category: req.category,
+          amount: req.amount,
+          token: req.token,
+          description: req.description,
+          proof_url: req.proofUrl,
+          timestamp: Date.now(),
+          status: 'Open',
+          raised: 0
+        })
         .select();
       
-      if (error) {
-        showError(`Failed to save request: ${error.message}`);
-        throw error;
-      }
-      
+      if (error) throw error;
       await fetchRequests();
-      return data && data.length > 0 ? data[0] : null;
-    } catch (err) {
-      console.error('[use-requests] Add request failed:', err);
+      return data?.[0] || null;
+    } catch (err: any) {
+      showError(err.message);
       return null;
     }
   };
@@ -121,79 +111,37 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         dbUpdates.proof_url = updates.proofUrl;
         delete dbUpdates.proofUrl;
       }
-
-      const { data, error } = await supabase
-        .from('aid_requests')
-        .update(dbUpdates)
-        .eq('id', id)
-        .select();
-      
+      const { data, error } = await supabase.from('aid_requests').update(dbUpdates).eq('id', id).select();
       if (error) throw error;
       await fetchRequests();
       return data;
     } catch (err) {
-      console.error('[use-requests] Update request failed:', err);
       return null;
     }
   };
 
   const deleteRequest = async (id: string) => {
-    console.log(`🗑️ Attempting to delete request: ${id}`);
     try {
-      // First delete associated contributions to avoid FK constraint errors
-      const { error: contribError } = await supabase
-        .from('contributions')
-        .delete()
-        .eq('request_id', id);
-      
-      if (contribError) {
-        console.error('❌ Contribution deletion failed:', contribError);
-        throw new Error(`Contributions error: ${contribError.message}`);
-      }
-
-      // Then delete the request
-      const { error } = await supabase
-        .from('aid_requests')
-        .delete()
-        .eq('id', id);
-      
-      if (error) {
-        console.error('❌ Request deletion failed:', error);
-        throw new Error(`Request error: ${error.message}`);
-      }
-      
-      console.log('✅ Deletion successful');
+      // Delete child records first to satisfy DB constraints
+      await supabase.from('contributions').delete().eq('request_id', id);
+      const { error } = await supabase.from('aid_requests').delete().eq('id', id);
+      if (error) throw error;
       await fetchRequests();
     } catch (err: any) {
-      console.error('[use-requests] Delete request failed:', err);
-      showError(err.message || "Deletion failed. Check permissions.");
+      showError("Moderator permission required in Supabase SQL Editor.");
       throw err;
     }
   };
 
   const batchDeleteRequests = async (ids: string[]) => {
-    console.log(`🗑️ Attempting batch delete for ${ids.length} items`);
     try {
-      // Delete all contributions for these requests first
-      const { error: contribError } = await supabase
-        .from('contributions')
-        .delete()
-        .in('request_id', ids);
-      
-      if (contribError) throw contribError;
-
-      // Then delete the requests themselves
-      const { error } = await supabase
-        .from('aid_requests')
-        .delete()
-        .in('id', ids);
-      
+      await supabase.from('contributions').delete().in('request_id', ids);
+      const { error } = await supabase.from('aid_requests').delete().in('id', ids);
       if (error) throw error;
       await fetchRequests();
-      showSuccess(`Deleted ${ids.length} requests.`);
+      showSuccess(`Successfully removed ${ids.length} items.`);
     } catch (err: any) {
-      console.error('[use-requests] Batch delete failed:', err);
-      showError(err.message || "Batch delete failed.");
+      showError("Batch delete failed. Check RLS policies.");
     }
   };
 
@@ -208,10 +156,7 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         timestamp: Date.now(),
       });
       
-      if (contribError) {
-        showError(`Failed to record contribution: ${contribError.message}`);
-        throw contribError;
-      }
+      if (contribError) throw contribError;
 
       const request = requests.find(r => r.id === requestId);
       if (request && token === request.token) {
@@ -225,7 +170,6 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       await fetchRequests();
       return true;
     } catch (err) {
-      console.error('[use-requests] Contribute failed:', err);
       return false;
     }
   };
@@ -249,29 +193,17 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   useEffect(() => {
     fetchRequests();
-    
-    const subscription = supabase
-      .channel('requests_channel')
+    const subscription = supabase.channel('realtime-sync')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'aid_requests' }, fetchRequests)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'contributions' }, fetchRequests)
       .subscribe();
-
-    return () => {
-      supabase.removeChannel(subscription);
-    };
+    return () => { supabase.removeChannel(subscription); };
   }, [fetchRequests]);
 
   return (
     <RequestsContext.Provider value={{
-      requests,
-      loading,
-      fetchRequests,
-      addRequest,
-      updateRequest,
-      deleteRequest,
-      batchDeleteRequests,
-      contribute,
-      markCompleted,
+      requests, loading, fetchRequests, addRequest, updateRequest, 
+      deleteRequest, batchDeleteRequests, contribute, markCompleted,
     }}>
       {children}
     </RequestsContext.Provider>

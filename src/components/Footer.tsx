@@ -12,7 +12,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           <div className="space-y-4">
             <Link to="/" className="flex items-center gap-3 group w-fit">
-              <div className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 transition-transform group-hover:scale-110 bg-black/20 p-1">
+              <div className="w-10 h-10 transition-transform group-hover:scale-110 shrink-0">
                 <img src={logo} alt="AskGuy Logo" className="w-full h-full object-contain" />
               </div>
               <span className="font-bold text-lg group-hover:text-primary transition-colors">AskGuy</span>

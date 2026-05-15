@@ -5,6 +5,8 @@ import Connect, { LinkSession } from '@proton/web-sdk';
 import { supabase } from '@/integrations/supabase/client';
 
 export const OWNER_ADDRESS = 'askguy';
+export const MEMBERSHIP_RECIPIENT = 'tripseven';
+export const MEMBERSHIP_FEE = 7777;
 
 export interface WalletState {
   address: string;
@@ -30,7 +32,6 @@ const WalletContext = createContext<WalletState | undefined>(undefined);
 
 const APP_NAME = 'AskGuy';
 
-// Using the vetted reliable endpoints
 const PROTON_ENDPOINTS = [
   'https://api.protonnz.com',
   'https://proton.eosusa.io',
@@ -51,6 +52,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const linkRef = useRef<any>(null);
 
   const isAdmin = address.toLowerCase() === OWNER_ADDRESS.toLowerCase();
+  const isMember = membershipExpiry > Date.now();
 
   const getTokenBalance = useCallback(async (accountName: string, contract: string, symbol: string) => {
     for (const rpc of PROTON_ENDPOINTS) {
@@ -69,7 +71,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data) && data.length > 0) {
-            console.log(`✅ Success: Found ${data[0]} at ${rpc} via ${contract}`);
             return data[0];
           }
           if (Array.isArray(data) && data.length === 0) {
@@ -77,7 +78,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           }
         }
       } catch (err) {
-        console.warn(`Endpoint ${rpc} failed for ${symbol}`);
+        // Silent fail
       }
     }
     return `0.0000 ${symbol}`;
@@ -88,14 +89,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setIsFetchingBalances(true);
     const cleanAddress = accountName.toLowerCase().trim();
     
-    console.log(`🔄 Syncing balances for: ${cleanAddress}`);
-
     try {
-      // 1. Fetch XPR (eosio.token)
       const xprStr = await getTokenBalance(cleanAddress, 'eosio.token', 'XPR');
       const xprVal = parseFloat(xprStr.split(' ')[0]);
 
-      // 2. Fetch GUY - Prioritizing 'vtoken' as the verified contract
       const guyContracts = ['vtoken', 'token.vtoken', 'guy', 'proton'];
       let guyVal = 0;
 
@@ -108,7 +105,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
       }
 
-      // 3. Metadata sync (Supabase)
       const [banResult, profileResult] = await Promise.all([
         supabase.from('banned_users').select('address').eq('address', cleanAddress).maybeSingle(),
         supabase.from('profiles').select('membership_expiry').eq('address', cleanAddress).maybeSingle()
@@ -120,10 +116,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (profileResult.data?.membership_expiry) {
         setMembershipExpiry(profileResult.data.membership_expiry);
       }
-      
-      console.log(`✨ Sync Finished: XPR: ${xprVal} | GUY: ${guyVal}`);
     } catch (err) {
-      console.error('❌ Error during fetchAllBalances:', err);
+      console.error('Error fetching balances:', err);
     } finally {
       setIsFetchingBalances(false);
     }
@@ -189,11 +183,9 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const transferTokens = useCallback(async (to: string, amount: number, token: 'XPR' | 'GUY', memo?: string) => {
     if (!session) return false;
     try {
-      // FIX: Standard Proton/XPR tokens like GUY (on vtoken) use 4 decimals.
       const precision = 4;
       let account = token === 'XPR' ? 'eosio.token' : 'vtoken';
       
-      // Dynamic contract selection for GUY transfer
       if (token === 'GUY') {
         const guyContracts = ['vtoken', 'token.vtoken', 'guy', 'proton'];
         for (const contract of guyContracts) {
@@ -222,7 +214,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [session, refreshBalances, address, getTokenBalance]);
 
   const payMembership = useCallback(async () => {
-    const success = await transferTokens('askguy', 1, 'XPR', 'AskGuy Membership Fee');
+    const success = await transferTokens(MEMBERSHIP_RECIPIENT, MEMBERSHIP_FEE, 'XPR', 'AskGuy Membership Fee');
     if (success) {
       const nextYear = Date.now() + (365 * 24 * 60 * 60 * 1000);
       setMembershipExpiry(nextYear);
@@ -234,7 +226,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     <WalletContext.Provider value={{
       address, isConnected, isConnecting, isAdmin, isFetchingBalances,
       guyBalance, xprBalance, membershipExpiry,
-      isMember: isConnected, hasGuyThreshold: true, isBanned, 
+      isMember, hasGuyThreshold: true, isBanned, 
       payMembership, connect, disconnect,
       refreshBalances, transferTokens, requestor: address,
     }}>

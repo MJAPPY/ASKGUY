@@ -42,7 +42,7 @@ const HowItWorks = () => {
     {
       number: "03",
       title: "Trusted Member",
-      description: "Only 4,777 XPR to become a trusted member and pay 25 GUY per request posting."
+      description: "Join for 7,777 XPR to become a trusted member and pay 25 GUY per request posting."
     },
     {
       number: "04",

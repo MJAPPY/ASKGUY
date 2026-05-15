@@ -32,7 +32,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { supabase } from '@/integrations/supabase/client';
 
@@ -47,7 +47,6 @@ const Profile = () => {
   const [targetMembershipExpiry, setTargetMembershipExpiry] = useState<number | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
 
-  // Fetch membership status for the target user if it's not the logged in user
   useEffect(() => {
     const fetchTargetProfile = async () => {
       if (!targetAddress) return;
@@ -60,7 +59,7 @@ const Profile = () => {
 
       setIsLoadingProfile(true);
       try {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from('profiles')
           .select('membership_expiry')
           .eq('address', targetAddress.toLowerCase().trim())
@@ -157,7 +156,6 @@ const Profile = () => {
     <div className="min-h-screen bg-[#060912] text-foreground flex flex-col relative overflow-hidden">
       <Navbar />
       
-      {/* Enhanced Hero Header */}
       <div className="relative border-b border-white/5 bg-gradient-to-b from-white/[0.02] to-transparent py-12 md:py-20 overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-[#1565C0]/5 blur-[120px] rounded-full pointer-events-none" />
         
@@ -216,7 +214,6 @@ const Profile = () => {
                 </div>
               </div>
 
-              {/* Membership Card - Polished */}
               <div className="md:max-w-xs w-full glass-card rounded-[32px] p-6 border-white/5 bg-white/[0.02] relative overflow-hidden group">
                 <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#1565C0]/10 blur-[40px] rounded-full" />
                 <div className="relative z-10 space-y-5">
@@ -256,7 +253,7 @@ const Profile = () => {
                         <AlertDialogHeader>
                           <AlertDialogTitle className="text-3xl font-black tracking-tight mb-2">Yearly Membership</AlertDialogTitle>
                           <AlertDialogDescription className="text-muted-foreground text-base leading-relaxed font-medium">
-                            Become a verified member to post community requests. Membership costs <span className="text-white font-black underline decoration-primary underline-offset-4">1 XPR</span> per year.
+                            Become a verified member to post community requests. Membership costs <span className="text-white font-black underline decoration-primary underline-offset-4">7,777 XPR</span> per year.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <div className="py-8 space-y-4">
@@ -266,7 +263,7 @@ const Profile = () => {
                               <span>Duration</span>
                             </div>
                             <div className="flex justify-between items-center text-2xl font-black">
-                              <span className="text-primary">1.00 XPR</span>
+                              <span className="text-primary">7,777.00 XPR</span>
                               <span>365 Days</span>
                             </div>
                           </div>
@@ -289,9 +286,7 @@ const Profile = () => {
       
       <main className="flex-1 container mx-auto px-4 py-12 md:py-16">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12">
-          {/* Main Content Area */}
           <div className="lg:col-span-8 space-y-12">
-            {/* Stats Showcase */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {isOwnProfile && (
                 <Card className="glass-card border-[#1565C0]/20 bg-[#1565C0]/5 group rounded-[32px] transition-all hover:scale-[1.02]">
@@ -343,7 +338,6 @@ const Profile = () => {
               </Card>
             </div>
 
-            {/* Profile Tabs */}
             <Tabs defaultValue="requests" className="w-full">
               <div className="flex items-center justify-between mb-8 border-b border-white/5 pb-4">
                 <TabsList className="bg-white/5 border border-white/10 p-1.5 h-12 rounded-2xl">
@@ -442,7 +436,6 @@ const Profile = () => {
             </Tabs>
           </div>
 
-          {/* Sidebar Area */}
           <div className="lg:col-span-4 space-y-8">
             <TransactionHistory />
             

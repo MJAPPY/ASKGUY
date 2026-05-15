@@ -25,7 +25,7 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
   const [skipProof, setSkipProof] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { requests, addRequest } = useRequests();
-  const { address, requestor, guyBalance, transferTokens } = useWallet();
+  const { address, requestor, guyBalance, transferTokens, isMember } = useWallet();
   
   const [formData, setFormData] = useState({
     title: '',
@@ -64,6 +64,11 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
     e.preventDefault();
     if (!address || isLimitReached) return;
     
+    if (!isMember) {
+      showError("You need an active membership to post requests. Visit your profile to join.");
+      return;
+    }
+
     if (!hasEnoughGuy) {
       showError("You need at least 25 GUY to post a request.");
       return;
@@ -73,7 +78,6 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
     setSubmittingStep('authorizing');
     
     try {
-      // Step 1: Process the 25 GUY payment
       const paymentSuccess = await transferTokens(
         'askguy', 
         25, 
@@ -90,7 +94,6 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
 
       setSubmittingStep('finalizing');
 
-      // Step 2: Save the request to the database
       const categoryToSubmit = formData.category === 'Other' 
         ? formData.customCategory || 'Other' 
         : formData.category;
@@ -158,6 +161,16 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
       
       <ScrollArea className="flex-1 pr-4 -mr-4">
         <form id="request-form" onSubmit={handleSubmit} className="space-y-6 pb-4">
+          {!isMember && (
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-[#1565C0]/10 border border-[#1565C0]/30 text-blue-100 text-xs font-semibold leading-normal">
+              <AlertCircle size={18} className="shrink-0 text-[#1565C0] mt-0.5" />
+              <p>
+                <span className="text-[#1565C0] font-black uppercase tracking-widest mr-1">Membership Required:</span> 
+                You need an active membership to post. Visit your <Link to="/profile" className="underline text-white">profile</Link> to join.
+              </p>
+            </div>
+          )}
+
           {isLimitReached && (
             <div className="flex items-start gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-100 text-xs font-semibold leading-normal">
               <AlertCircle size={18} className="shrink-0 text-red-400 mt-0.5" />
@@ -168,7 +181,7 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
             </div>
           )}
 
-          {!hasEnoughGuy && !isLimitReached && (
+          {!hasEnoughGuy && !isLimitReached && isMember && (
             <div className="flex items-start gap-3 p-4 rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-100 text-xs font-semibold leading-normal">
               <AlertTriangle size={18} className="shrink-0 text-orange-400 mt-0.5" />
               <p>
@@ -178,7 +191,7 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
             </div>
           )}
 
-          <div className={`space-y-5 ${(isLimitReached || !hasEnoughGuy) ? 'opacity-50 pointer-events-none' : ''}`}>
+          <div className={`space-y-5 ${(isLimitReached || !hasEnoughGuy || !isMember) ? 'opacity-50 pointer-events-none' : ''}`}>
             <div className="space-y-2">
               <Label htmlFor="title" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Request Title</Label>
               <Input 
@@ -320,13 +333,15 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
           form="request-form"
           type="submit" 
           className="w-full gap-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black h-16 rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] uppercase tracking-[0.15em] text-[11px]" 
-          disabled={loading || isLimitReached || !hasEnoughGuy}
+          disabled={loading || isLimitReached || !hasEnoughGuy || !isMember}
         >
           {loading ? (
             <div className="flex items-center gap-3">
               <Loader2 className="animate-spin" size={18} />
               <span>{submittingStep === 'authorizing' ? 'Authorizing Transaction...' : 'Publishing Request...'}</span>
             </div>
+          ) : !isMember ? (
+            "Membership Required"
           ) : isLimitReached ? (
             "Limit Reached (3/3)"
           ) : !hasEnoughGuy ? (

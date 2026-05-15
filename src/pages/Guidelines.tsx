@@ -14,7 +14,7 @@ const Guidelines = () => {
       title: "Membership & Eligibility",
       content: [
         "AskGuy is open to all XPR Network wallet holders. Anyone can connect and support the community.",
-        "To post a request, a yearly membership fee of 1 XPR is required. This fee supports platform maintenance and prevents spam.",
+        "To post a request, a yearly membership fee of 7,777 XPR is required. This fee supports platform maintenance and prevents spam.",
         "The membership fee is paid directly on-chain and grants full posting rights for 365 days."
       ]
     },

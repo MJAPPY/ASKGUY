@@ -26,7 +26,7 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
   const [skipProof, setSkipProof] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { requests, addRequest } = useRequests();
-  const { address, requestor, guyBalance, transferTokens, isMember } = useWallet();
+  const { address, requestor, guyBalance, transferTokens, isMember, postingFeeGuy } = useWallet();
   
   const [formData, setFormData] = useState({
     title: '',
@@ -42,7 +42,7 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
   }, [requests, address]);
 
   const isLimitReached = activeRequestsCount >= 3;
-  const hasEnoughGuy = guyBalance >= 25;
+  const hasEnoughGuy = guyBalance >= postingFeeGuy;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -71,7 +71,7 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
     }
 
     if (!hasEnoughGuy) {
-      showError("You need at least 25 GUY to post a request.");
+      showError(`You need at least ${postingFeeGuy} GUY to post a request.`);
       return;
     }
     
@@ -81,7 +81,7 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
     try {
       const paymentSuccess = await transferTokens(
         'askguy', 
-        25, 
+        postingFeeGuy, 
         'GUY', 
         `Request Fee: ${formData.title.substring(0, 50)}`
       );
@@ -120,7 +120,7 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
         });
         setPreview(null);
         setSkipProof(false);
-        showSuccess("25 GUY authorized & request published!");
+        showSuccess(`${postingFeeGuy} GUY authorized & request published!`);
         if (onSuccess) onSuccess();
       }
     } catch (err) {
@@ -156,7 +156,7 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
           </div>
         </div>
         <CardDescription className="text-muted-foreground/80 font-medium">
-          Authorise a <span className="text-primary font-bold">25 GUY</span> contribution to post your need.
+          Authorise a <span className="text-primary font-bold">{postingFeeGuy} GUY</span> contribution to post your need.
         </CardDescription>
       </CardHeader>
       
@@ -187,7 +187,7 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
               <AlertTriangle size={18} className="shrink-0 text-orange-400 mt-0.5" />
               <p>
                 <span className="text-orange-400 font-black uppercase tracking-widest mr-1">Insufficient GUY:</span> 
-                You need 25 GUY tokens to post. Your current balance is {guyBalance.toLocaleString()} GUY.
+                You need {postingFeeGuy} GUY tokens to post. Your current balance is {guyBalance.toLocaleString()} GUY.
               </p>
             </div>
           )}
@@ -350,7 +350,7 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
           ) : (
             <div className="flex items-center gap-3">
               <Zap size={18} className="fill-current" />
-              <span>Submit Request • 25 GUY Fee</span>
+              <span>Submit Request • {postingFeeGuy} GUY Fee</span>
             </div>
           )}
         </Button>

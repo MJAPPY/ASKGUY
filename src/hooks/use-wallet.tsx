@@ -17,6 +17,7 @@ export interface WalletState {
   xprBalance: number;
   membershipExpiry: number;
   membershipFee: number;
+  postingFeeGuy: number;
   isMembershipEnabled: boolean;
   isMember: boolean; 
   hasGuyThreshold: boolean; 
@@ -48,6 +49,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [xprBalance, setXprBalance] = useState(0);
   const [membershipExpiry, setMembershipExpiry] = useState(0);
   const [membershipFee, setMembershipFee] = useState(7777);
+  const [postingFeeGuy, setPostingFeeGuy] = useState(25);
   const [isMembershipEnabled, setIsMembershipEnabled] = useState(true);
   const [isFetchingBalances, setIsFetchingBalances] = useState(false);
   const [isBanned, setIsBanned] = useState(false);
@@ -68,6 +70,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (data) {
         setMembershipFee(Number(data.membership_fee));
         setIsMembershipEnabled(data.membership_active);
+        setPostingFeeGuy(Number(data.posting_fee_guy ?? 25));
       }
     } catch (err) {
       console.error('Error fetching settings:', err);
@@ -247,7 +250,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     <WalletContext.Provider value={{
       address, isConnected, isConnecting, isAdmin, isFetchingBalances,
       guyBalance, xprBalance, membershipExpiry,
-      membershipFee, isMembershipEnabled,
+      membershipFee, postingFeeGuy, isMembershipEnabled,
       isMember, hasGuyThreshold: true, isBanned, 
       payMembership, connect, disconnect,
       refreshBalances, transferTokens, requestor: address,

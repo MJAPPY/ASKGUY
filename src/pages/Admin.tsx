@@ -39,7 +39,7 @@ import { showSuccess, showError } from '@/utils/toast';
 import { cn } from '@/lib/utils';
 
 const Admin = () => {
-  const { isConnected, isAdmin, transferTokens, guyBalance, membershipFee: currentFee, isMembershipEnabled: currentEnabled } = useWallet();
+  const { isConnected, isAdmin, transferTokens, guyBalance, membershipFee: currentFee, isMembershipEnabled: currentEnabled, postingFeeGuy: currentPostingFee } = useWallet();
   const { requests, deleteRequest, batchDeleteRequests, loading: requestsLoading } = useRequests();
   const [bannedUsers, setBannedUsers] = useState<{ address: string, created_at: string }[]>([]);
   const [newBanAddress, setNewBanAddress] = useState('');
@@ -51,6 +51,7 @@ const Admin = () => {
   // Settings state
   const [membershipActive, setMembershipActive] = useState(currentEnabled);
   const [membershipFee, setMembershipFee] = useState(currentFee.toString());
+  const [postingFeeGuy, setPostingFeeGuy] = useState(currentPostingFee.toString());
 
   // Individual rewards state
   const [individualRewards, setIndividualRewards] = useState<Record<string, string>>({});
@@ -58,7 +59,8 @@ const Admin = () => {
   useEffect(() => {
     setMembershipActive(currentEnabled);
     setMembershipFee(currentFee.toString());
-  }, [currentEnabled, currentFee]);
+    setPostingFeeGuy(currentPostingFee.toString());
+  }, [currentEnabled, currentFee, currentPostingFee]);
 
   const stats = useMemo(() => {
     const contributionMap: Record<string, number> = {};
@@ -158,7 +160,8 @@ const Admin = () => {
         .upsert({ 
           id: 'global',
           membership_active: membershipActive,
-          membership_fee: parseFloat(membershipFee)
+          membership_fee: parseFloat(membershipFee),
+          posting_fee_guy: parseFloat(postingFeeGuy)
         });
 
       if (error) throw error;
@@ -375,7 +378,7 @@ const Admin = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <Card className="glass-card border-white/5 p-8 rounded-[32px]">
                   <div className="flex items-center justify-between mb-8">
-                    <h3 className="text-xl font-black">Status Distribution</h3>
+                    h3 className="text-xl font-black">Status Distribution</h3>
                   </div>
                   <div className="space-y-6">
                     {[
@@ -638,7 +641,7 @@ const Admin = () => {
                     <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
                       <Settings size={20} />
                     </div>
-                    <CardTitle className="text-xl font-black">Global Membership Settings</CardTitle>
+                    <CardTitle className="text-xl font-black">Global Platform Settings</CardTitle>
                   </div>
                 </CardHeader>
                 <CardContent className="px-0 space-y-8">
@@ -653,9 +656,9 @@ const Admin = () => {
                     />
                   </div>
 
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Membership Fee (XPR)</label>
-                    <div className="flex gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Membership Fee (XPR)</label>
                       <Input 
                         type="number"
                         value={membershipFee}
@@ -663,15 +666,27 @@ const Admin = () => {
                         className="bg-black/20 border-white/10 h-14 font-black rounded-xl text-lg"
                         placeholder="7777"
                       />
-                      <Button 
-                        onClick={handleUpdateSettings}
-                        disabled={processing}
-                        className="h-14 bg-primary hover:bg-primary/90 text-black font-black rounded-xl px-8 uppercase tracking-widest text-[10px]"
-                      >
-                        {processing ? <Loader2 className="animate-spin" size={18} /> : "Update Settings"}
-                      </Button>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Post Request Fee (GUY)</label>
+                      <Input 
+                        type="number"
+                        value={postingFeeGuy}
+                        onChange={(e) => setPostingFeeGuy(e.target.value)}
+                        className="bg-black/20 border-white/10 h-14 font-black rounded-xl text-lg"
+                        placeholder="25"
+                      />
                     </div>
                   </div>
+
+                  <Button 
+                    onClick={handleUpdateSettings}
+                    disabled={processing}
+                    className="w-full h-14 bg-primary hover:bg-primary/90 text-black font-black rounded-xl px-8 uppercase tracking-widest text-[10px]"
+                  >
+                    {processing ? <Loader2 className="animate-spin" size={18} /> : "Update Global Settings"}
+                  </Button>
                 </CardContent>
               </Card>
             </TabsContent>

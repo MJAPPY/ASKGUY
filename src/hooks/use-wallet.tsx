@@ -65,12 +65,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         if (response.ok) {
           const data = await response.json();
-          // Response is an array like ["123.456 GUY"]
           if (Array.isArray(data) && data.length > 0) {
             const val = parseFloat(data[0].split(' ')[0]);
             return isNaN(val) ? 0 : val;
           }
-          return 0; // No balance found
+          return 0;
         }
       } catch (err) {
         continue;
@@ -84,27 +83,33 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setIsFetchingBalances(true);
     const cleanAddress = walletAddress.toLowerCase();
     
+    // 1. Fetch Supabase Data (Bans and Membership) - Handled separately so it won't block balances
     try {
-      const [banCheck, profileCheck, xprVal, guyVtoken, guyXtokens, guy777] = await Promise.all([
-        supabase.from('banned_users').select('address').eq('address', cleanAddress).maybeSingle(),
-        supabase.from('profiles').select('membership_expiry').eq('address', cleanAddress).maybeSingle(),
+      const { data: banData } = await supabase.from('banned_users').select('address').eq('address', cleanAddress).maybeSingle();
+      setIsBanned(!!banData);
+
+      const { data: profileData } = await supabase.from('profiles').select('membership_expiry').eq('address', cleanAddress).maybeSingle();
+      if (profileData?.membership_expiry) {
+        setMembershipExpiry(profileData.membership_expiry);
+      }
+    } catch (err) {
+      console.warn('[use-wallet] Supabase sync error (non-critical):', err);
+    }
+
+    // 2. Fetch Blockchain Balances (Independent of Supabase)
+    try {
+      const [xprVal, guyVtoken, guyXtokens, guy777] = await Promise.all([
         fetchTokenBalance(cleanAddress, 'eosio.token', 'XPR'),
         fetchTokenBalance(cleanAddress, 'proton-vtoken', 'GUY'),
         fetchTokenBalance(cleanAddress, 'xtokens', 'GUY'),
         fetchTokenBalance(cleanAddress, 'token.777', 'GUY')
       ]);
 
-      setIsBanned(!!banCheck.data);
       setXprBalance(xprVal);
-      
       const totalGuy = Math.max(guyVtoken, guyXtokens, guy777);
       setGuyBalance(totalGuy);
-
-      if (profileCheck.data?.membership_expiry) {
-        setMembershipExpiry(profileCheck.data.membership_expiry);
-      }
     } catch (err) {
-      console.error('[use-wallet] Balance sync error:', err);
+      console.error('[use-wallet] Blockchain sync error:', err);
     } finally {
       setIsFetchingBalances(false);
     }

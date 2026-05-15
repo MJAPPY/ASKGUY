@@ -79,7 +79,8 @@ const RequestCard: React.FC<RequestCardProps> = ({
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
 
   const progress = Math.min((raised / amount) * 100, 100);
-  const isOwner = address === requestor;
+  // Using case-insensitive comparison for wallet addresses
+  const isOwner = address?.toLowerCase() === requestor?.toLowerCase();
   const isFunded = progress >= 100;
 
   const quickAmounts = [10, 50, 100, 500];
@@ -508,7 +509,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
                 {isProcessing ? <Loader2 className="animate-spin" size={14} /> : <><CheckCircle2 size={14} /> Mark as Done</>}
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent className="glass-card border-white/10 max-w-md shadow-2xl">
+            <AlertDialogContent className="glass-card border-white/10 max-md shadow-2xl">
               <AlertDialogHeader>
                 <AlertDialogTitle className="flex items-center gap-2 text-2xl font-black tracking-tight">
                   <CheckCircle2 className="text-emerald-400" size={24} />

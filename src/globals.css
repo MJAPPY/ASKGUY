@@ -11,9 +11,8 @@
     --popover: 215 25% 17%;
     --popover-foreground: 210 40% 98%;
     
-    /* Pantone 871 C approximation: #86704d -> HSL(37, 27%, 41%) */
-    /* Adjusted slightly for digital UI vibrancy: HSL(37, 27%, 50%) */
-    --primary: 37 27% 50%;
+    /* Updated to #FBD451: HSL(46, 97%, 65%) */
+    --primary: 46 97% 65%;
     --primary-foreground: 220 60% 10%;
     
     --brand-blue: 217 91% 60%;
@@ -24,13 +23,13 @@
     --secondary-foreground: 210 40% 98%;
     --muted: 215 25% 27%;
     --muted-foreground: 215 16% 65%;
-    --accent: 37 27% 50%;
+    --accent: 46 97% 65%;
     --accent-foreground: 220 60% 10%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
     --border: 215 25% 27%;
     --input: 215 25% 27%;
-    --ring: 37 27% 50%;
+    --ring: 46 97% 65%;
     --radius: 1rem;
   }
 }
@@ -58,12 +57,12 @@
 }
 
 .gold-glow {
-  box-shadow: 0 0 25px rgba(134, 112, 77, 0.1), 0 0 50px rgba(134, 112, 77, 0.02);
+  box-shadow: 0 0 25px rgba(251, 212, 81, 0.1), 0 0 50px rgba(251, 212, 81, 0.02);
   @apply transition-all duration-300 hover:scale-[1.02] active:scale-[0.98];
 }
 
 .gold-glow:hover {
-  box-shadow: 0 0 35px rgba(134, 112, 77, 0.2), 0 0 70px rgba(134, 112, 77, 0.1);
+  box-shadow: 0 0 35px rgba(251, 212, 81, 0.2), 0 0 70px rgba(251, 212, 81, 0.1);
 }
 
 .green-glow {

@@ -61,7 +61,9 @@
 }
 
 .glass-card:hover {
-  @apply border-primary/40 bg-[#1e293b]/98 shadow-[0_0_40px_rgba(0,0,0,0.4)];
+  /* Fixed the arbitrary background syntax for PostCSS compatibility */
+  @apply border-primary/40 shadow-[0_0_40px_rgba(0,0,0,0.4)];
+  background-color: rgba(30, 41, 59, 0.98);
 }
 
 .gold-glow {

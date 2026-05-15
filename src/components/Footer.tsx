@@ -4,18 +4,19 @@ import React from 'react';
 import { Twitter } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import logo from '@/assets/logo.jpg';
+import agTitle from '@/assets/ag.PNG';
 
 const Footer = () => {
   return (
     <footer className="border-t border-white/5 bg-background/50 py-12 mt-20">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-          <div className="space-y-4">
+          <div className="space-y-6">
             <Link to="/" className="flex items-center gap-3 group w-fit">
-              <div className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 transition-transform group-hover:scale-110">
-                <img src={logo} alt="AskGuy Logo" className="w-full h-full object-cover" />
+              <div className="w-9 h-9 rounded-lg overflow-hidden border border-white/10 transition-transform group-hover:scale-110">
+                <img src={logo} alt="AskGuy Logo" className="w-full h-full object-contain bg-black" />
               </div>
-              <span className="font-bold text-lg group-hover:text-primary transition-colors">AskGuy</span>
+              <img src={agTitle} alt="AskGuy" className="h-8 w-auto object-contain transition-opacity group-hover:opacity-80" />
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed">
               A peer-to-peer mutual help platform built for the XPR Network community. 

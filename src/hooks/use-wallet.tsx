@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import Connect, { LinkSession } from '@proton/web-sdk';
 import { supabase } from '@/integrations/supabase/client';
 
-export const OWNER_ADDRESS = 'tripseven';
+export const OWNER_ADDRESS = 'askguy';
 
 export interface WalletState {
   address: string;

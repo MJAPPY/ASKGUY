@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useWallet } from '@/hooks/use-wallet';
 import { useRequests } from '@/hooks/use-requests';
@@ -26,13 +26,15 @@ import {
   ExternalLink,
   History,
   Medal,
-  Activity
+  Activity,
+  AlertCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import { supabase } from '@/integrations/supabase/client';
 
 const Profile = () => {
   const { userAddress: routeAddress } = useParams();
@@ -41,6 +43,45 @@ const Profile = () => {
 
   const targetAddress = routeAddress || myAddress;
   const isOwnProfile = !routeAddress || routeAddress === myAddress;
+  
+  const [targetMembershipExpiry, setTargetMembershipExpiry] = useState<number | null>(null);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+
+  // Fetch membership status for the target user if it's not the logged in user
+  useEffect(() => {
+    const fetchTargetProfile = async () => {
+      if (!targetAddress) return;
+      
+      if (isOwnProfile) {
+        setTargetMembershipExpiry(myExpiry);
+        setIsLoadingProfile(false);
+        return;
+      }
+
+      setIsLoadingProfile(true);
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('membership_expiry')
+          .eq('address', targetAddress.toLowerCase().trim())
+          .maybeSingle();
+        
+        if (data) {
+          setTargetMembershipExpiry(data.membership_expiry);
+        } else {
+          setTargetMembershipExpiry(0);
+        }
+      } catch (err) {
+        console.error("Failed to fetch target profile:", err);
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    };
+
+    fetchTargetProfile();
+  }, [targetAddress, isOwnProfile, myExpiry]);
+
+  const isVerified = targetMembershipExpiry ? targetMembershipExpiry > Date.now() : false;
 
   const stats = useMemo(() => {
     if (!targetAddress) return { given: 0, received: 0, count: 0 };
@@ -125,16 +166,21 @@ const Profile = () => {
             <div className="flex flex-col md:flex-row gap-8 md:items-center justify-between">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
                 <div className="relative group">
-                  <div className="absolute -inset-1.5 bg-gradient-to-tr from-[#1565C0] to-emerald-400 rounded-[36px] blur-md opacity-30 group-hover:opacity-60 transition-opacity duration-700" />
-                  <Avatar className="h-28 w-28 md:h-32 md:w-32 rounded-[32px] border-4 border-[#0A1428] shadow-2xl relative z-10 transition-all duration-500 group-hover:scale-105 group-hover:border-[#1565C0]/50 p-1.5 bg-[#0A1428]">
+                  <div className={cn(
+                    "absolute -inset-1.5 rounded-[36px] blur-md opacity-30 group-hover:opacity-60 transition-opacity duration-700",
+                    isVerified ? "bg-gradient-to-tr from-[#1565C0] to-emerald-400" : "bg-white/10"
+                  )} />
+                  <Avatar className="h-28 w-28 md:h-32 md:w-32 rounded-[32px] border-4 border-[#0A1428] shadow-2xl relative z-10 transition-all duration-500 group-hover:scale-105 group-hover:border-white/20 p-1.5 bg-[#0A1428]">
                     <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${targetAddress}`} />
                     <AvatarFallback className="bg-[#1565C0] text-white font-black text-3xl rounded-[28px]">
                       {targetAddress?.substring(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-black p-2 rounded-2xl border-4 border-[#0A1428] shadow-xl z-20 shadow-emerald-500/20">
-                    <ShieldCheck size={20} />
-                  </div>
+                  {isVerified && (
+                    <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-black p-2 rounded-2xl border-4 border-[#0A1428] shadow-xl z-20 shadow-emerald-500/20">
+                      <ShieldCheck size={20} />
+                    </div>
+                  )}
                 </div>
                 
                 <div className="space-y-4">
@@ -145,19 +191,27 @@ const Profile = () => {
                       </h1>
                       {isOwnProfile && <Badge className="bg-[#1565C0]/20 text-[#1565C0] border-[#1565C0]/30 text-[10px] uppercase font-black px-3 h-6 tracking-widest">You</Badge>}
                     </div>
-                    <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.4em] flex items-center gap-2">
-                      <Activity size={12} className="text-emerald-400" />
-                      XPR Network Verified User
-                    </p>
+                    {isVerified ? (
+                      <p className="text-[10px] text-emerald-400 font-black uppercase tracking-[0.4em] flex items-center gap-2">
+                        <Activity size={12} className="text-emerald-400" />
+                        XPR Network Verified User
+                      </p>
+                    ) : (
+                      <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.4em] flex items-center gap-2">
+                        XPR Network Explorer
+                      </p>
+                    )}
                   </div>
                   
                   <div className="flex flex-wrap gap-3">
                     <Badge variant="outline" className="bg-white/5 border-white/10 text-white font-black px-4 py-1.5 rounded-xl uppercase tracking-widest text-[9px]">
-                      Verified Holder
+                      Community Member
                     </Badge>
-                    <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-black px-4 py-1.5 rounded-xl uppercase tracking-widest text-[9px]">
-                      Elite Member
-                    </Badge>
+                    {isVerified && (
+                      <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-black px-4 py-1.5 rounded-xl uppercase tracking-widest text-[9px]">
+                        Verified Supporter
+                      </Badge>
+                    )}
                   </div>
                 </div>
               </div>
@@ -170,9 +224,9 @@ const Profile = () => {
                     <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Membership Status</p>
                     <div className={cn(
                       "px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border",
-                      myExpiry > 0 ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-red-500/10 text-red-400 border-red-500/20"
+                      isVerified ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-red-500/10 text-red-400 border-red-500/20"
                     )}>
-                      {myExpiry > 0 ? 'Active' : 'Inactive'}
+                      {isVerified ? 'Active' : 'Inactive'}
                     </div>
                   </div>
                   
@@ -182,10 +236,10 @@ const Profile = () => {
                     </div>
                     <div>
                       <p className="text-lg font-black leading-none">
-                        {myExpiry > 0 ? new Date(myExpiry).toLocaleDateString() : 'Join Today'}
+                        {isVerified ? new Date(targetMembershipExpiry!).toLocaleDateString() : (isOwnProfile ? 'Join Today' : 'Not Verified')}
                       </p>
                       <p className="text-[10px] text-muted-foreground font-bold mt-1">
-                        {myExpiry > 0 ? 'Next Renewal Date' : 'Unlock platform features'}
+                        {isVerified ? 'Membership Active' : (isOwnProfile ? 'Unlock platform features' : 'Requires verification')}
                       </p>
                     </div>
                   </div>
@@ -195,7 +249,7 @@ const Profile = () => {
                       <AlertDialogTrigger asChild>
                         <Button className="w-full h-11 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-all gap-2.5">
                           <Sparkles size={14} className="text-primary" />
-                          {myExpiry > 0 ? 'Renew Membership' : 'Join AskGuy'}
+                          {isVerified ? 'Renew Membership' : 'Join AskGuy'}
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent className="glass-card border-white/10 shadow-2xl rounded-[32px] p-8">
@@ -423,22 +477,34 @@ const Profile = () => {
               </CardContent>
             </Card>
 
-            {isOwnProfile && (
-              <Card className="glass-card border-emerald-500/20 bg-emerald-500/5 rounded-[32px] overflow-hidden group">
-                <CardContent className="p-8 space-y-6">
-                  <div className="flex items-center gap-3 text-emerald-400">
-                    <ShieldCheck size={20} />
-                    <h4 className="text-sm font-black uppercase tracking-widest">Security Status</h4>
-                  </div>
-                  <p className="text-[11px] text-emerald-100/70 font-medium leading-relaxed">
-                    Your account is fully verified and protected by the XPR Network's on-chain identity protocol. No further action is required.
-                  </p>
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black uppercase tracking-widest text-emerald-400 w-fit">
-                    Identity Verified
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            <Card className={cn(
+              "glass-card rounded-[32px] overflow-hidden group",
+              isVerified ? "border-emerald-500/20 bg-emerald-500/5" : "border-white/5 bg-white/[0.01]"
+            )}>
+              <CardContent className="p-8 space-y-6">
+                <div className={cn(
+                  "flex items-center gap-3",
+                  isVerified ? "text-emerald-400" : "text-muted-foreground"
+                )}>
+                  {isVerified ? <ShieldCheck size={20} /> : <AlertCircle size={20} />}
+                  <h4 className="text-sm font-black uppercase tracking-widest">Verification Status</h4>
+                </div>
+                <p className="text-[11px] font-medium leading-relaxed">
+                  {isVerified 
+                    ? "This account is a verified member of the AskGuy community on the XPR Network."
+                    : (isOwnProfile 
+                        ? "Verify your account to post community requests and unlock all platform features."
+                        : "This user has not yet completed the community verification process.")
+                  }
+                </p>
+                <div className={cn(
+                  "flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[9px] font-black uppercase tracking-widest w-fit",
+                  isVerified ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-white/5 border-white/10 text-muted-foreground"
+                )}>
+                  {isVerified ? "Verified Member" : "Unverified"}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </main>

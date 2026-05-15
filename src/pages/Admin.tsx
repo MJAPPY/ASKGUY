@@ -23,7 +23,8 @@ import {
   Activity,
   AlertTriangle,
   Globe,
-  ExternalLink
+  ExternalLink,
+  Sparkles
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';

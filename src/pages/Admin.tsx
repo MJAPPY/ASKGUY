@@ -152,7 +152,7 @@ const Admin = () => {
           target.address, 
           target.amount, 
           'GUY', 
-          `AskGuy Reward: Hall of Fame Contributor`
+          `AskGuy Reward: Leaderboard Contributor`
         );
         if (success) successCount++;
       } catch (err) {
@@ -323,7 +323,7 @@ const Admin = () => {
                       <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
                         <Zap size={20} className="fill-primary" />
                       </div>
-                      <h3 className="text-xl font-black">Hall of Fame Rewards</h3>
+                      <h3 className="text-xl font-black">Leaderboard Rewards</h3>
                     </div>
                     
                     <p className="text-sm text-muted-foreground font-medium leading-relaxed">
@@ -359,7 +359,7 @@ const Admin = () => {
                         
                         {stats.top5.length === 0 && (
                           <div className="py-8 text-center border-2 border-dashed border-white/5 rounded-xl text-muted-foreground/40 italic text-xs">
-                            No contributors detected yet.
+                            No contributors detected yet. As members contribute XPR, they will appear here.
                           </div>
                         )}
                       </div>

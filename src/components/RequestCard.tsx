@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,7 +20,7 @@ import {
   AlertDialogTrigger 
 } from "@/components/ui/alert-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Heart, X, Loader2, CheckCircle2, Zap, Sparkles, Image as ImageIcon, MessageSquare, Quote, AlertTriangle, Share2, Info, Wallet, Trash2, Calendar, User, ShieldCheck } from 'lucide-react';
+import { Heart, X, Loader2, CheckCircle2, Zap, Sparkles, Image as ImageIcon, MessageSquare, Quote, AlertTriangle, Share2, Info, Wallet, Trash2, Calendar, User, ShieldCheck, Gift } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useRequests, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
@@ -77,6 +77,13 @@ const RequestCard: React.FC<RequestCardProps> = ({
   const [thanksMessage, setThanksMessage] = useState(DEFAULT_THANKS);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+
+  // Calculate total GUY gifts
+  const guyTotal = useMemo(() => {
+    return contributions
+      .filter(c => c.token === 'GUY')
+      .reduce((acc, c) => acc + c.amount, 0);
+  }, [contributions]);
 
   const getCategoryColor = () => {
     switch (category) {
@@ -235,15 +242,38 @@ const RequestCard: React.FC<RequestCardProps> = ({
               </div>
 
               <div className={cn(variant === 'list' ? "md:col-span-4" : "space-y-3")}>
-                <div className="flex items-center justify-between text-xs font-black uppercase tracking-widest mb-2">
-                  <div className="flex items-center gap-1.5 text-primary">
-                    <Zap size={14} className="fill-primary" />
-                    <span className="text-sm">{raised.toLocaleString()} {token}</span>
+                <div className="space-y-3">
+                  {/* Primary Target Bar */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest">
+                      <div className="flex items-center gap-1.5 text-primary">
+                        <Zap size={12} className="fill-primary" />
+                        <span className="text-xs">{raised.toLocaleString()} {token}</span>
+                      </div>
+                      <span className="text-muted-foreground opacity-50">/ {amount.toLocaleString()}</span>
+                    </div>
+                    <div className="w-full bg-white/5 rounded-full h-2.5 overflow-hidden border border-white/5 p-[1px]">
+                      <div className={cn("h-full rounded-full transition-all duration-1000 ease-out", isFunded ? "bg-emerald-500" : "bg-primary shadow-[0_0_10px_rgba(244,201,93,0.3)]")} style={{ width: `${progress}%` }} />
+                    </div>
                   </div>
-                  <span className="text-muted-foreground opacity-50">/ {amount.toLocaleString()}</span>
-                </div>
-                <div className="w-full bg-white/5 rounded-full h-3 overflow-hidden border border-white/5 p-[1px]">
-                  <div className={cn("h-full rounded-full transition-all duration-1000 ease-out", isFunded ? "bg-emerald-500" : "bg-primary shadow-[0_0_10px_rgba(244,201,93,0.3)]")} style={{ width: `${progress}%` }} />
+
+                  {/* GUY Gift Bar */}
+                  {guyTotal > 0 && (
+                    <div className="space-y-1.5 pt-1 animate-in fade-in slide-in-from-top-2 duration-500">
+                      <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest">
+                        <div className="flex items-center gap-1.5 text-primary">
+                          <Gift size={12} className="text-primary" />
+                          <span className="text-xs">+{guyTotal.toLocaleString()} GUY Gifts</span>
+                        </div>
+                      </div>
+                      <div className="w-full bg-primary/10 rounded-full h-1.5 overflow-hidden border border-primary/20">
+                        <div 
+                          className="h-full rounded-full bg-primary shadow-[0_0_15px_rgba(244,201,93,0.4)] animate-pulse" 
+                          style={{ width: `${Math.min((guyTotal / 1000) * 100, 100)}%` }} 
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -323,6 +353,12 @@ const RequestCard: React.FC<RequestCardProps> = ({
                   <div className="w-full bg-white/10 rounded-full h-1 md:h-1.5 overflow-hidden">
                     <div className="bg-primary h-full" style={{ width: `${progress}%` }} />
                   </div>
+                  {guyTotal > 0 && (
+                    <div className="flex items-center justify-end gap-1.5 pt-1 text-primary">
+                      <Gift size={10} />
+                      <span className="text-[10px] font-black">+{guyTotal.toLocaleString()} GUY Support</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -395,8 +431,11 @@ const RequestCard: React.FC<RequestCardProps> = ({
                               </p>
                             </div>
                           </div>
-                          <div className="px-3 py-1.5 md:px-5 md:py-2.5 rounded-xl md:rounded-2xl bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.1)]">
-                            <span className="text-sm md:text-base font-black text-emerald-400">+{msg.amount.toLocaleString()} {msg.token}</span>
+                          <div className={cn(
+                            "px-3 py-1.5 md:px-5 md:py-2.5 rounded-xl md:rounded-2xl border shadow-lg transition-all",
+                            msg.token === 'GUY' ? "bg-primary/10 border-primary/20 text-primary shadow-primary/5" : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400 shadow-emerald-500/5"
+                          )}>
+                            <span className="text-sm md:text-base font-black">+{msg.amount.toLocaleString()} {msg.token}</span>
                           </div>
                         </div>
                         {msg.message && (

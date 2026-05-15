@@ -378,7 +378,7 @@ const Admin = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <Card className="glass-card border-white/5 p-8 rounded-[32px]">
                   <div className="flex items-center justify-between mb-8">
-                    h3 className="text-xl font-black">Status Distribution</h3>
+                    <h3 className="text-xl font-black">Status Distribution</h3>
                   </div>
                   <div className="space-y-6">
                     {[

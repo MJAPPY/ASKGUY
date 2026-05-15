@@ -39,44 +39,37 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ limit = 7 }) => {
       case 1: return {
         bg: "bg-gradient-to-br from-yellow-400/20 to-yellow-600/5",
         border: "border-yellow-500/30",
-        shadow: "shadow-[0_0_30px_rgba(234,179,8,0.2)]",
-        icon: <Trophy className="text-yellow-400 fill-yellow-400/20" size={24} />,
-        medal: "text-yellow-400",
-        rankColor: "text-yellow-400"
+        shadow: "shadow-[0_0_40px_rgba(234,179,8,0.25)]",
+        iconColor: "text-yellow-400",
+        numBg: "bg-yellow-400 text-black",
+        badgeScale: "scale-125"
       };
       case 2: return {
         bg: "bg-gradient-to-br from-slate-300/10 to-slate-400/5",
         border: "border-slate-300/20",
-        shadow: "shadow-[0_0_20px_rgba(148,163,184,0.15)]",
-        icon: <Trophy className="text-slate-300 fill-slate-300/20" size={22} />,
-        medal: "text-slate-300",
-        rankColor: "text-slate-300"
+        shadow: "shadow-[0_0_30px_rgba(148,163,184,0.15)]",
+        iconColor: "text-slate-300",
+        numBg: "bg-slate-300 text-black",
+        badgeScale: "scale-110"
       };
       case 3: return {
         bg: "bg-gradient-to-br from-amber-700/10 to-amber-900/5",
         border: "border-amber-700/20",
-        shadow: "shadow-[0_0_20px_rgba(180,83,9,0.15)]",
-        icon: <Trophy className="text-amber-600 fill-amber-600/20" size={20} />,
-        medal: "text-amber-600",
-        rankColor: "text-amber-600"
+        shadow: "shadow-[0_0_25px_rgba(180,83,9,0.15)]",
+        iconColor: "text-amber-600",
+        numBg: "bg-amber-600 text-white",
+        badgeScale: "scale-105"
       };
       case 4:
       case 5: return {
         bg: "bg-white/[0.03]",
         border: "border-emerald-500/20",
         shadow: "shadow-[0_0_15px_rgba(16,185,129,0.1)]",
-        icon: <Trophy className="text-emerald-400/70 fill-emerald-400/10" size={18} />,
-        medal: "text-emerald-400/70",
-        rankColor: "text-emerald-400"
+        iconColor: "text-emerald-400",
+        numBg: "bg-emerald-500 text-black",
+        badgeScale: "scale-100"
       };
-      default: return {
-        bg: "bg-transparent",
-        border: "border-white/5",
-        shadow: "shadow-none",
-        icon: null,
-        medal: "text-muted-foreground",
-        rankColor: "text-muted-foreground"
-      };
+      default: return null;
     }
   };
 
@@ -100,24 +93,29 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ limit = 7 }) => {
           <div className="divide-y divide-white/5">
             {leaders.map((leader) => {
               const styles = getRankStyles(leader.rank);
+              const isTop5 = leader.rank <= 5;
+              
               return (
                 <div 
                   key={leader.name} 
-                  className={`flex items-center justify-between p-4 px-6 transition-all duration-300 hover:bg-white/[0.05] ${styles.bg} ${leader.rank <= 3 ? 'py-6' : 'py-4'}`}
+                  className={`flex items-center justify-between p-4 px-6 transition-all duration-300 hover:bg-white/[0.05] ${styles?.bg || ''} ${leader.rank <= 3 ? 'py-8' : 'py-4'}`}
                 >
-                  <div className="flex items-center gap-5">
-                    <div className="relative flex flex-col items-center justify-center min-w-[48px]">
-                      {leader.rank <= 5 ? (
-                        <div className="relative flex flex-col items-center">
-                          <div className={`transition-transform duration-500 hover:scale-110`}>
-                            {styles.icon}
+                  <div className="flex items-center gap-6">
+                    <div className="relative flex flex-col items-center justify-center min-w-[56px]">
+                      {isTop5 && styles ? (
+                        <div className={`relative flex items-center justify-center transition-all duration-500 hover:scale-110 ${styles.badgeScale}`}>
+                          <Trophy className={`${styles.iconColor} opacity-20 absolute -top-1`} size={48} />
+                          <div className={`relative z-10 w-8 h-8 rounded-full ${styles.numBg} flex items-center justify-center font-black text-sm shadow-xl border-2 border-background`}>
+                            {leader.rank}
                           </div>
-                          <span className={`absolute -bottom-1 text-[10px] font-black ${styles.rankColor} drop-shadow-md`}>
-                            #{leader.rank}
-                          </span>
+                          {leader.rank === 1 && (
+                            <div className="absolute -top-4 -right-1 text-yellow-400 animate-bounce">
+                              <Crown size={14} className="fill-current" />
+                            </div>
+                          )}
                         </div>
                       ) : (
-                        <span className="text-sm font-black text-muted-foreground/40">
+                        <span className="text-sm font-black text-muted-foreground/30 ml-2">
                           #{leader.rank}
                         </span>
                       )}
@@ -125,36 +123,32 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ limit = 7 }) => {
 
                     <div className="flex items-center gap-4">
                       <div className="relative">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm border ${styles.border} ${styles.shadow} bg-white/5`}>
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-base border transition-all duration-500 group-hover:rotate-3 ${isTop5 ? 'bg-white/10 border-white/20' : 'bg-white/5 border-white/5'} shadow-xl`}>
                           {leader.avatar}
                         </div>
-                        {leader.rank === 1 && (
-                          <div className="absolute -top-2 -right-2 bg-background rounded-full p-1 border border-yellow-500/30 shadow-lg">
-                            <Crown className="text-yellow-400" size={12} />
-                          </div>
-                        )}
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className={`font-bold text-sm ${leader.rank === 1 ? 'text-white' : 'text-foreground/90'}`}>
+                          <span className={`font-black text-base tracking-tight ${leader.rank === 1 ? 'text-white' : 'text-foreground/90'}`}>
                             {leader.name}
                           </span>
+                          {isTop5 && <Star className="text-primary fill-primary" size={10} />}
                         </div>
-                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">Contributor</p>
+                        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest opacity-60">Verified Contributor</p>
                       </div>
                     </div>
                   </div>
                   
                   <div className="text-right">
-                    <div className="flex items-center gap-1.5 justify-end">
-                      <span className={`text-sm font-black ${leader.rank === 1 ? 'text-primary' : 'text-foreground'}`}>
+                    <div className="flex items-center gap-2 justify-end">
+                      <span className={`text-xl font-black tabular-nums ${leader.rank === 1 ? 'text-primary' : 'text-white'}`}>
                         {leader.amount.toLocaleString()}
                       </span>
-                      <span className="text-[10px] font-bold text-muted-foreground">XPR</span>
+                      <span className="text-[10px] font-black text-muted-foreground tracking-tighter">XPR</span>
                     </div>
-                    {leader.rank <= 5 && (
-                      <div className={`text-[8px] font-black uppercase tracking-widest ${styles.medal}`}>
-                        Elite Supporter
+                    {isTop5 && (
+                      <div className={`text-[9px] font-black uppercase tracking-[0.2em] mt-1 ${styles?.iconColor || ''} opacity-80`}>
+                        {leader.rank === 1 ? 'PLATINUM' : leader.rank <= 3 ? 'ELITE' : 'TOP TIER'}
                       </div>
                     )}
                   </div>

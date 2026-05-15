@@ -152,7 +152,7 @@ const Admin = () => {
           target.address, 
           target.amount, 
           'GUY', 
-          `AskGuy Reward: Leaderboard Contributor`
+          `kudos for the help you gave others.`
         );
         if (success) successCount++;
       } catch (err) {

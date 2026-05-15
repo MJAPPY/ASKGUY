@@ -24,7 +24,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import logo from '@/assets/logo.jpg';
-import agTitle from '@/assets/ag.PNG';
 
 const Navbar = () => {
   const { isConnected, isConnecting, isFetchingBalances, address, xprBalance, disconnect, refreshBalances, connect } = useWallet();
@@ -46,16 +45,14 @@ const Navbar = () => {
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-white/5 bg-[#0a0a0c]/80 backdrop-blur-md">
       <div className="container mx-auto px-4 h-20 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-6">
-          <Link to="/" className="flex items-center gap-4 group shrink-0">
-            {/* Sharper, clearer logo container */}
-            <div className="w-11 h-11 md:w-13 md:h-13 rounded-xl overflow-hidden border-2 border-white/20 shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all duration-300 group-hover:scale-110 group-hover:border-primary/50 group-hover:shadow-[0_0_25px_rgba(244,201,93,0.4)]">
-              <img src={logo} alt="Logo" className="w-full h-full object-contain bg-black" />
+        <div className="flex items-center gap-10">
+          <Link to="/" className="flex items-center gap-3 group shrink-0">
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl overflow-hidden border border-white/10 shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:border-primary/50 group-hover:shadow-[0_0_20px_rgba(244,201,93,0.3)]">
+              <img src={logo} alt="Logo" className="w-full h-full object-cover" />
             </div>
-            {/* Replaced text with the agTitle image */}
-            <div className="h-10 md:h-12 hidden xs:flex items-center transition-transform group-hover:scale-105">
-              <img src={agTitle} alt="AskGuy" className="h-full w-auto object-contain brightness-110" />
-            </div>
+            <span className="font-black text-lg md:text-xl hidden xs:inline-block tracking-tight group-hover:text-primary transition-colors">
+              Ask<span className="text-primary group-hover:text-white transition-colors">Guy</span>
+            </span>
           </Link>
 
           <div className="hidden lg:flex items-center gap-1">

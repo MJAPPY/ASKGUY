@@ -93,12 +93,12 @@ const Index = () => {
                   AskGuy is a mutual assistance platform where XPR Network members help each other with real-life expenses. Post a need, send tokens, lift each other up.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 pt-2">
-                  <Button onClick={connect} size="lg" className="h-14 px-8 text-lg font-black bg-[#1565C0] hover:bg-[#1565C0]/90 text-white rounded-2xl flex gap-3 group transition-all shadow-[0_0_40px_rgba(21,101,192,0.3)] btn-premium uppercase tracking-widest border-none">
+                  <Button onClick={connect} size="lg" className="h-14 px-6 md:px-8 text-base md:text-lg font-black bg-[#1565C0] hover:bg-[#1565C0]/90 text-white rounded-2xl flex gap-3 group transition-all shadow-[0_0_40px_rgba(21,101,192,0.3)] btn-premium uppercase tracking-wider border-none shrink-0">
                     <Heart size={20} className="fill-white" />
                     Connect & Join
                     <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                   </Button>
-                  <Button asChild variant="outline" size="lg" className="h-14 px-8 text-lg font-black border-primary/20 bg-primary/5 text-primary rounded-2xl flex gap-3 hover:bg-primary/10 transition-all gold-glow uppercase tracking-widest">
+                  <Button asChild variant="outline" size="lg" className="h-14 px-8 text-base md:text-lg font-black border-primary/20 bg-primary/5 text-primary rounded-2xl flex gap-3 hover:bg-primary/10 transition-all gold-glow uppercase tracking-wider">
                     <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer">
                       Buy GUY Tokens
                     </a>

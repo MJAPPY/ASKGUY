@@ -27,12 +27,11 @@ const WalletContext = createContext<WalletState | undefined>(undefined);
 
 const APP_NAME = 'AskGuy';
 
-// Prioritized list of Proton RPC endpoints
 const ENDPOINTS = [
   'https://proton.greymass.com',
   'https://api.protonnz.com',
-  'https://proton.protonuk.io',
   'https://api.protonchain.com',
+  'https://proton.protonuk.io',
   'https://proton.eosusa.io',
 ];
 
@@ -48,32 +47,34 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [session, setSession] = useState<LinkSession | null>(null);
   const linkRef = useRef<any>(null);
 
-  const fetchChainBalance = async (account: string, code: string, symbol: string): Promise<number> => {
+  const fetchTokenBalance = async (account: string, contract: string, symbol: string): Promise<number> => {
     const cleanAccount = String(account).toLowerCase().trim();
-    const cleanCode = String(code).toLowerCase().trim();
+    const cleanContract = String(contract).toLowerCase().trim();
     
-    // Try each endpoint until one succeeds
     for (const endpoint of ENDPOINTS) {
       try {
-        const balanceRes = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
+        const response = await fetch(`${endpoint}/v1/chain/get_table_rows`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code: cleanCode, account: cleanAccount, symbol }),
-          signal: AbortSignal.timeout(4000) // 4 second timeout per request
+          body: JSON.stringify({
+            json: true,
+            code: cleanContract,
+            scope: cleanAccount,
+            table: 'accounts',
+            limit: 10
+          }),
         });
 
-        if (balanceRes.ok) {
-          const data = await balanceRes.json();
-          if (Array.isArray(data)) {
-            if (data.length === 0) return 0;
-            // Response format example: ["1234.567890 GUY"]
-            const rawValue = data[0].toString().split(' ')[0];
-            const parsed = parseFloat(rawValue);
-            return isNaN(parsed) ? 0 : parsed;
+        if (response.ok) {
+          const data = await response.json();
+          const row = data.rows?.find((r: any) => r.balance?.includes(symbol));
+          if (row) {
+            const val = parseFloat(row.balance.split(' ')[0]);
+            return isNaN(val) ? 0 : val;
           }
         }
       } catch (err) {
-        continue; // Try next endpoint
+        continue;
       }
     }
     return 0;
@@ -84,35 +85,31 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setIsFetchingBalances(true);
     const cleanAddress = walletAddress.toLowerCase();
     
+    console.log(`[use-wallet] Syncing data for @${cleanAddress}...`);
+
     try {
-      // 1. Check ban status and profile in Supabase
-      const [banCheck, profileCheck] = await Promise.all([
+      const [banCheck, profileCheck, xprVal, guyVtoken, guyXtokens, guy777] = await Promise.all([
         supabase.from('banned_users').select('address').eq('address', cleanAddress).maybeSingle(),
         supabase.from('profiles').select('membership_expiry').eq('address', cleanAddress).maybeSingle(),
+        fetchTokenBalance(cleanAddress, 'eosio.token', 'XPR'),
+        fetchTokenBalance(cleanAddress, 'proton-vtoken', 'GUY'),
+        fetchTokenBalance(cleanAddress, 'xtokens', 'GUY'),
+        fetchTokenBalance(cleanAddress, 'token.777', 'GUY')
       ]);
 
       setIsBanned(!!banCheck.data);
+      setXprBalance(xprVal);
+      
+      const totalGuy = Math.max(guyVtoken, guyXtokens, guy777);
+      setGuyBalance(totalGuy);
+
       if (profileCheck.data?.membership_expiry) {
         setMembershipExpiry(profileCheck.data.membership_expiry);
       }
-
-      // 2. Fetch On-Chain Balances
-      // We check XPR and the three known contracts for GUY (prioritizing proton-vtoken)
-      const xprVal = await fetchChainBalance(cleanAddress, 'eosio.token', 'XPR');
-      setXprBalance(xprVal);
-
-      // Aggregating GUY from multiple potential contracts as a safety measure
-      const guyBalances = await Promise.all([
-        fetchChainBalance(cleanAddress, 'proton-vtoken', 'GUY'),
-        fetchChainBalance(cleanAddress, 'xtokens', 'GUY'),
-        fetchChainBalance(cleanAddress, 'token.777', 'GUY')
-      ]);
       
-      const highestGuyBalance = Math.max(...guyBalances);
-      setGuyBalance(highestGuyBalance);
-      
+      console.log(`[use-wallet] Sync complete. GUY: ${totalGuy}, XPR: ${xprVal}`);
     } catch (err) {
-      console.error('[use-wallet] Balance sync failed:', err);
+      console.error('[use-wallet] Critical sync error:', err);
     } finally {
       setIsFetchingBalances(false);
     }
@@ -144,7 +141,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         loadBalances(actor);
       }
     } catch (err) {
-      console.error('[use-wallet] Wallet initialization failed:', err);
+      console.error('[use-wallet] Initialization failed:', err);
     }
   }, [loadBalances]);
 
@@ -154,27 +151,15 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const connect = useCallback(async () => {
     setIsConnecting(true);
-    try { 
-      await initWallet(false); 
-    } finally { 
-      setIsConnecting(false); 
-    }
+    try { await initWallet(false); } finally { setIsConnecting(false); }
   }, [initWallet]);
 
   const disconnect = useCallback(async () => {
     if (session && linkRef.current) {
-      try { 
-        await linkRef.current.removeSession(APP_NAME, session.auth); 
-      } catch (e) {
-        console.warn('[use-wallet] Session removal error:', e);
-      }
+      try { await linkRef.current.removeSession(APP_NAME, session.auth); } catch {}
     }
-    setAddress(''); 
-    setSession(null); 
-    setIsConnected(false);
-    setGuyBalance(0); 
-    setXprBalance(0); 
-    setIsBanned(false);
+    setAddress(''); setSession(null); setIsConnected(false);
+    setGuyBalance(0); setXprBalance(0); setIsBanned(false);
   }, [session]);
 
   const refreshBalances = useCallback(async () => {
@@ -187,15 +172,14 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const precision = token === 'XPR' ? 4 : 6;
       let account = token === 'XPR' ? 'eosio.token' : 'proton-vtoken';
       
-      // Dynamic contract selection for GUY based on current holdings
       if (token === 'GUY') {
-        const vtokenVal = await fetchChainBalance(address, 'proton-vtoken', 'GUY');
+        const vtokenVal = await fetchTokenBalance(address, 'proton-vtoken', 'GUY');
         if (vtokenVal < amount) {
-          const xtokensVal = await fetchChainBalance(address, 'xtokens', 'GUY');
+          const xtokensVal = await fetchTokenBalance(address, 'xtokens', 'GUY');
           if (xtokensVal >= amount) {
             account = 'xtokens';
           } else {
-            const t777Val = await fetchChainBalance(address, 'token.777', 'GUY');
+            const t777Val = await fetchTokenBalance(address, 'token.777', 'GUY');
             if (t777Val >= amount) account = 'token.777';
           }
         }
@@ -205,21 +189,14 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         account: account,
         name: 'transfer',
         authorization: [session.auth],
-        data: { 
-          from: session.auth.actor, 
-          to, 
-          quantity: `${amount.toFixed(precision)} ${token}`, 
-          memo: memo || '' 
-        }
+        data: { from: session.auth.actor, to, quantity: `${amount.toFixed(precision)} ${token}`, memo: memo || '' }
       };
       
       await session.transact({ actions: [action] }, { broadcast: true });
-      
-      // Refresh balances after a short delay to allow for block propagation
       setTimeout(refreshBalances, 3000);
       return true;
     } catch (err) {
-      console.error('[use-wallet] Transaction processing error:', err);
+      console.error('[use-wallet] Transaction error:', err);
       return false;
     }
   }, [session, refreshBalances, address]);
@@ -235,22 +212,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   return (
     <WalletContext.Provider value={{
-      address, 
-      isConnected, 
-      isConnecting, 
-      isFetchingBalances,
-      guyBalance, 
-      xprBalance, 
-      membershipExpiry,
-      isMember: isConnected, 
-      hasGuyThreshold: true, 
-      isBanned, 
-      payMembership, 
-      connect, 
-      disconnect,
-      refreshBalances, 
-      transferTokens, 
-      requestor: address,
+      address, isConnected, isConnecting, isFetchingBalances,
+      guyBalance, xprBalance, membershipExpiry,
+      isMember: isConnected, hasGuyThreshold: true, isBanned, 
+      payMembership, connect, disconnect,
+      refreshBalances, transferTokens, requestor: address,
     }}>
       {children}
     </WalletContext.Provider>

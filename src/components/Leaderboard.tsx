@@ -11,25 +11,13 @@ interface LeaderboardProps {
 }
 
 const Leaderboard: React.FC<LeaderboardProps> = ({ limit = 7 }) => {
-  // Generating mock data for top 100
+  // Resetting to empty or zeroed out data for a fresh start
   const leaders = useMemo(() => {
     const baseLeaders = [
-      { name: "tripseven.xpr", amount: 15400, avatar: "T" },
-      { name: "guy_whale.xpr", amount: 12200, avatar: "G" },
-      { name: "helper.xpr", amount: 8900, avatar: "H" },
-      { name: "community.xpr", amount: 5400, avatar: "C" },
-      { name: "friend.xpr", amount: 3200, avatar: "F" },
-      { name: "legend.xpr", amount: 2100, avatar: "L" },
-      { name: "supporter.xpr", amount: 1800, avatar: "S" },
+      { name: "Waiting for helpers...", amount: 0, avatar: "?" },
     ];
 
-    const generated = Array.from({ length: Math.max(0, limit - baseLeaders.length) }, (_, i) => ({
-      name: `user_${i + 8}.xpr`,
-      amount: Math.floor(Math.random() * 1500) + 100,
-      avatar: String.fromCharCode(65 + (i % 26))
-    }));
-
-    return [...baseLeaders, ...generated]
+    return baseLeaders
       .sort((a, b) => b.amount - a.amount)
       .map((l, i) => ({ ...l, rank: i + 1 }))
       .slice(0, limit);
@@ -43,28 +31,6 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ limit = 7 }) => {
         icon: "text-yellow-400 drop-shadow-[0_0_10px_rgba(234,179,8,0.5)]",
         label: "Ultimate Helper",
         rowBg: "bg-yellow-500/[0.03]"
-      };
-      case 2: return {
-        wrapper: "bg-slate-400/10 border-slate-400/30 shadow-[0_0_40px_rgba(148,163,184,0.2)]",
-        badge: "bg-gradient-to-br from-slate-200 via-slate-400 to-slate-500 text-black shadow-[0_0_15px_rgba(148,163,184,0.4)]",
-        icon: "text-slate-300 drop-shadow-[0_0_8px_rgba(148,163,184,0.4)]",
-        label: "Diamond Heart",
-        rowBg: "bg-slate-400/[0.02]"
-      };
-      case 3: return {
-        wrapper: "bg-amber-700/10 border-amber-700/30 shadow-[0_0_30px_rgba(180,83,9,0.15)]",
-        badge: "bg-gradient-to-br from-amber-500 via-amber-700 to-amber-800 text-white shadow-[0_0_12px_rgba(180,83,9,0.4)]",
-        icon: "text-amber-600 drop-shadow-[0_0_6px_rgba(180,83,9,0.4)]",
-        label: "Golden Giver",
-        rowBg: "bg-amber-700/[0.01]"
-      };
-      case 4:
-      case 5: return {
-        wrapper: "bg-emerald-500/5 border-emerald-500/20",
-        badge: "bg-gradient-to-br from-emerald-400 to-emerald-600 text-black shadow-[0_0_10px_rgba(16,185,129,0.3)]",
-        icon: "text-emerald-500/50",
-        label: "Elite Supporter",
-        rowBg: "transparent"
       };
       default: return null;
     }
@@ -84,7 +50,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ limit = 7 }) => {
         </div>
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10">
           <Users size={12} className="text-muted-foreground" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-white/80">{limit} Verified</span>
+          <span className="text-[10px] font-black uppercase tracking-widest text-white/80">Season 1</span>
         </div>
       </CardHeader>
       <CardContent className="p-0">
@@ -102,11 +68,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ limit = 7 }) => {
                     config?.rowBg || "transparent"
                   )}
                 >
-                  {/* Hover Shimmer Effect */}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
 
                   <div className="flex items-center gap-8 relative z-10">
-                    {/* Professional Rank Badge */}
                     <div className="flex items-center justify-center min-w-[64px]">
                       {isTop5 ? (
                         <div className="relative flex flex-col items-center">
@@ -121,12 +85,6 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ limit = 7 }) => {
                               {leader.rank}
                             </div>
                             <Trophy className={cn("absolute -bottom-1.5 -right-1.5 opacity-40 -rotate-12", config.icon)} size={20} />
-                            
-                            {leader.rank === 1 && (
-                              <div className="absolute -top-5 left-1/2 -translate-x-1/2 animate-bounce">
-                                <Crown className="text-yellow-400 fill-yellow-400/20" size={16} />
-                              </div>
-                            )}
                           </div>
                         </div>
                       ) : (
@@ -155,17 +113,10 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ limit = 7 }) => {
                           )}>
                             {leader.name}
                           </span>
-                          {isTop5 && <Star className="text-primary fill-primary animate-pulse" size={10} />}
                         </div>
-                        {isTop5 ? (
-                          <div className={cn("text-[9px] font-black uppercase tracking-[0.2em]", config.icon)}>
-                            {config.label}
-                          </div>
-                        ) : (
-                          <div className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
-                            Verified Contributor
-                          </div>
-                        )}
+                        <div className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
+                          Waiting for contributors
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -177,17 +128,10 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ limit = 7 }) => {
                         "text-2xl font-black tabular-nums tracking-tighter transition-all duration-500 group-hover:scale-105",
                         leader.rank === 1 ? 'text-primary drop-shadow-[0_0_10px_rgba(244,201,93,0.3)]' : 'text-white'
                       )}>
-                        {leader.amount.toLocaleString()}
+                        {leader.amount}
                       </span>
                       <span className="text-[10px] font-black text-muted-foreground/50 tracking-widest uppercase">XPR</span>
                     </div>
-                    {isTop5 && (
-                      <div className="mt-1.5 flex justify-end gap-1">
-                        {Array.from({ length: 5 - leader.rank + 1 }).map((_, i) => (
-                          <div key={i} className={cn("w-1 h-1 rounded-full", config.badge.split(' ')[0])} />
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </div>
               );

@@ -10,7 +10,7 @@ import { Link } from 'react-router-dom';
 import { showSuccess, showError } from '@/utils/toast';
 
 const LeaderboardPage = () => {
-  const [likes, setLikes] = useState(1242);
+  const [likes, setLikes] = useState(0);
   const [hasLiked, setHasLiked] = useState(false);
 
   const handleLike = () => {
@@ -60,7 +60,7 @@ const LeaderboardPage = () => {
                   <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center border border-primary/30">
                     <Trophy className="text-primary" size={28} />
                   </div>
-                  <h1 className="text-4xl font-black tracking-tight">Top 100 Contributors</h1>
+                  <h1 className="text-4xl font-black tracking-tight">Top Contributors</h1>
                 </div>
                 <p className="text-muted-foreground text-lg max-w-xl">
                   Celebrating the most generous members of the AskGuy community. Your support makes a real difference.
@@ -70,7 +70,7 @@ const LeaderboardPage = () => {
               <div className="flex flex-wrap gap-3">
                 <div className="text-center px-6 py-3 rounded-2xl bg-white/5 border border-white/10">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Total Given</p>
-                  <p className="text-xl font-black text-primary">142,500 XPR</p>
+                  <p className="text-xl font-black text-primary">0 XPR</p>
                 </div>
                 
                 <div className="flex gap-2">
@@ -107,7 +107,6 @@ const LeaderboardPage = () => {
             </div>
             
             <div className="space-y-6">
-              {/* New Reward Section */}
               <div className="glass-card p-8 rounded-3xl border-blue-500/30 bg-blue-500/10 space-y-6 relative overflow-hidden group">
                 <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                   <Gift size={80} className="text-blue-400" />

@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { showError } from '@/utils/toast';
+import { showError, showSuccess } from '@/utils/toast';
 
 export interface AidRequest {
   id: string;
@@ -35,6 +35,7 @@ interface RequestsContextType {
   addRequest: (req: any) => Promise<any>;
   updateRequest: (id: string, updates: any) => Promise<any>;
   deleteRequest: (id: string) => Promise<void>;
+  batchDeleteRequests: (ids: string[]) => Promise<void>;
   contribute: (requestId: string, contributor: string, amount: number, token: TokenSymbol, message?: string) => Promise<boolean>;
   markCompleted: (id: string, thanksMessage?: string) => Promise<any>;
 }
@@ -150,6 +151,22 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
+  const batchDeleteRequests = async (ids: string[]) => {
+    try {
+      const { error } = await supabase
+        .from('aid_requests')
+        .delete()
+        .in('id', ids);
+      
+      if (error) throw error;
+      await fetchRequests();
+      showSuccess(`Deleted ${ids.length} requests.`);
+    } catch (err) {
+      console.error('[use-requests] Batch delete failed:', err);
+      showError("Failed to delete selected requests.");
+    }
+  };
+
   const contribute = async (requestId: string, contributor: string, amount: number, token: TokenSymbol, message?: string) => {
     try {
       const { error: contribError } = await supabase.from('contributions').insert({
@@ -222,6 +239,7 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       addRequest,
       updateRequest,
       deleteRequest,
+      batchDeleteRequests,
       contribute,
       markCompleted,
     }}>

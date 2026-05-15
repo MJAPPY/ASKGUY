@@ -9,6 +9,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   ShieldAlert, 
   UserX, 
@@ -28,7 +29,8 @@ import {
   Gift,
   Zap,
   ArrowRight,
-  Trophy
+  Trophy,
+  Filter
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
@@ -36,12 +38,13 @@ import { cn } from '@/lib/utils';
 
 const Admin = () => {
   const { isConnected, isAdmin, transferTokens, guyBalance } = useWallet();
-  const { requests, deleteRequest, loading: requestsLoading } = useRequests();
+  const { requests, deleteRequest, batchDeleteRequests, loading: requestsLoading } = useRequests();
   const [bannedUsers, setBannedUsers] = useState<{ address: string, created_at: string }[]>([]);
   const [newBanAddress, setNewBanAddress] = useState('');
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [modSearch, setModSearch] = useState('');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   
   // State for individual reward amounts for the top 5
   const [individualRewards, setIndividualRewards] = useState<Record<string, string>>({});
@@ -95,6 +98,27 @@ const Admin = () => {
       r.requestor.toLowerCase().includes(modSearch.toLowerCase())
     );
   }, [requests, modSearch]);
+
+  // Grouping requests by status
+  const groupedRequests = useMemo(() => {
+    const groups: Record<string, typeof requests> = {
+      'Open': [],
+      'Funded': [],
+      'Completed': []
+    };
+    
+    filteredRequests.forEach(req => {
+      if (groups[req.status]) {
+        groups[req.status].push(req);
+      } else {
+        // Fallback for any unknown status
+        if (!groups['Other']) groups['Other'] = [];
+        groups['Other'].push(req);
+      }
+    });
+    
+    return groups;
+  }, [filteredRequests]);
 
   const fetchBannedUsers = async () => {
     setLoading(true);
@@ -219,6 +243,36 @@ const Admin = () => {
     }
   };
 
+  const handleBatchDelete = async () => {
+    if (selectedIds.length === 0) return;
+    if (!confirm(`Are you sure you want to delete ${selectedIds.length} requests? This action is permanent.`)) return;
+    
+    setProcessing(true);
+    try {
+      await batchDeleteRequests(selectedIds);
+      setSelectedIds([]);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const selectAllInGroup = (groupRequests: typeof requests) => {
+    const groupIds = groupRequests.map(r => r.id);
+    const allInSelected = groupIds.every(id => selectedIds.includes(id));
+    
+    if (allInSelected) {
+      setSelectedIds(prev => prev.filter(id => !groupIds.includes(id)));
+    } else {
+      setSelectedIds(prev => Array.from(new Set([...prev, ...groupIds])));
+    }
+  };
+
   if (!isConnected || !isAdmin) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -257,7 +311,7 @@ const Admin = () => {
             </div>
           </div>
 
-          <Tabs defaultValue="analytics" className="space-y-8">
+          <Tabs defaultValue="moderation" className="space-y-8">
             <TabsList className="bg-white/5 border border-white/10 p-1.5 h-14 rounded-2xl w-full md:w-auto justify-start">
               <TabsTrigger value="analytics" className="px-8 font-black text-[10px] uppercase tracking-widest h-full rounded-xl data-[state=active]:bg-primary data-[state=active]:text-black transition-all gap-2">
                 <TrendingUp size={14} /> Analytics
@@ -379,60 +433,110 @@ const Admin = () => {
             </TabsContent>
 
             <TabsContent value="moderation" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="flex items-center gap-4 bg-white/5 border border-white/10 p-4 rounded-2xl">
-                <Search size={20} className="text-muted-foreground" />
-                <Input 
-                  placeholder="Filter requests by title or address..." 
-                  className="border-none bg-transparent focus-visible:ring-0 text-lg font-medium p-0"
-                  value={modSearch}
-                  onChange={(e) => setModSearch(e.target.value)}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 gap-4">
-                {requestsLoading ? (
-                  <div className="py-20 flex flex-col items-center gap-4">
-                    <Loader2 className="animate-spin text-primary" size={32} />
-                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Syncing Database...</p>
-                  </div>
-                ) : filteredRequests.length > 0 ? (
-                  filteredRequests.map(req => (
-                    <Card key={req.id} className="glass-card border-white/5 bg-white/[0.01] hover:bg-white/[0.02] p-5 rounded-[24px] flex items-center justify-between group">
-                      <div className="flex items-center gap-5">
-                        <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-muted-foreground shrink-0 overflow-hidden">
-                          {req.proofUrl ? <img src={req.proofUrl} className="w-full h-full object-cover" /> : <LayoutDashboard size={20} />}
-                        </div>
-                        <div className="space-y-1">
-                          <h4 className="font-black text-white group-hover:text-primary transition-colors">{req.title}</h4>
-                          <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                            <span className="text-primary">@{req.requestor}</span>
-                            <span>•</span>
-                            <span>{req.amount} {req.token}</span>
-                            <span>•</span>
-                            <span className={cn(
-                              req.status === 'Completed' ? "text-emerald-400" : "text-blue-400"
-                            )}>{req.status}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => handleDeleteRequest(req.id)}
-                          className="h-10 w-10 text-red-400 hover:bg-red-500/10 rounded-xl"
-                        >
-                          <Trash2 size={18} />
-                        </Button>
-                      </div>
-                    </Card>
-                  ))
-                ) : (
-                  <div className="py-20 text-center glass-card border-dashed border-white/10 rounded-[32px] text-muted-foreground italic">
-                    No matching requests found.
-                  </div>
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="flex items-center gap-4 bg-white/5 border border-white/10 p-3 px-4 rounded-2xl flex-1 max-w-xl">
+                  <Search size={18} className="text-muted-foreground" />
+                  <Input 
+                    placeholder="Search by title or address..." 
+                    className="border-none bg-transparent focus-visible:ring-0 text-base font-medium p-0"
+                    value={modSearch}
+                    onChange={(e) => setModSearch(e.target.value)}
+                  />
+                </div>
+                
+                {selectedIds.length > 0 && (
+                  <Button 
+                    onClick={handleBatchDelete}
+                    disabled={processing}
+                    variant="destructive"
+                    className="h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] gap-2 shadow-lg animate-in zoom-in duration-300"
+                  >
+                    <Trash2 size={16} />
+                    Delete {selectedIds.length} Selected
+                  </Button>
                 )}
               </div>
+
+              {requestsLoading ? (
+                <div className="py-20 flex flex-col items-center gap-4">
+                  <Loader2 className="animate-spin text-primary" size={32} />
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Syncing Database...</p>
+                </div>
+              ) : (
+                <div className="space-y-12">
+                  {Object.entries(groupedRequests).map(([status, groupRequests]) => groupRequests.length > 0 && (
+                    <div key={status} className="space-y-5">
+                      <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                        <div className="flex items-center gap-3">
+                          <Filter size={14} className="text-muted-foreground" />
+                          <h3 className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
+                            {status} Requests
+                            <span className="text-[10px] bg-white/5 px-2 py-0.5 rounded-md border border-white/10 text-muted-foreground">{groupRequests.length}</span>
+                          </h3>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => selectAllInGroup(groupRequests)}
+                          className="text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-white"
+                        >
+                          {groupRequests.every(id => selectedIds.includes(id.id)) ? "Deselect Group" : "Select All"}
+                        </Button>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 gap-3">
+                        {groupRequests.map(req => (
+                          <div 
+                            key={req.id} 
+                            onClick={() => toggleSelect(req.id)}
+                            className={cn(
+                              "glass-card border-white/5 bg-white/[0.01] hover:bg-white/[0.02] p-4 rounded-2xl flex items-center justify-between group transition-all cursor-pointer",
+                              selectedIds.includes(req.id) ? "border-primary/40 bg-primary/5 translate-x-1" : ""
+                            )}
+                          >
+                            <div className="flex items-center gap-5">
+                              <div onClick={(e) => e.stopPropagation()}>
+                                <Checkbox 
+                                  checked={selectedIds.includes(req.id)} 
+                                  onCheckedChange={() => toggleSelect(req.id)}
+                                  className="h-5 w-5 rounded-md border-white/20 data-[state=checked]:bg-primary data-[state=checked]:text-black"
+                                />
+                              </div>
+                              <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-muted-foreground shrink-0 overflow-hidden">
+                                {req.proofUrl ? <img src={req.proofUrl} className="w-full h-full object-cover" /> : <LayoutDashboard size={18} />}
+                              </div>
+                              <div className="space-y-0.5">
+                                <h4 className="font-bold text-white text-sm line-clamp-1">{req.title}</h4>
+                                <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-muted-foreground">
+                                  <span className="text-primary">@{req.requestor}</span>
+                                  <span>•</span>
+                                  <span>{req.amount} {req.token}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => handleDeleteRequest(req.id)}
+                                className="h-8 w-8 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded-lg"
+                              >
+                                <Trash2 size={14} />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {filteredRequests.length === 0 && (
+                    <div className="py-20 text-center glass-card border-dashed border-white/10 rounded-[32px] text-muted-foreground italic">
+                      No matching requests found for your current search.
+                    </div>
+                  )}
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="safety" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">

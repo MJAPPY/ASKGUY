@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Upload, X, AlertCircle, ShieldCheck, Sparkles, AlertTriangle, Coins, Loader2 } from 'lucide-react';
+import { Upload, X, AlertCircle, ShieldCheck, Sparkles, AlertTriangle, Coins, Loader2, Zap } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useRequests, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
@@ -20,6 +20,7 @@ interface RequestFormProps {
 
 const RequestForm = ({ onSuccess }: RequestFormProps) => {
   const [loading, setLoading] = useState(false);
+  const [submittingStep, setSubmittingStep] = useState<'idle' | 'authorizing' | 'finalizing'>('idle');
   const [preview, setPreview] = useState<string | null>(null);
   const [skipProof, setSkipProof] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -69,6 +70,7 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
     }
     
     setLoading(true);
+    setSubmittingStep('authorizing');
     
     try {
       // Step 1: Process the 25 GUY payment
@@ -80,10 +82,13 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
       );
 
       if (!paymentSuccess) {
-        showError("Failed to process GUY payment. Please try again.");
+        showError("Payment authorization failed. Please try again.");
         setLoading(false);
+        setSubmittingStep('idle');
         return;
       }
+
+      setSubmittingStep('finalizing');
 
       // Step 2: Save the request to the database
       const categoryToSubmit = formData.category === 'Other' 
@@ -111,13 +116,14 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
         });
         setPreview(null);
         setSkipProof(false);
-        showSuccess("25 GUY Paid & Request posted successfully!");
+        showSuccess("25 GUY authorized & request published!");
         if (onSuccess) onSuccess();
       }
     } catch (err) {
-      showError("An error occurred. Please try again.");
+      showError("An error occurred. Please check your connection.");
     } finally {
       setLoading(false);
+      setSubmittingStep('idle');
     }
   };
 
@@ -146,7 +152,7 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
           </div>
         </div>
         <CardDescription className="text-muted-foreground/80 font-medium">
-          Share your situation. Posting costs <span className="text-primary font-bold">25 GUY</span>.
+          Authorise a <span className="text-primary font-bold">25 GUY</span> contribution to post your need.
         </CardDescription>
       </CardHeader>
       
@@ -177,7 +183,7 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
               <Label htmlFor="title" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Request Title</Label>
               <Input 
                 id="title"
-                placeholder="Briefly summarize your need..." 
+                placeholder="What do you need help with?" 
                 required 
                 value={formData.title}
                 onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
@@ -204,7 +210,7 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Amount Requested ({formData.token})</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Target Amount ({formData.token})</Label>
                 <Input 
                   type="number" 
                   placeholder="0.00" 
@@ -230,10 +236,10 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
             )}
             
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Brief Situation</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Detailed Description</Label>
               <Textarea 
-                placeholder="Explain your situation..." 
-                className="min-h-[100px] bg-white/5 border-white/10 focus:border-emerald-500/50 leading-relaxed font-medium" 
+                placeholder="Please provide details so the community can understand your situation..." 
+                className="min-h-[120px] bg-white/5 border-white/10 focus:border-emerald-500/50 leading-relaxed font-medium" 
                 required 
                 value={formData.description}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
@@ -241,13 +247,13 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
             </div>
 
             <div className="space-y-3 pt-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Proof of Need (Recommended)</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Proof & Verification</Label>
               
               <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 space-y-4">
                 <div className="flex gap-3">
                   <ShieldCheck className="text-emerald-400 shrink-0 mt-0.5" size={16} />
                   <p className="text-[11px] leading-relaxed text-emerald-100/70 font-medium">
-                    Upload a photo of your bill with your <span className="text-emerald-400 font-black">@{address}</span> handwritten.
+                    Highly recommended: Upload a photo of the bill/invoice with your handle <span className="text-emerald-400 font-black">@{address}</span> written next to it.
                   </p>
                 </div>
 
@@ -262,23 +268,26 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
                 {!preview ? (
                   <div 
                     onClick={() => fileInputRef.current?.click()}
-                    className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer group ${skipProof ? 'opacity-40 border-white/10 pointer-events-none' : 'border-emerald-500/20 hover:border-emerald-500/50 hover:bg-emerald-500/5'}`}
+                    className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer group ${skipProof ? 'opacity-40 border-white/10 pointer-events-none' : 'border-emerald-500/20 hover:border-emerald-500/50 hover:bg-emerald-500/5'}`}
                   >
-                    <p className="text-sm font-black tracking-tight">Click to upload photo proof</p>
-                    <p className="text-[10px] text-muted-foreground mt-1 font-bold uppercase tracking-widest">JPG or PNG</p>
+                    <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                      <Upload size={20} className="text-muted-foreground" />
+                    </div>
+                    <p className="text-sm font-black tracking-tight">Select Verification Photo</p>
+                    <p className="text-[10px] text-muted-foreground mt-1 font-bold uppercase tracking-widest">Supports JPG & PNG</p>
                   </div>
                 ) : (
                   <div className="relative rounded-2xl overflow-hidden border border-emerald-500/30 aspect-video bg-black/40 group">
                     <img src={preview} alt="Preview" className="w-full h-full object-contain" />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                        <Button 
                         type="button" 
                         variant="destructive"
                         size="sm"
-                        className="h-9 gap-2 font-black text-[10px] uppercase tracking-widest"
+                        className="h-10 gap-2 font-black text-[10px] uppercase tracking-widest rounded-xl"
                         onClick={removePreview}
                       >
-                        <X size={14} /> Remove Photo
+                        <X size={14} /> Remove and Change
                       </Button>
                     </div>
                   </div>
@@ -297,7 +306,7 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
                     htmlFor="skip" 
                     className="text-[11px] font-bold leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-muted-foreground cursor-pointer uppercase tracking-tight"
                   >
-                    I prefer not to upload proof at this time
+                    Post without photo verification
                   </label>
                 </div>
               </div>
@@ -310,17 +319,23 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
         <Button 
           form="request-form"
           type="submit" 
-          className="w-full gap-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black h-16 rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] uppercase tracking-widest text-[11px]" 
+          className="w-full gap-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black h-16 rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] uppercase tracking-[0.15em] text-[11px]" 
           disabled={loading || isLimitReached || !hasEnoughGuy}
         >
           {loading ? (
-            <><Loader2 className="animate-spin" size={18} /> Processing...</>
+            <div className="flex items-center gap-3">
+              <Loader2 className="animate-spin" size={18} />
+              <span>{submittingStep === 'authorizing' ? 'Authorizing Transaction...' : 'Publishing Request...'}</span>
+            </div>
           ) : isLimitReached ? (
             "Limit Reached (3/3)"
           ) : !hasEnoughGuy ? (
             "Insufficient GUY Balance"
           ) : (
-            <><Coins size={18} /> Pay 25 GUY & Post Request</>
+            <div className="flex items-center gap-3">
+              <Zap size={18} className="fill-current" />
+              <span>Submit Request • 25 GUY Fee</span>
+            </div>
           )}
         </Button>
       </CardFooter>

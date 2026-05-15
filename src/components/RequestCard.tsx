@@ -20,7 +20,7 @@ import {
   AlertDialogTrigger 
 } from "@/components/ui/alert-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Heart, X, Loader2, CheckCircle2, Zap, Sparkles, Image as ImageIcon, MessageSquare, Quote, AlertTriangle, Share2, Info, Wallet } from 'lucide-react';
+import { Heart, X, Loader2, CheckCircle2, Zap, Sparkles, Image as ImageIcon, MessageSquare, Quote, AlertTriangle, Share2, Info, Wallet, Trash2 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useRequests, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
@@ -69,8 +69,8 @@ const RequestCard: React.FC<RequestCardProps> = ({
   timestamp,
   variant = 'grid'
 }) => {
-  const { contribute, markCompleted } = useRequests();
-  const { address, transferTokens, xprBalance, guyBalance } = useWallet();
+  const { contribute, markCompleted, deleteRequest } = useRequests();
+  const { address, transferTokens, xprBalance, guyBalance, isAdmin } = useWallet();
   const [contributionAmount, setContributionAmount] = useState('100');
   const [contributionToken, setContributionToken] = useState<TokenSymbol>(token);
   const [contributionMessage, setContributionMessage] = useState('');
@@ -142,6 +142,18 @@ const RequestCard: React.FC<RequestCardProps> = ({
       showSuccess("Request marked as done and thanks sent!");
     } catch (err) {
       showError("Failed to update status");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setIsProcessing(true);
+    try {
+      await deleteRequest(id);
+      showSuccess("Request deleted by moderator.");
+    } catch (err) {
+      showError("Failed to delete request");
     } finally {
       setIsProcessing(false);
     }
@@ -247,9 +259,32 @@ const RequestCard: React.FC<RequestCardProps> = ({
           <DialogHeader className="p-6 border-b border-white/5 shrink-0">
             <div className="flex items-center justify-between">
               <DialogTitle className="text-3xl font-black tracking-tight leading-tight">{title}</DialogTitle>
-              <Button variant="outline" size="icon" onClick={handleShare} className="h-8 w-8 rounded-full border-white/10 hover:bg-white/10 ml-4">
-                <Share2 size={14} />
-              </Button>
+              <div className="flex items-center gap-2 ml-4">
+                {isAdmin && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-red-400 hover:text-red-300 hover:bg-red-500/10">
+                        <Trash2 size={16} />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="glass-card border-white/10 p-8 rounded-[32px]">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="text-2xl font-black tracking-tight">Delete Request?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-muted-foreground font-medium">
+                          This action will permanently remove this request and all associated activity from the platform. This cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter className="gap-3">
+                        <AlertDialogCancel className="rounded-xl font-bold h-12">Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-500 text-white font-black rounded-xl h-12 shadow-[0_0_20px_rgba(220,38,38,0.2)]">Delete Permanently</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
+                <Button variant="outline" size="icon" onClick={handleShare} className="h-8 w-8 rounded-full border-white/10 hover:bg-white/10">
+                  <Share2 size={14} />
+                </Button>
+              </div>
             </div>
             <div className="flex items-center gap-2 mt-2">
               <Avatar className="w-8 h-8 border border-white/20 p-0.5 bg-black/20">
@@ -416,6 +451,28 @@ const RequestCard: React.FC<RequestCardProps> = ({
               <AlertDialogFooter className="gap-3">
                 <AlertDialogCancel className="rounded-xl font-bold h-12">Not Yet</AlertDialogCancel>
                 <AlertDialogAction onClick={handleComplete} className="bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl h-12 shadow-[0_0_20px_rgba(16,185,129,0.2)]">Confirm & Send Thanks</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+
+        {isAdmin && !isOwner && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" className={cn("w-full text-red-400 hover:bg-red-500/10 hover:text-red-300 font-black rounded-xl gap-2 uppercase tracking-widest", variant === 'list' ? "h-12 text-[10px]" : "h-10 text-[10px]")}>
+                <Trash2 size={14} /> Delete Request
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="glass-card border-white/10 p-8 rounded-[32px]">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="text-2xl font-black tracking-tight text-red-400">Moderator Action</AlertDialogTitle>
+                <AlertDialogDescription className="text-muted-foreground font-medium">
+                  Are you sure you want to remove this request from the platform? This action is permanent.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter className="gap-3">
+                <AlertDialogCancel className="rounded-xl font-bold h-12">Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-500 text-white font-black rounded-xl h-12">Delete Permanently</AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>

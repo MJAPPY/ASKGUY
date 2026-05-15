@@ -17,7 +17,7 @@ import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
-import { Heart, ArrowRight, Search, Loader2, LayoutGrid, List, Sparkles, PlusCircle } from 'lucide-react';
+import { Heart, ArrowRight, Search, Loader2, LayoutGrid, List, Sparkles, Plus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -139,12 +139,15 @@ const Index = () => {
             <div className="space-y-6">
               <Dialog open={isRequestModalOpen} onOpenChange={setIsRequestModalOpen}>
                 <DialogTrigger asChild>
-                  <Button className="w-full h-20 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-[24px] shadow-[0_0_30px_rgba(16,185,129,0.2)] flex flex-col items-center justify-center gap-1 group transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]">
-                    <div className="flex items-center gap-2">
-                      <PlusCircle size={24} className="transition-transform group-hover:rotate-90 duration-500" />
-                      <span className="text-lg uppercase tracking-widest">Post New Request</span>
+                  <Button className="w-full h-16 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-2xl shadow-[0_4px_20px_rgba(16,185,129,0.15)] flex items-center justify-center gap-3 group transition-all duration-300 border border-emerald-400/20">
+                    <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center transition-transform group-hover:rotate-90 duration-500">
+                      <Plus size={20} className="text-white" />
                     </div>
-                    <span className="text-[10px] text-emerald-100/60 uppercase font-black tracking-tighter">Ask the community for support</span>
+                    <div className="text-left">
+                      <p className="text-sm uppercase tracking-widest leading-none mb-1">Post New Request</p>
+                      <p className="text-[10px] text-emerald-100/60 uppercase font-bold tracking-tight">Ask for community aid</p>
+                    </div>
+                    <Sparkles size={16} className="ml-auto opacity-40 group-hover:opacity-100 transition-opacity" />
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="glass-card border-white/10 max-w-xl p-8 rounded-[32px] shadow-2xl">

@@ -71,7 +71,7 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (error) throw error;
       setRequests((data || []).map(mapRequestFromDB));
     } catch (err) {
-      console.error('[use-requests] Sync error:', err);
+      console.error('[use-requests] Fetch error:', err);
     } finally {
       setLoading(false);
     }
@@ -121,27 +121,45 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const deleteRequest = async (id: string) => {
+    console.log(`[Moderation] Requesting deletion for ID: ${id}`);
     try {
-      // Delete child records first to satisfy DB constraints
-      await supabase.from('contributions').delete().eq('request_id', id);
-      const { error } = await supabase.from('aid_requests').delete().eq('id', id);
-      if (error) throw error;
+      // Step 1: Clean up contributions
+      const { error: cError } = await supabase.from('contributions').delete().eq('request_id', id);
+      if (cError) {
+        console.error('[Moderation] Contribution cleanup failed:', cError);
+        throw new Error("Could not clean up contributions. Check RLS policies.");
+      }
+
+      // Step 2: Delete the request
+      const { error: rError } = await supabase.from('aid_requests').delete().eq('id', id);
+      if (rError) {
+        console.error('[Moderation] Request deletion failed:', rError);
+        throw new Error("Request deletion failed. Ensure your wallet address is authorized in Supabase RLS.");
+      }
+
       await fetchRequests();
+      showSuccess("Content removed successfully.");
     } catch (err: any) {
-      showError("Moderator permission required in Supabase SQL Editor.");
+      showError(err.message);
       throw err;
     }
   };
 
   const batchDeleteRequests = async (ids: string[]) => {
+    console.log(`[Moderation] Requesting batch deletion for: ${ids.length} items`);
     try {
       await supabase.from('contributions').delete().in('request_id', ids);
       const { error } = await supabase.from('aid_requests').delete().in('id', ids);
-      if (error) throw error;
+      
+      if (error) {
+        console.error('[Moderation] Batch delete failed:', error);
+        throw new Error("Batch delete failed. Check RLS permissions.");
+      }
+
       await fetchRequests();
       showSuccess(`Successfully removed ${ids.length} items.`);
     } catch (err: any) {
-      showError("Batch delete failed. Check RLS policies.");
+      showError(err.message);
     }
   };
 

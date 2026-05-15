@@ -8,7 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Upload, X, AlertCircle, ShieldCheck, Sparkles, AlertTriangle, Coins } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Upload, X, AlertCircle, ShieldCheck, Sparkles, AlertTriangle, Coins, Loader2 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useRequests, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
@@ -131,8 +132,8 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
   ];
 
   return (
-    <div className="overflow-hidden">
-      <CardHeader className="px-0 pb-6">
+    <div className="flex flex-col h-full max-h-[85vh]">
+      <CardHeader className="px-0 pb-6 shrink-0">
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
@@ -149,8 +150,8 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
         </CardDescription>
       </CardHeader>
       
-      <form onSubmit={handleSubmit}>
-        <CardContent className="px-0 space-y-5">
+      <ScrollArea className="flex-1 pr-4 -mr-4">
+        <form id="request-form" onSubmit={handleSubmit} className="space-y-6 pb-4">
           {isLimitReached && (
             <div className="flex items-start gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-100 text-xs font-semibold leading-normal">
               <AlertCircle size={18} className="shrink-0 text-red-400 mt-0.5" />
@@ -171,7 +172,7 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
             </div>
           )}
 
-          <div className={`space-y-4 ${(isLimitReached || !hasEnoughGuy) ? 'opacity-50 pointer-events-none' : ''}`}>
+          <div className={`space-y-5 ${(isLimitReached || !hasEnoughGuy) ? 'opacity-50 pointer-events-none' : ''}`}>
             <div className="space-y-2">
               <Label htmlFor="title" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Request Title</Label>
               <Input 
@@ -302,26 +303,27 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
               </div>
             </div>
           </div>
-        </CardContent>
-        
-        <CardFooter className="px-0 pt-6">
-          <Button 
-            type="submit" 
-            className="w-full gap-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black h-16 rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] uppercase tracking-widest text-[11px]" 
-            disabled={loading || isLimitReached || !hasEnoughGuy}
-          >
-            {loading ? (
-              <><Loader2 className="animate-spin" size={18} /> Processing...</>
-            ) : isLimitReached ? (
-              "Limit Reached (3/3)"
-            ) : !hasEnoughGuy ? (
-              "Insufficient GUY Balance"
-            ) : (
-              <><Coins size={18} /> Pay 25 GUY & Post Request</>
-            )}
-          </Button>
-        </CardFooter>
-      </form>
+        </form>
+      </ScrollArea>
+      
+      <CardFooter className="px-0 pt-6 shrink-0 border-t border-white/5 mt-4">
+        <Button 
+          form="request-form"
+          type="submit" 
+          className="w-full gap-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black h-16 rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] uppercase tracking-widest text-[11px]" 
+          disabled={loading || isLimitReached || !hasEnoughGuy}
+        >
+          {loading ? (
+            <><Loader2 className="animate-spin" size={18} /> Processing...</>
+          ) : isLimitReached ? (
+            "Limit Reached (3/3)"
+          ) : !hasEnoughGuy ? (
+            "Insufficient GUY Balance"
+          ) : (
+            <><Coins size={18} /> Pay 25 GUY & Post Request</>
+          )}
+        </Button>
+      </CardFooter>
     </div>
   );
 };

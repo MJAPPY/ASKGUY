@@ -57,13 +57,13 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ code: cleanCode, account: cleanAccount, symbol }),
-          signal: AbortSignal.timeout(3000)
         });
 
         if (balanceRes.ok) {
           const data = await balanceRes.json();
           if (Array.isArray(data)) {
             if (data.length === 0) return 0;
+            // Response format: ["123.456000 GUY"]
             const val = parseFloat(data[0].split(' ')[0] || '0');
             return val;
           }
@@ -81,20 +81,22 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const cleanAddress = walletAddress.toLowerCase();
     
     try {
-      const [banCheck, profileCheck, xprVal, guyCheck] = await Promise.all([
+      // Parallel fetch for speed
+      const [banCheck, profileCheck, xprVal, vtokenGuy, xtokensGuy, t777Guy] = await Promise.all([
         supabase.from('banned_users').select('*').eq('address', cleanAddress).maybeSingle(),
         supabase.from('profiles').select('membership_expiry').eq('address', cleanAddress).maybeSingle(),
         fetchChainBalance(cleanAddress, 'eosio.token', 'XPR'),
-        Promise.all([
-          fetchChainBalance(cleanAddress, 'proton-vtoken', 'GUY'),
-          fetchChainBalance(cleanAddress, 'xtokens', 'GUY'),
-          fetchChainBalance(cleanAddress, 'token.777', 'GUY')
-        ]).then(results => Math.max(...results))
+        fetchChainBalance(cleanAddress, 'proton-vtoken', 'GUY'),
+        fetchChainBalance(cleanAddress, 'xtokens', 'GUY'),
+        fetchChainBalance(cleanAddress, 'token.777', 'GUY')
       ]);
 
       setIsBanned(!!banCheck.data);
       setXprBalance(xprVal);
-      setGuyBalance(guyCheck);
+      
+      // Use the highest balance found across known contracts
+      const totalGuy = Math.max(vtokenGuy, xtokensGuy, t777Guy);
+      setGuyBalance(totalGuy);
 
       if (profileCheck.data?.membership_expiry) {
         setMembershipExpiry(profileCheck.data.membership_expiry);
@@ -157,7 +159,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const precision = token === 'XPR' ? 4 : 6;
       let account = token === 'XPR' ? 'eosio.token' : 'proton-vtoken';
       
-      // If sending GUY, check which contract actually has the funds
       if (token === 'GUY') {
         const vtokenVal = await fetchChainBalance(address, 'proton-vtoken', 'GUY');
         if (vtokenVal < amount) {
@@ -195,7 +196,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [transferTokens, address]);
 
-  // Everyone connected is a member for now
   const isMember = isConnected; 
   const hasGuyThreshold = true;
 

@@ -92,8 +92,8 @@ const Navbar = () => {
                   )}
                 </div>
 
-                {/* GUY Balance */}
-                <div className="hidden sm:flex items-center gap-1.5 px-2.5 md:px-4 py-1.5 md:py-2 rounded-full bg-primary/10 border border-primary/20 text-[10px] md:text-[11px] font-bold hover:bg-primary/20 transition-colors cursor-default">
+                {/* GUY Balance - Always visible on all screen sizes */}
+                <div className="flex items-center gap-1.5 px-2.5 md:px-4 py-1.5 md:py-2 rounded-full bg-primary/10 border border-primary/20 text-[10px] md:text-[11px] font-bold hover:bg-primary/20 transition-colors cursor-default">
                   {isFetchingBalances ? (
                     <Loader2 size={12} className="animate-spin text-primary" />
                   ) : (

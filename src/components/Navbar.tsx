@@ -45,13 +45,13 @@ const Navbar = () => {
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-white/5 bg-[#0a0a0c]/80 backdrop-blur-md">
       <div className="container mx-auto px-4 h-20 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-10">
+        <div className="flex items-center gap-6 md:gap-10">
           <Link to="/" className="flex items-center gap-3 group shrink-0">
-            <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl overflow-hidden border border-white/10 shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:border-primary/50 group-hover:shadow-[0_0_20px_rgba(244,201,93,0.3)]">
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl overflow-hidden border border-white/10 shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:border-[#1565C0]/50 group-hover:shadow-[0_0_20px_rgba(21,101,192,0.3)]">
               <img src={logo} alt="Logo" className="w-full h-full object-cover" />
             </div>
-            <span className="font-black text-lg md:text-xl hidden xs:inline-block tracking-tight group-hover:text-primary transition-colors">
-              Ask<span className="text-primary group-hover:text-white transition-colors">Guy</span>
+            <span className="font-black text-lg md:text-xl tracking-tight transition-colors">
+              Ask<span className="text-[#1565C0]">Guy</span>
             </span>
           </Link>
 
@@ -63,7 +63,7 @@ const Navbar = () => {
                 asChild
                 className={`gap-2 text-sm font-medium h-10 px-4 transition-all duration-300 hover:scale-105 ${
                   isActive(item.path) 
-                    ? 'text-primary bg-primary/10 border border-primary/20 shadow-[0_0_15px_rgba(244,201,93,0.1)]' 
+                    ? 'text-[#1565C0] bg-[#1565C0]/10 border border-[#1565C0]/20 shadow-[0_0_15px_rgba(21,101,192,0.1)]' 
                     : 'text-muted-foreground hover:text-white hover:bg-white/5'
                 }`}
               >
@@ -96,15 +96,15 @@ const Navbar = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="h-10 md:h-12 gap-2 md:gap-3 px-1 md:px-2 hover:bg-white/5 rounded-xl group transition-all duration-300">
                     <div className="relative">
-                      <div className="absolute -inset-1 bg-gradient-to-tr from-primary/40 to-emerald-400/40 rounded-full blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                      <Avatar className="h-7 w-7 md:h-8 md:w-8 border border-white/20 group-hover:border-primary/50 transition-all duration-300 relative z-10 shadow-lg p-1 bg-black/20">
+                      <div className="absolute -inset-1 bg-gradient-to-tr from-[#1565C0]/40 to-emerald-400/40 rounded-full blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      <Avatar className="h-7 w-7 md:h-8 md:w-8 border border-white/20 group-hover:border-[#1565C0]/50 transition-all duration-300 relative z-10 shadow-lg p-1 bg-black/20">
                         <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${displayAddress}`} />
-                        <AvatarFallback className="bg-primary text-black font-bold text-[10px]">
+                        <AvatarFallback className="bg-[#1565C0] text-white font-bold text-[10px]">
                           {displayAddress.substring(0, 2).toUpperCase() || '??'}
                         </AvatarFallback>
                       </Avatar>
                     </div>
-                    <span className="text-sm font-bold hidden sm:inline-block group-hover:text-primary transition-colors">{displayAddress}</span>
+                    <span className="text-sm font-bold hidden sm:inline-block group-hover:text-[#1565C0] transition-colors">{displayAddress}</span>
                     <ChevronDown size={14} className="text-muted-foreground group-data-[state=open]:rotate-180 transition-transform hidden sm:block" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -117,7 +117,7 @@ const Navbar = () => {
                       </div>
                     </div>
 
-                    <Button variant="outline" size="sm" className="w-full h-8 text-[10px] font-bold gap-2 border-white/10 hover:bg-white/10 hover:border-primary/30 transition-all" asChild>
+                    <Button variant="outline" size="sm" className="w-full h-8 text-[10px] font-bold gap-2 border-white/10 hover:bg-white/10 hover:border-[#1565C0]/30 transition-all" asChild>
                       <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer">
                         Buy $GUY on DEX <ExternalLink size={10} />
                       </a>
@@ -154,7 +154,7 @@ const Navbar = () => {
             <Button 
               onClick={connect} 
               disabled={isConnecting}
-              className="bg-primary hover:bg-primary/90 text-black font-bold rounded-full px-4 md:px-6 h-10 md:h-11 gold-glow btn-premium text-xs md:text-sm"
+              className="bg-[#1565C0] hover:bg-[#1565C0]/90 text-white font-bold rounded-full px-4 md:px-6 h-10 md:h-11 shadow-[0_0_20px_rgba(21,101,192,0.3)] btn-premium text-xs md:text-sm"
             >
               {isConnecting ? <Loader2 className="animate-spin" size={18} /> : "Connect Wallet"}
             </Button>

@@ -138,6 +138,7 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const deleteRequest = async (id: string) => {
+    console.log(`🗑️ Attempting to delete request: ${id}`);
     try {
       // First delete associated contributions to avoid FK constraint errors
       const { error: contribError } = await supabase
@@ -145,7 +146,10 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         .delete()
         .eq('request_id', id);
       
-      if (contribError) throw contribError;
+      if (contribError) {
+        console.error('❌ Contribution deletion failed:', contribError);
+        throw new Error(`Contributions error: ${contribError.message}`);
+      }
 
       // Then delete the request
       const { error } = await supabase
@@ -153,15 +157,22 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         .delete()
         .eq('id', id);
       
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Request deletion failed:', error);
+        throw new Error(`Request error: ${error.message}`);
+      }
+      
+      console.log('✅ Deletion successful');
       await fetchRequests();
-    } catch (err) {
+    } catch (err: any) {
       console.error('[use-requests] Delete request failed:', err);
-      throw err; // Propagate error so UI can handle it
+      showError(err.message || "Deletion failed. Check permissions.");
+      throw err;
     }
   };
 
   const batchDeleteRequests = async (ids: string[]) => {
+    console.log(`🗑️ Attempting batch delete for ${ids.length} items`);
     try {
       // Delete all contributions for these requests first
       const { error: contribError } = await supabase
@@ -180,9 +191,9 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (error) throw error;
       await fetchRequests();
       showSuccess(`Deleted ${ids.length} requests.`);
-    } catch (err) {
+    } catch (err: any) {
       console.error('[use-requests] Batch delete failed:', err);
-      showError("Failed to delete selected requests.");
+      showError(err.message || "Batch delete failed.");
     }
   };
 

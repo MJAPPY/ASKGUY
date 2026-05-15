@@ -4,13 +4,13 @@ import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Leaderboard from '@/components/Leaderboard';
-import { Trophy, Star, ArrowLeft, Heart, Share2 } from 'lucide-react';
+import { Trophy, Star, ArrowLeft, Heart, Share2, Gift, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { showSuccess, showError } from '@/utils/toast';
 
 const LeaderboardPage = () => {
-  const [likes, setLikes] = useState(1242);
+  const [likes, setLikes] = useState(0);
   const [hasLiked, setHasLiked] = useState(false);
 
   const handleLike = () => {
@@ -60,7 +60,7 @@ const LeaderboardPage = () => {
                   <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center border border-primary/30">
                     <Trophy className="text-primary" size={28} />
                   </div>
-                  <h1 className="text-4xl font-black tracking-tight">Top 100 Contributors</h1>
+                  <h1 className="text-4xl font-black tracking-tight">Top Contributors</h1>
                 </div>
                 <p className="text-muted-foreground text-lg max-w-xl">
                   Celebrating the most generous members of the AskGuy community. Your support makes a real difference.
@@ -70,7 +70,7 @@ const LeaderboardPage = () => {
               <div className="flex flex-wrap gap-3">
                 <div className="text-center px-6 py-3 rounded-2xl bg-white/5 border border-white/10">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Total Given</p>
-                  <p className="text-xl font-black text-primary">142,500 XPR</p>
+                  <p className="text-xl font-black text-primary">0 XPR</p>
                 </div>
                 
                 <div className="flex gap-2">
@@ -107,6 +107,26 @@ const LeaderboardPage = () => {
             </div>
             
             <div className="space-y-6">
+              <div className="glass-card p-8 rounded-3xl border-blue-500/30 bg-blue-500/10 space-y-6 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                  <Gift size={80} className="text-blue-400" />
+                </div>
+                <div className="flex items-center gap-3 text-blue-400 relative z-10">
+                  <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center border border-blue-500/30">
+                    <Zap size={20} className="fill-blue-400" />
+                  </div>
+                  <h3 className="font-black text-xl">Quarterly Rewards</h3>
+                </div>
+                <p className="text-sm text-foreground/90 leading-relaxed relative z-10 font-medium">
+                  The <span className="text-blue-400 font-black">top 5 quarterly contributors</span> will share a dedicated <span className="text-white font-black">$GUY token pool</span> as a thank you for their immense impact.
+                </p>
+                <div className="pt-2 relative z-10">
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/20 border border-blue-500/30 w-fit">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-blue-300">Status: Active</span>
+                  </div>
+                </div>
+              </div>
+
               <div className="glass-card p-8 rounded-3xl border-primary/20 bg-primary/5 space-y-6 sticky top-24">
                 <div className="flex items-center gap-3 text-primary">
                   <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">

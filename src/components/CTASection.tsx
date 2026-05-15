@@ -18,7 +18,7 @@ const CTASection = () => {
         <div className="space-y-4">
           <h2 className="text-3xl md:text-4xl font-bold">Ready to help or be helped?</h2>
           <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
-            Join the AskGuy community today. Hold 7,770 GUY and start making a difference.
+            Join the AskGuy community today. Support each other and start making a difference.
           </p>
         </div>
 
@@ -26,7 +26,7 @@ const CTASection = () => {
           onClick={connect}
           disabled={isConnecting}
           size="lg" 
-          className="bg-primary hover:bg-primary/90 text-black font-bold h-14 px-10 rounded-xl gold-glow flex gap-2 mx-auto"
+          className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-black font-bold h-14 px-10 rounded-xl gold-glow flex gap-2 mx-auto"
         >
           {isConnecting ? (
             <Loader2 className="animate-spin" size={18} />

@@ -9,6 +9,12 @@ export default defineConfig(() => ({
     port: 8080,
   },
   plugins: [dyadComponentTagger(), react()],
+  define: {
+    // Ensuring global and Buffer are available for blockchain SDKs
+    global: 'window',
+    'process.env': {},
+    Buffer: ['buffer', 'Buffer'],
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

@@ -8,28 +8,28 @@ const CommunityStats = () => {
   const stats = [
     {
       label: "Total Help Provided",
-      value: "142,500 XPR",
+      value: "0 XPR",
       icon: <Coins className="text-emerald-400" size={20} />,
       borderColor: "border-emerald-500/20",
       description: "Directly to community members"
     },
     {
       label: "Bills Fully Funded",
-      value: "342",
+      value: "0",
       icon: <CheckCircle2 className="text-blue-400" size={20} />,
       borderColor: "border-blue-500/20",
       description: "100% success rate"
     },
     {
       label: "Active Members",
-      value: "1,204",
+      value: "1",
       icon: <Users className="text-purple-400" size={20} />,
       borderColor: "border-purple-500/20",
       description: "Verified GUY holders"
     },
     {
       label: "Total Contributors",
-      value: "856",
+      value: "0",
       icon: <Heart className="text-rose-400" size={20} />,
       borderColor: "border-rose-500/20",
       description: "Unique donors this month"

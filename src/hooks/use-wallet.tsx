@@ -69,12 +69,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return null;
   };
 
-  const loadBalances = useCallback(async (walletAddress: string) => {
-    if (!walletAddress) return;
+  const fetchAllBalances = useCallback(async (accountName: string) => {
+    if (!accountName) return;
     setIsFetchingBalances(true);
-    const cleanAddress = walletAddress.toLowerCase().trim();
+    const cleanAddress = accountName.toLowerCase().trim();
     
-    console.log(`[loadBalances] 🔄 Syncing @${cleanAddress}...`);
+    console.log(`🔄 Fetching balances for: ${cleanAddress}`);
 
     try {
       // 1. Fetch native XPR
@@ -86,7 +86,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const xprVal = xprData && xprData.length > 0 ? parseFloat(xprData[0].split(' ')[0]) : 0;
       console.log(`✅ XPR Balance:`, xprVal);
 
-      // 2. Fetch GUY using table rows (the method you provided)
+      // 2. Fetch GUY using table rows
       const fetchTableBalance = async (symbol: string) => {
         const data = await rpcCall('/v1/chain/get_table_rows', {
           json: true,
@@ -108,7 +108,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         guyVal = await fetchTableBalance('Guy');
       }
 
-      // 3. Fallback: Search all tokens if still 0
+      // 3. Fallback: Search all tokens
       if (guyVal === 0) {
         const allTokensData = await rpcCall('/v1/chain/get_account_tokens', { account: cleanAddress });
         const foundGuy = allTokensData?.tokens?.find((t: any) => 
@@ -141,6 +141,14 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, []);
 
+  // Effect to trigger balance fetch when session changes
+  useEffect(() => {
+    const accountName = session?.auth?.actor;
+    if (accountName) {
+      fetchAllBalances(String(accountName));
+    }
+  }, [session, fetchAllBalances]);
+
   const initWallet = useCallback(async (restore = true) => {
     try {
       const result = await Connect({
@@ -164,12 +172,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setSession(result.session);
         setAddress(actor);
         setIsConnected(true);
-        loadBalances(actor);
       }
     } catch (err) {
       console.error('[initWallet] Connection error:', err);
     }
-  }, [loadBalances]);
+  }, []);
 
   useEffect(() => {
     initWallet(true);
@@ -189,8 +196,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [session]);
 
   const refreshBalances = useCallback(async () => {
-    if (address) await loadBalances(address);
-  }, [address, loadBalances]);
+    if (address) await fetchAllBalances(address);
+  }, [address, fetchAllBalances]);
 
   const transferTokens = useCallback(async (to: string, amount: number, token: 'XPR' | 'GUY', memo?: string) => {
     if (!session) return false;

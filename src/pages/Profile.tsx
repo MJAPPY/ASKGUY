@@ -22,12 +22,17 @@ import {
   User, 
   Sparkles,
   LayoutGrid,
-  Coins
+  Coins,
+  ExternalLink,
+  History,
+  Medal,
+  Activity
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { cn } from "@/lib/utils";
 
 const Profile = () => {
   const { userAddress: routeAddress } = useParams();
@@ -83,22 +88,22 @@ const Profile = () => {
 
   if (!targetAddress && !isConnected) {
     return (
-      <div className="min-h-screen bg-background text-foreground flex flex-col">
+      <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
         <Navbar />
-        <main className="flex-1 flex items-center justify-center p-4">
-          <div className="max-w-md w-full glass-card rounded-[40px] p-10 text-center space-y-8 border-white/5 shadow-2xl relative overflow-hidden">
-            <div className="absolute -top-24 -left-24 w-48 h-48 bg-primary/20 rounded-full blur-[80px] pointer-events-none" />
-            <div className="w-20 h-20 rounded-[28px] bg-primary/10 flex items-center justify-center mx-auto border border-primary/20 shadow-[0_0_30px_rgba(244,201,93,0.2)]">
-              <Wallet className="text-primary" size={40} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#1565C0]/5 blur-[120px] rounded-full pointer-events-none" />
+        <main className="flex-1 flex items-center justify-center p-4 relative z-10">
+          <div className="max-w-md w-full glass-card rounded-[40px] p-10 text-center space-y-8 border-white/5 shadow-2xl">
+            <div className="w-24 h-24 rounded-[32px] bg-[#1565C0]/10 flex items-center justify-center mx-auto border border-[#1565C0]/20 shadow-[0_0_30px_rgba(21,101,192,0.2)]">
+              <Wallet className="text-[#1565C0]" size={48} />
             </div>
-            <div className="space-y-2">
-              <h1 className="text-3xl font-black tracking-tight">Connect Your Wallet</h1>
-              <p className="text-muted-foreground text-base leading-relaxed font-medium">
-                Connect your wallet to see your impact or search for other community members.
+            <div className="space-y-3">
+              <h1 className="text-3xl font-black tracking-tight">Access Your Profile</h1>
+              <p className="text-muted-foreground text-sm leading-relaxed font-medium">
+                Connect your XPR Network wallet to view your activity, manage your membership, and see your community impact.
               </p>
             </div>
-            <Button onClick={connect} disabled={isConnecting} className="w-full h-14 bg-primary hover:bg-primary/90 text-black font-black rounded-2xl gold-glow btn-premium text-base gap-3">
-              {isConnecting ? <Loader2 size={20} className="animate-spin" /> : <><Wallet size={20} /> Connect WebAuth</>}
+            <Button onClick={connect} disabled={isConnecting} className="w-full h-14 bg-[#1565C0] hover:bg-[#1565C0]/90 text-white font-black rounded-2xl shadow-[0_0_40px_rgba(21,101,192,0.3)] btn-premium text-base gap-3 border-none uppercase tracking-wider">
+              {isConnecting ? <Loader2 size={20} className="animate-spin" /> : <><Wallet size={20} /> Connect Wallet</>}
             </Button>
           </div>
         </main>
@@ -108,193 +113,236 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
+    <div className="min-h-screen bg-[#060912] text-foreground flex flex-col relative overflow-hidden">
       <Navbar />
       
-      <div className="relative border-b border-white/5 bg-white/[0.02] py-16 overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
+      {/* Enhanced Hero Header */}
+      <div className="relative border-b border-white/5 bg-gradient-to-b from-white/[0.02] to-transparent py-12 md:py-20 overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-[#1565C0]/5 blur-[120px] rounded-full pointer-events-none" />
         
         <div className="container mx-auto px-4 relative z-10">
-          <Button variant="ghost" asChild className="mb-12 -ml-2 text-muted-foreground hover:text-primary transition-all hover:translate-x-[-4px]">
-            <Link to="/" className="flex items-center gap-2 font-black text-xs uppercase tracking-widest">
-              <ArrowLeft size={16} /> Back to Dashboard
-            </Link>
-          </Button>
-          
-          <div className="flex flex-col md:flex-row gap-10 items-start md:items-center justify-between">
-            <div className="flex items-center gap-8">
-              <div className="relative group">
-                <div className="absolute -inset-2 bg-gradient-to-tr from-primary/40 to-emerald-400/40 rounded-full blur-xl opacity-50 group-hover:opacity-100 transition-opacity duration-700" />
-                <Avatar className="h-28 w-28 border-4 border-white/20 shadow-2xl relative z-10 transition-transform duration-500 group-hover:scale-105 group-hover:border-primary/50 p-1.5 bg-black/20">
-                  <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${targetAddress}`} />
-                  <AvatarFallback className="bg-primary text-black font-black text-2xl">
-                    {targetAddress?.substring(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="absolute -bottom-1 -right-1 bg-primary text-black p-2 rounded-2xl border-4 border-[#0A1428] shadow-xl z-20 shadow-primary/20">
-                  <ShieldCheck size={20} />
+          <div className="flex flex-col gap-12">
+            <div className="flex flex-col md:flex-row gap-8 md:items-center justify-between">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                <div className="relative group">
+                  <div className="absolute -inset-1.5 bg-gradient-to-tr from-[#1565C0] to-emerald-400 rounded-[36px] blur-md opacity-30 group-hover:opacity-60 transition-opacity duration-700" />
+                  <Avatar className="h-28 w-28 md:h-32 md:w-32 rounded-[32px] border-4 border-[#0A1428] shadow-2xl relative z-10 transition-all duration-500 group-hover:scale-105 group-hover:border-[#1565C0]/50 p-1.5 bg-[#0A1428]">
+                    <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${targetAddress}`} />
+                    <AvatarFallback className="bg-[#1565C0] text-white font-black text-3xl rounded-[28px]">
+                      {targetAddress?.substring(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-black p-2 rounded-2xl border-4 border-[#0A1428] shadow-xl z-20 shadow-emerald-500/20">
+                    <ShieldCheck size={20} />
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="space-y-1">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white uppercase italic">
+                        {targetAddress}
+                      </h1>
+                      {isOwnProfile && <Badge className="bg-[#1565C0]/20 text-[#1565C0] border-[#1565C0]/30 text-[10px] uppercase font-black px-3 h-6 tracking-widest">You</Badge>}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.4em] flex items-center gap-2">
+                      <Activity size={12} className="text-emerald-400" />
+                      XPR Network Verified User
+                    </p>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-3">
+                    <Badge variant="outline" className="bg-white/5 border-white/10 text-white font-black px-4 py-1.5 rounded-xl uppercase tracking-widest text-[9px]">
+                      Verified Holder
+                    </Badge>
+                    <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-black px-4 py-1.5 rounded-xl uppercase tracking-widest text-[9px]">
+                      Elite Member
+                    </Badge>
+                  </div>
                 </div>
               </div>
-              
-              <div className="space-y-3">
-                <h1 className="text-5xl font-black tracking-tight flex items-center gap-4 text-white">
-                  {targetAddress}
-                  {isOwnProfile && <Badge className="bg-white/10 text-white border-white/10 text-[10px] uppercase font-black px-3 h-6">You</Badge>}
-                </h1>
-                <div className="flex flex-wrap gap-3">
-                  <Badge variant="outline" className="bg-white/5 border-white/10 text-white font-black px-4 py-1.5 rounded-xl uppercase tracking-widest text-[10px]">
-                    Verified Holder
-                  </Badge>
-                  <Badge className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-black px-4 py-1.5 rounded-xl uppercase tracking-widest text-[10px] shadow-[0_0_15px_rgba(16,185,129,0.1)]">
-                    Community Member
-                  </Badge>
+
+              {/* Membership Card - Polished */}
+              <div className="md:max-w-xs w-full glass-card rounded-[32px] p-6 border-white/5 bg-white/[0.02] relative overflow-hidden group">
+                <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#1565C0]/10 blur-[40px] rounded-full" />
+                <div className="relative z-10 space-y-5">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Membership Status</p>
+                    <div className={cn(
+                      "px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border",
+                      myExpiry > 0 ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-red-500/10 text-red-400 border-red-500/20"
+                    )}>
+                      {myExpiry > 0 ? 'Active' : 'Inactive'}
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-muted-foreground group-hover:text-[#1565C0] transition-colors">
+                      <Calendar size={22} />
+                    </div>
+                    <div>
+                      <p className="text-lg font-black leading-none">
+                        {myExpiry > 0 ? new Date(myExpiry).toLocaleDateString() : 'Join Today'}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground font-bold mt-1">
+                        {myExpiry > 0 ? 'Next Renewal Date' : 'Unlock platform features'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {isOwnProfile && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button className="w-full h-11 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-all gap-2.5">
+                          <Sparkles size={14} className="text-primary" />
+                          {myExpiry > 0 ? 'Renew Membership' : 'Join AskGuy'}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="glass-card border-white/10 shadow-2xl rounded-[32px] p-8">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle className="text-3xl font-black tracking-tight mb-2">Yearly Membership</AlertDialogTitle>
+                          <AlertDialogDescription className="text-muted-foreground text-base leading-relaxed font-medium">
+                            Become a verified member to post community requests. Membership costs <span className="text-white font-black underline decoration-primary underline-offset-4">1 XPR</span> per year.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <div className="py-8 space-y-4">
+                          <div className="p-6 rounded-[24px] bg-primary/5 border border-primary/10 space-y-3 shadow-inner">
+                            <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                              <span>Annual Fee</span>
+                              <span>Duration</span>
+                            </div>
+                            <div className="flex justify-between items-center text-2xl font-black">
+                              <span className="text-primary">1.00 XPR</span>
+                              <span>365 Days</span>
+                            </div>
+                          </div>
+                        </div>
+                        <AlertDialogFooter className="gap-3">
+                          <AlertDialogCancel className="bg-white/5 border-white/10 rounded-2xl h-14 font-black uppercase tracking-widest text-xs px-8">Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={payMembership} className="bg-primary text-black font-black rounded-2xl h-14 px-10 gold-glow uppercase tracking-widest text-xs">
+                            Confirm Payment
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
                 </div>
               </div>
             </div>
-
-            {isOwnProfile && (
-              <div className="p-8 glass-card rounded-[32px] border-primary/20 flex items-center gap-10 bg-primary/5 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                  <Calendar size={100} />
-                </div>
-                <div className="relative z-10">
-                  <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-1.5">Membership Status</p>
-                  <p className="text-xl font-black flex items-center gap-2.5">
-                    <Calendar size={22} className="text-primary" />
-                    {myExpiry > 0 ? (
-                      <span>Expires {new Date(myExpiry).toLocaleDateString()}</span>
-                    ) : (
-                      <span className="text-muted-foreground">Inactive</span>
-                    )}
-                  </p>
-                </div>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="secondary" className="h-12 px-8 font-black border-white/10 bg-white/10 hover:bg-white/20 transition-all uppercase tracking-widest text-[11px] gap-2.5 rounded-2xl shadow-lg relative z-10 hover:scale-105 active:scale-95">
-                      <Sparkles size={16} className="text-primary" />
-                      {myExpiry > 0 ? 'Renew' : 'Join'}
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent className="glass-card border-white/10 shadow-2xl rounded-[32px] p-8">
-                    <AlertDialogHeader>
-                      <AlertDialogTitle className="text-3xl font-black tracking-tight mb-2">Yearly Membership</AlertDialogTitle>
-                      <AlertDialogDescription className="text-muted-foreground text-base leading-relaxed font-medium">
-                        Joining AskGuy as an active member allows you to post up to 3 requests at a time. The membership fee is <span className="text-white font-black underline decoration-primary underline-offset-4">1 XPR</span> and lasts for 365 days.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <div className="py-8 space-y-4">
-                      <div className="p-6 rounded-[24px] bg-primary/5 border border-primary/10 space-y-3 shadow-inner">
-                        <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                          <span>Annual Cost</span>
-                          <span>Duration</span>
-                        </div>
-                        <div className="flex justify-between items-center text-2xl font-black">
-                          <span className="text-primary drop-shadow-[0_0_10px_rgba(244,201,93,0.3)]">1.00 XPR</span>
-                          <span>365 Days</span>
-                        </div>
-                      </div>
-                    </div>
-                    <AlertDialogFooter className="gap-3">
-                      <AlertDialogCancel className="bg-white/5 border-white/10 rounded-2xl h-14 font-black uppercase tracking-widest text-xs px-8">Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={payMembership} className="bg-primary text-black font-black rounded-2xl h-14 px-10 gold-glow uppercase tracking-widest text-xs">
-                        Pay & Activate
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            )}
           </div>
         </div>
       </div>
       
-      <main className="flex-1 container mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-          <div className="lg:col-span-2 space-y-10">
-            {/* Balance and Impact Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <main className="flex-1 container mx-auto px-4 py-12 md:py-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12">
+          {/* Main Content Area */}
+          <div className="lg:col-span-8 space-y-12">
+            {/* Stats Showcase */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {isOwnProfile && (
-                <Card className="glass-card border-primary/20 bg-primary/5 group rounded-[32px] overflow-hidden">
-                  <CardContent className="p-8 flex items-center gap-6">
-                    <div className="w-16 h-16 rounded-[24px] bg-primary/10 flex items-center justify-center border border-primary/20 group-hover:scale-110 transition-transform duration-500 shadow-[0_0_20px_rgba(134,112,77,0.1)]">
-                      <Coins className="text-primary" size={32} />
+                <Card className="glass-card border-[#1565C0]/20 bg-[#1565C0]/5 group rounded-[32px] transition-all hover:scale-[1.02]">
+                  <CardContent className="p-8 space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div className="w-12 h-12 rounded-2xl bg-[#1565C0]/10 flex items-center justify-center border border-[#1565C0]/20 group-hover:scale-110 transition-transform">
+                        <Coins className="text-[#1565C0]" size={24} />
+                      </div>
+                      <Link to="https://vibrr.ai/dex/token/20" target="_blank" className="text-muted-foreground hover:text-white transition-colors">
+                        <ExternalLink size={14} />
+                      </Link>
                     </div>
                     <div>
-                      <p className="text-[11px] text-muted-foreground uppercase font-black tracking-widest mb-1">Your GUY</p>
-                      <p className="text-3xl font-black text-primary">{guyBalance.toLocaleString()}</p>
+                      <p className="text-[10px] text-[#1565C0] uppercase font-black tracking-widest mb-1.5">Your GUY Assets</p>
+                      <h3 className="text-3xl font-black text-white leading-none">
+                        {guyBalance.toLocaleString()}
+                      </h3>
                     </div>
                   </CardContent>
                 </Card>
               )}
               
-              <Card className="glass-card border-white/5 bg-white/[0.02] group rounded-[32px] overflow-hidden">
-                <CardContent className="p-8 flex items-center gap-6">
-                  <div className="w-16 h-16 rounded-[24px] bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:scale-110 transition-transform duration-500 shadow-[0_0_20px_rgba(16,185,129,0.1)]">
-                    <Heart className="text-emerald-400 fill-emerald-400/20" size={32} />
+              <Card className="glass-card border-emerald-500/10 bg-emerald-500/[0.02] group rounded-[32px] transition-all hover:scale-[1.02]">
+                <CardContent className="p-8 space-y-6">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:scale-110 transition-transform">
+                    <Heart className="text-emerald-400" size={24} />
                   </div>
                   <div>
-                    <p className="text-[11px] text-muted-foreground uppercase font-black tracking-widest mb-1">Total Given</p>
-                    <p className="text-3xl font-black">{stats.given.toLocaleString()} <span className="text-xs text-muted-foreground font-medium">XPR</span></p>
+                    <p className="text-[10px] text-emerald-400 uppercase font-black tracking-widest mb-1.5">Total Contributions</p>
+                    <h3 className="text-3xl font-black text-white leading-none">
+                      {stats.given.toLocaleString()} <span className="text-xs text-muted-foreground font-medium">XPR</span>
+                    </h3>
                   </div>
                 </CardContent>
               </Card>
               
-              <Card className="glass-card border-white/5 bg-white/[0.02] group rounded-[32px] overflow-hidden">
-                <CardContent className="p-8 flex items-center gap-6">
-                  <div className="w-16 h-16 rounded-[24px] bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:scale-110 transition-transform duration-500 shadow-[0_0_20px_rgba(59,130,246,0.1)]">
-                    <Heart className="text-blue-400 fill-blue-400/20" size={32} />
+              <Card className="glass-card border-blue-500/10 bg-blue-500/[0.02] group rounded-[32px] transition-all hover:scale-[1.02]">
+                <CardContent className="p-8 space-y-6">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:scale-110 transition-transform">
+                    <History className="text-blue-400" size={24} />
                   </div>
                   <div>
-                    <p className="text-[11px] text-muted-foreground uppercase font-black tracking-widest mb-1">Total Received</p>
-                    <p className="text-3xl font-black">{stats.received.toLocaleString()} <span className="text-xs text-muted-foreground font-medium">XPR</span></p>
+                    <p className="text-[10px] text-blue-400 uppercase font-black tracking-widest mb-1.5">Community Support Received</p>
+                    <h3 className="text-3xl font-black text-white leading-none">
+                      {stats.received.toLocaleString()} <span className="text-xs text-muted-foreground font-medium">XPR</span>
+                    </h3>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            <Tabs defaultValue="requests" className="space-y-10">
-              <TabsList className="bg-white/5 border border-white/10 p-1.5 h-14 rounded-2xl w-full md:w-auto overflow-x-auto no-scrollbar justify-start">
-                <TabsTrigger value="requests" className="rounded-xl px-8 font-black text-xs uppercase tracking-widest h-full data-[state=active]:bg-primary data-[state=active]:text-black transition-all">
-                  Requests ({profileRequests.length})
-                </TabsTrigger>
-                <TabsTrigger value="contributions" className="rounded-xl px-8 font-black text-xs uppercase tracking-widest h-full data-[state=active]:bg-primary data-[state=active]:text-black transition-all">
-                  Gifts Given ({profileContributions.length})
-                </TabsTrigger>
-                {isOwnProfile && (
-                  <TabsTrigger value="messages" className="rounded-xl px-8 font-black text-xs uppercase tracking-widest h-full data-[state=active]:bg-primary data-[state=active]:text-black flex gap-2.5 transition-all">
-                    <MessageSquare size={16} /> Messages ({receivedMessages.length})
+            {/* Profile Tabs */}
+            <Tabs defaultValue="requests" className="w-full">
+              <div className="flex items-center justify-between mb-8 border-b border-white/5 pb-4">
+                <TabsList className="bg-white/5 border border-white/10 p-1.5 h-12 rounded-2xl">
+                  <TabsTrigger value="requests" className="rounded-xl px-6 font-black text-[10px] uppercase tracking-widest h-full data-[state=active]:bg-[#1565C0] data-[state=active]:text-white">
+                    Requests ({profileRequests.length})
                   </TabsTrigger>
-                )}
-              </TabsList>
+                  <TabsTrigger value="contributions" className="rounded-xl px-6 font-black text-[10px] uppercase tracking-widest h-full data-[state=active]:bg-[#1565C0] data-[state=active]:text-white">
+                    Impact ({profileContributions.length})
+                  </TabsTrigger>
+                  {isOwnProfile && (
+                    <TabsTrigger value="messages" className="rounded-xl px-6 font-black text-[10px] uppercase tracking-widest h-full data-[state=active]:bg-[#1565C0] data-[state=active]:text-white flex gap-2">
+                      <MessageSquare size={14} /> Messages
+                    </TabsTrigger>
+                  )}
+                </TabsList>
+                
+                <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                  <Activity size={12} className="text-emerald-400" />
+                  Active Profile
+                </div>
+              </div>
 
-              <TabsContent value="requests" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <TabsContent value="requests" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 {profileRequests.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {profileRequests.map(req => <RequestCard key={req.id} {...req} />)}
                   </div>
                 ) : (
-                  <div className="text-center py-32 glass-card border-dashed border-white/10 rounded-[40px] flex flex-col items-center gap-4">
-                    <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-muted-foreground/30">
+                  <div className="py-24 text-center glass-card border-dashed border-white/10 rounded-[40px] flex flex-col items-center gap-4">
+                    <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-muted-foreground/20">
                       <LayoutGrid size={32} />
                     </div>
-                    <p className="text-muted-foreground font-black uppercase tracking-widest text-xs">No active needs posted yet.</p>
+                    <div className="space-y-1">
+                      <p className="text-white font-black uppercase tracking-widest text-xs">No active requests</p>
+                      <p className="text-[10px] text-muted-foreground font-medium">When life gets tough, the community is here to help.</p>
+                    </div>
                   </div>
                 )}
               </TabsContent>
 
-              <TabsContent value="contributions" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <TabsContent value="contributions" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 {profileContributions.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {profileContributions.map(req => <RequestCard key={req.id} {...req} />)}
                   </div>
                 ) : (
-                  <div className="text-center py-32 glass-card border-dashed border-white/10 rounded-[40px] flex flex-col items-center gap-4">
-                    <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-muted-foreground/30">
+                  <div className="py-24 text-center glass-card border-dashed border-white/10 rounded-[40px] flex flex-col items-center gap-4">
+                    <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-muted-foreground/20">
                       <Heart size={32} />
                     </div>
-                    <div className="space-y-2">
-                      <p className="text-muted-foreground font-black uppercase tracking-widest text-xs">No gifts shared yet.</p>
-                      <p className="text-[10px] text-muted-foreground/60 font-medium">Every contribution makes a massive difference in someone's life.</p>
+                    <div className="space-y-1">
+                      <p className="text-white font-black uppercase tracking-widest text-xs">No impact history yet</p>
+                      <p className="text-[10px] text-muted-foreground font-medium">Start contributing to community requests to build your legacy.</p>
                     </div>
                   </div>
                 )}
@@ -304,38 +352,35 @@ const Profile = () => {
                 <TabsContent value="messages" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                   {receivedMessages.length > 0 ? (
                     receivedMessages.map((m, i) => (
-                      <Card key={i} className="glass-card border-blue-500/10 bg-blue-500/5 p-8 rounded-[32px] transition-all hover:border-blue-500/30 group">
+                      <Card key={i} className="glass-card border-[#1565C0]/10 bg-[#1565C0]/5 p-8 rounded-[32px] transition-all hover:border-[#1565C0]/30 group">
                         <div className="flex gap-8">
-                          <div className="w-14 h-14 rounded-2xl bg-blue-500/20 flex items-center justify-center shrink-0 border border-blue-500/20 group-hover:scale-110 transition-transform">
-                            <Quote className="text-blue-400" size={24} />
+                          <div className="w-14 h-14 rounded-2xl bg-[#1565C0]/20 flex items-center justify-center shrink-0 border border-[#1565C0]/20 group-hover:scale-110 transition-transform">
+                            <Quote className="text-[#1565C0]" size={24} />
                           </div>
                           <div className="space-y-4 flex-1">
                             <div className="flex justify-between items-start">
                               <div className="space-y-1">
-                                <Link to={`/profile/${m.user}`} className="text-lg font-black text-blue-400 hover:underline flex items-center gap-2 group/link">
-                                  <Avatar className="w-5 h-5 border border-white/20 group-hover/link:border-blue-400 transition-colors p-0.5 bg-black/20">
+                                <Link to={`/profile/${m.user}`} className="text-lg font-black text-[#1565C0] hover:underline flex items-center gap-2 group/link">
+                                  <Avatar className="w-5 h-5 border border-white/20 p-0.5 bg-black/20">
                                     <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${m.user}`} />
                                   </Avatar>
                                   @{m.user}
                                 </Link>
-                                <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">on request: <span className="text-foreground">"{m.requestTitle}"</span></p>
+                                <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">on: <span className="text-white">"{m.requestTitle}"</span></p>
                               </div>
-                              <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest opacity-50">{new Date(m.timestamp).toLocaleDateString()}</p>
+                              <p className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">{new Date(m.timestamp).toLocaleDateString()}</p>
                             </div>
-                            <div className="relative">
-                              <Quote className="absolute -top-1 -left-1 text-white/5 w-10 h-10 pointer-events-none" />
-                              <p className="text-base italic text-white/90 leading-relaxed font-medium pl-6 py-2 relative z-10">"{m.message}"</p>
-                            </div>
+                            <p className="text-base italic text-white/90 leading-relaxed font-medium pl-6 border-l-2 border-[#1565C0]/30">"{m.message}"</p>
                           </div>
                         </div>
                       </Card>
                     ))
                   ) : (
-                    <div className="text-center py-32 glass-card border-dashed border-white/10 rounded-[40px] flex flex-col items-center gap-4">
-                      <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-muted-foreground/30">
+                    <div className="py-24 text-center glass-card border-dashed border-white/10 rounded-[40px] flex flex-col items-center gap-4">
+                      <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-muted-foreground/20">
                         <MessageSquare size={32} />
                       </div>
-                      <p className="text-muted-foreground font-black uppercase tracking-widest text-xs">No messages received yet.</p>
+                      <p className="text-white font-black uppercase tracking-widest text-xs">No community messages yet</p>
                     </div>
                   )}
                 </TabsContent>
@@ -343,11 +388,61 @@ const Profile = () => {
             </Tabs>
           </div>
 
-          <div className="lg:col-span-1">
+          {/* Sidebar Area */}
+          <div className="lg:col-span-4 space-y-8">
             <TransactionHistory />
+            
+            <Card className="glass-card border-white/5 bg-white/[0.01] rounded-[32px] overflow-hidden">
+              <CardContent className="p-8 space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                    <Medal size={20} />
+                  </div>
+                  <h4 className="text-sm font-black uppercase tracking-widest">Hall of Fame Status</h4>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+                    <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                      <span>Total Given</span>
+                      <span className="text-primary">{stats.given.toLocaleString()} XPR</span>
+                    </div>
+                    <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
+                      <div className="bg-primary h-full transition-all duration-1000" style={{ width: `${Math.min((stats.given / 1000) * 100, 100)}%` }} />
+                    </div>
+                    <p className="text-[9px] text-muted-foreground/60 italic font-medium">Reach 1,000 XPR to earn the 'Generous Heart' badge.</p>
+                  </div>
+
+                  <Button variant="ghost" asChild className="w-full h-12 border border-white/10 hover:bg-white/5 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all gap-2">
+                    <Link to="/leaderboard">
+                      View Global Rankings
+                      <ArrowLeft className="rotate-180" size={14} />
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {isOwnProfile && (
+              <Card className="glass-card border-emerald-500/20 bg-emerald-500/5 rounded-[32px] overflow-hidden group">
+                <CardContent className="p-8 space-y-6">
+                  <div className="flex items-center gap-3 text-emerald-400">
+                    <ShieldCheck size={20} />
+                    <h4 className="text-sm font-black uppercase tracking-widest">Security Status</h4>
+                  </div>
+                  <p className="text-[11px] text-emerald-100/70 font-medium leading-relaxed">
+                    Your account is fully verified and protected by the XPR Network's on-chain identity protocol. No further action is required.
+                  </p>
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black uppercase tracking-widest text-emerald-400 w-fit">
+                    Identity Verified
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </main>
+      
       <Footer />
     </div>
   );

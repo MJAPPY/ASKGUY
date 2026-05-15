@@ -9,6 +9,11 @@ export default defineConfig(() => ({
     port: 8080,
   },
   plugins: [dyadComponentTagger(), react()],
+  define: {
+    // Ensuring global and process are available for blockchain SDKs
+    global: 'window',
+    'process.env': {},
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

@@ -53,25 +53,24 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     
     for (const endpoint of ENDPOINTS) {
       try {
-        const response = await fetch(`${endpoint}/v1/chain/get_table_rows`, {
+        const response = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            json: true,
             code: cleanContract,
-            scope: cleanAccount,
-            table: 'accounts',
-            limit: 10
+            account: cleanAccount,
+            symbol: symbol
           }),
         });
 
         if (response.ok) {
           const data = await response.json();
-          const row = data.rows?.find((r: any) => r.balance?.includes(symbol));
-          if (row) {
-            const val = parseFloat(row.balance.split(' ')[0]);
+          // Response is an array like ["123.456 GUY"]
+          if (Array.isArray(data) && data.length > 0) {
+            const val = parseFloat(data[0].split(' ')[0]);
             return isNaN(val) ? 0 : val;
           }
+          return 0; // No balance found
         }
       } catch (err) {
         continue;
@@ -85,8 +84,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setIsFetchingBalances(true);
     const cleanAddress = walletAddress.toLowerCase();
     
-    console.log(`[use-wallet] Syncing data for @${cleanAddress}...`);
-
     try {
       const [banCheck, profileCheck, xprVal, guyVtoken, guyXtokens, guy777] = await Promise.all([
         supabase.from('banned_users').select('address').eq('address', cleanAddress).maybeSingle(),
@@ -106,10 +103,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (profileCheck.data?.membership_expiry) {
         setMembershipExpiry(profileCheck.data.membership_expiry);
       }
-      
-      console.log(`[use-wallet] Sync complete. GUY: ${totalGuy}, XPR: ${xprVal}`);
     } catch (err) {
-      console.error('[use-wallet] Critical sync error:', err);
+      console.error('[use-wallet] Balance sync error:', err);
     } finally {
       setIsFetchingBalances(false);
     }
@@ -141,7 +136,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         loadBalances(actor);
       }
     } catch (err) {
-      console.error('[use-wallet] Initialization failed:', err);
+      console.error('[use-wallet] Wallet init error:', err);
     }
   }, [loadBalances]);
 
@@ -196,7 +191,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setTimeout(refreshBalances, 3000);
       return true;
     } catch (err) {
-      console.error('[use-wallet] Transaction error:', err);
+      console.error('[use-wallet] Transfer failed:', err);
       return false;
     }
   }, [session, refreshBalances, address]);

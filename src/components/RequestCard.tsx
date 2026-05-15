@@ -20,7 +20,7 @@ import {
   AlertDialogTrigger 
 } from "@/components/ui/alert-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Heart, X, Loader2, CheckCircle2, Zap, Sparkles, Image as ImageIcon, MessageSquare, Quote, AlertTriangle, Share2 } from 'lucide-react';
+import { Heart, X, Loader2, CheckCircle2, Zap, Sparkles, Image as ImageIcon, MessageSquare, Quote, AlertTriangle, Share2, Info } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useRequests, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
@@ -79,8 +79,13 @@ const RequestCard: React.FC<RequestCardProps> = ({
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
 
   const progress = Math.min((raised / amount) * 100, 100);
-  // Using case-insensitive comparison for wallet addresses
-  const isOwner = address?.toLowerCase() === requestor?.toLowerCase();
+  
+  // Robust owner check
+  const currentAddr = address?.toLowerCase()?.trim() || "";
+  const ownerAddr = requestor?.toLowerCase()?.trim() || "";
+  const isOwner = currentAddr !== "" && currentAddr === ownerAddr;
+  
+  const isCompleted = status === 'Completed';
   const isFunded = progress >= 100;
 
   const quickAmounts = [10, 50, 100, 500];
@@ -222,7 +227,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
 
         {variant === 'list' && (
            <div className="md:col-span-3 flex flex-wrap gap-3 justify-end items-center">
-              {status === 'Completed' ? (
+              {isCompleted ? (
                 <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full flex items-center gap-1.5 border border-emerald-500/20 uppercase tracking-widest shadow-[0_0_15px_rgba(16,185,129,0.1)]">
                   <CheckCircle2 size={12} /> Done
                 </span>
@@ -251,10 +256,10 @@ const RequestCard: React.FC<RequestCardProps> = ({
     <Card className={cn(
       "glass-card overflow-hidden group hover:border-primary/40 transition-all duration-500 flex flex-col h-full",
       variant === 'list' ? "flex-row h-auto min-h-[160px]" : "h-full",
-      isUrgent && status === 'Open' ? 'border-red-500/40 shadow-[0_0_30px_rgba(239,68,68,0.1)]' : '',
-      isFunded && status !== 'Completed' ? 'border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.1)]' : ''
+      isUrgent && !isCompleted ? 'border-red-500/40 shadow-[0_0_30px_rgba(239,68,68,0.1)]' : '',
+      isFunded && !isCompleted ? 'border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.1)]' : ''
     )}>
-      {variant === 'grid' && <div className={cn("h-1 transition-all duration-1000 shadow-[0_0_10px_currentColor]", isFunded ? "bg-emerald-500 text-emerald-500" : getCategoryColor().split(' ')[1] + " text-primary")} style={{ width: `${progress}%` }} />}
+      {variant === 'grid' && <div className={cn("h-1 transition-all duration-1000 shadow-[0_0_10px_currentColor]", isFunded ? "bg-emerald-500 text-emerald-500" : "bg-primary text-primary")} style={{ width: `${progress}%` }} />}
       
       <Dialog>
         <DialogTrigger asChild>
@@ -398,7 +403,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
         variant === 'list' ? "p-6 border-l border-white/5 shrink-0 justify-center min-w-[160px]" : "p-6 pt-0"
       )}>
         <div className="flex gap-2">
-          {!isOwner && status === 'Open' && (
+          {!isOwner && !isCompleted && (
             <Dialog open={isHelpModalOpen} onOpenChange={setIsHelpModalOpen}>
               <DialogTrigger asChild>
                 <Button 
@@ -495,7 +500,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
           )}
         </div>
 
-        {isOwner && status !== 'Completed' && (
+        {isOwner && !isCompleted && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button 
@@ -546,19 +551,16 @@ const RequestCard: React.FC<RequestCardProps> = ({
           </AlertDialog>
         )}
 
-        {status === 'Completed' && variant === 'list' && (
-          <span className="text-xs font-black text-emerald-400/60 uppercase tracking-widest text-center animate-in fade-in">
-            Completed
-          </span>
-        )}
-
-        {status !== 'Open' && !isOwner && variant === 'list' && (
-           <span className="text-xs font-black text-muted-foreground/60 uppercase tracking-widest text-center animate-in fade-in">
-            Funded
-          </span>
+        {isCompleted && (
+          <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10 space-y-1">
+            <span className="text-[10px] font-black text-emerald-400 flex items-center gap-1.5 border-none uppercase tracking-widest shadow-none">
+              <CheckCircle2 size={12} /> COMPLETED
+            </span>
+            <span className="text-[8px] text-muted-foreground font-bold uppercase tracking-tight">Gifts received!</span>
+          </div>
         )}
         
-        {variant === 'list' && (
+        {variant === 'list' && !isCompleted && (
           <Button 
             variant="ghost" 
             size="sm" 

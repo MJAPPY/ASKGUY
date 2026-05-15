@@ -69,6 +69,27 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return null;
   };
 
+  const getTokenBalance = useCallback(async (
+    accountName: string, 
+    contract: string, 
+    symbol: string
+  ) => {
+    try {
+      const data = await rpcCall('/v1/chain/get_table_rows', {
+        json: true,
+        code: contract,
+        scope: accountName,
+        table: "accounts",
+        lower_bound: symbol,
+        upper_bound: symbol,
+        limit: 1
+      });
+      return data?.rows[0]?.balance || `0.0000 ${symbol}`;
+    } catch (err) {
+      return `0.0000 ${symbol}`;
+    }
+  }, []);
+
   const fetchAllBalances = useCallback(async (accountName: string) => {
     if (!accountName) return;
     setIsFetchingBalances(true);
@@ -87,25 +108,15 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       console.log(`✅ XPR Balance:`, xprVal);
 
       // 2. Fetch GUY using table rows
-      const fetchTableBalance = async (symbol: string) => {
-        const data = await rpcCall('/v1/chain/get_table_rows', {
-          json: true,
-          code: 'proton',
-          scope: cleanAddress,
-          table: "accounts",
-          lower_bound: symbol,
-          upper_bound: symbol,
-          limit: 1
-        });
-        const balanceStr = data?.rows[0]?.balance || `0.000000 ${symbol}`;
-        console.log(`📊 Raw Table Row (${symbol}):`, balanceStr);
-        return parseFloat(balanceStr.split(' ')[0]);
-      };
+      const guyBalanceStr = await getTokenBalance(cleanAddress, 'proton', 'GUY');
+      let guyVal = parseFloat(guyBalanceStr.split(' ')[0]);
+      console.log(`📊 GUY Balance:`, guyBalanceStr);
 
-      // Try "GUY" then fallback to "Guy"
-      let guyVal = await fetchTableBalance('GUY');
+      // Try "Guy" as fallback
       if (guyVal === 0) {
-        guyVal = await fetchTableBalance('Guy');
+        const guy2Str = await getTokenBalance(cleanAddress, 'proton', 'Guy');
+        guyVal = parseFloat(guy2Str.split(' ')[0]);
+        console.log(`📊 Guy Fallback Balance:`, guy2Str);
       }
 
       // 3. Fallback: Search all tokens
@@ -139,15 +150,27 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } finally {
       setIsFetchingBalances(false);
     }
-  }, []);
+  }, [getTokenBalance]);
 
-  // Effect to trigger balance fetch when session changes
+  // Diagnostic Effect
   useEffect(() => {
     const accountName = session?.auth?.actor;
+    
     if (accountName) {
-      fetchAllBalances(String(accountName));
+      console.log("=== ACCOUNT DETECTED ===", accountName);
+      const name = String(accountName);
+
+      // Perform main sync
+      fetchAllBalances(name);
+
+      // Diagnostic logs as requested
+      getTokenBalance(name, 'eosio.token', 'XPR')
+        .then(balance => console.log("✅ XPR Test:", balance));
+
+      getTokenBalance(name, 'proton', 'GUY')
+        .then(balance => console.log("✅ GUY Test:", balance));
     }
-  }, [session, fetchAllBalances]);
+  }, [session, fetchAllBalances, getTokenBalance]);
 
   const initWallet = useCallback(async (restore = true) => {
     try {

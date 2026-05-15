@@ -30,13 +30,12 @@ const WalletContext = createContext<WalletState | undefined>(undefined);
 
 const APP_NAME = 'AskGuy';
 
-// Prioritizing the most stable public endpoints
+// Strictly using reliable public endpoints provided by the user
 const PROTON_ENDPOINTS = [
-  'https://proton.greymass.com',
-  'https://api.protonchain.com',
-  'https://proton.protonuk.io',
   'https://api.protonnz.com',
-  'https://proton.eosusa.io'
+  'https://proton.eosusa.io',
+  'https://proton.cryptolions.io',
+  'https://proton.eoscafeblock.com'
 ];
 
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -56,7 +55,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const getTokenBalance = useCallback(async (accountName: string, contract: string, symbol: string) => {
     for (const rpc of PROTON_ENDPOINTS) {
       try {
-        // We use get_currency_balance as it's the standard for token assets
         const res = await fetch(`${rpc}/v1/chain/get_currency_balance`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -65,20 +63,25 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             account: accountName,
             symbol: symbol
           }),
-          signal: AbortSignal.timeout(3000)
+          signal: AbortSignal.timeout(4000)
         });
 
         if (res.ok) {
           const data = await res.json();
+          // The API returns an array of strings: ["100.0000 XPR"]
           if (Array.isArray(data) && data.length > 0) {
+            console.log(`✅ Success: Found ${data[0]} at ${rpc} via ${contract}`);
             return data[0];
           }
+          // If array is empty, balance is 0
           if (Array.isArray(data) && data.length === 0) {
             return `0.0000 ${symbol}`;
           }
+        } else {
+          console.warn(`⚠️ Endpoint ${rpc} returned status ${res.status} for ${symbol}`);
         }
       } catch (err) {
-        // Silently fail to next node
+        console.warn(`❌ Failed to fetch from ${rpc}:`, err);
       }
     }
     return `0.0000 ${symbol}`;
@@ -89,21 +92,25 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setIsFetchingBalances(true);
     const cleanAddress = accountName.toLowerCase().trim();
     
-    console.log(`🔄 Syncing balances for: ${cleanAddress}`);
+    console.log(`🔄 Syncing all balances for: ${cleanAddress}`);
 
     try {
-      // 1. Fetch XPR (eosio.token)
+      // 1. Fetch XPR (always on eosio.token)
       const xprStr = await getTokenBalance(cleanAddress, 'eosio.token', 'XPR');
       const xprVal = parseFloat(xprStr.split(' ')[0]);
 
-      // 2. Fetch GUY - GUY is often on 'token.vtoken' (bridge) or 'proton' (native)
-      // We check both to be sure
-      let guyStr = await getTokenBalance(cleanAddress, 'token.vtoken', 'GUY');
-      let guyVal = parseFloat(guyStr.split(' ')[0]);
+      // 2. Fetch GUY with multi-contract fallback
+      // We try 'guy' first as suggested, then common fallbacks
+      const guyContracts = ['guy', 'token.vtoken', 'proton'];
+      let guyVal = 0;
 
-      if (guyVal === 0) {
-        guyStr = await getTokenBalance(cleanAddress, 'proton', 'GUY');
-        guyVal = parseFloat(guyStr.split(' ')[0]);
+      for (const contract of guyContracts) {
+        const guyStr = await getTokenBalance(cleanAddress, contract, 'GUY');
+        const currentGuyVal = parseFloat(guyStr.split(' ')[0]);
+        if (currentGuyVal > 0) {
+          guyVal = currentGuyVal;
+          break; // Found it!
+        }
       }
 
       // 3. Metadata sync (Supabase)
@@ -121,7 +128,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       
       console.log(`✨ Sync Finished: XPR: ${xprVal} | GUY: ${guyVal}`);
     } catch (err) {
-      console.error('❌ Wallet sync encountered an error:', err);
+      console.error('❌ Error during fetchAllBalances:', err);
     } finally {
       setIsFetchingBalances(false);
     }
@@ -194,9 +201,13 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       
       // Verification for GUY contract during transfer
       if (token === 'GUY') {
-        const nativeCheck = await getTokenBalance(address, 'proton', 'GUY');
-        if (parseFloat(nativeCheck.split(' ')[0]) > 0) {
-          account = 'proton';
+        const guyContracts = ['guy', 'token.vtoken', 'proton'];
+        for (const contract of guyContracts) {
+          const checkStr = await getTokenBalance(address, contract, 'GUY');
+          if (parseFloat(checkStr.split(' ')[0]) > 0) {
+            account = contract;
+            break;
+          }
         }
       }
       

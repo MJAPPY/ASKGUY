@@ -12,8 +12,8 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           <div className="space-y-4">
             <Link to="/" className="flex items-center gap-3 group w-fit">
-              <div className="w-10 h-10 transition-transform group-hover:scale-110 shrink-0">
-                <img src={logo} alt="AskGuy Logo" className="w-full h-full object-contain" />
+              <div className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 transition-transform group-hover:scale-110">
+                <img src={logo} alt="AskGuy Logo" className="w-full h-full object-cover" />
               </div>
               <span className="font-bold text-lg group-hover:text-primary transition-colors">AskGuy</span>
             </Link>
@@ -33,12 +33,7 @@ const Footer = () => {
               </li>
               <li>
                 <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
-                  GUY Token Info (Vibrr)
-                </a>
-              </li>
-              <li>
-                <a href="https://alcor.exchange/v/xpr/terminal/guy-vtoken" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
-                  Buy GUY on Alcor
+                  GUY Token Info
                 </a>
               </li>
               <li>

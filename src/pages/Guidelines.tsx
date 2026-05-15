@@ -3,7 +3,7 @@
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { ShieldCheck, Heart, Zap, Scale, Info, ArrowLeft } from 'lucide-react';
+import { ShieldCheck, AlertCircle, Heart, Zap, Scale, Info, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 
@@ -13,9 +13,9 @@ const Guidelines = () => {
       icon: <ShieldCheck className="text-emerald-400" size={24} />,
       title: "Membership & Eligibility",
       content: [
-        "AskGuy is open to all XPR Network wallet holders. Anyone can connect and support the community.",
+        "To participate in the AskGuy community, users must hold a minimum of 7,770 GUY tokens in their WebAuth wallet.",
         "To post a request, a yearly membership fee of 1 XPR is required. This fee supports platform maintenance and prevents spam.",
-        "The membership fee is paid directly on-chain and grants full posting rights for 365 days."
+        "Membership is verified on-chain. If your GUY balance falls below the threshold, your access to community features may be restricted."
       ]
     },
     {
@@ -60,7 +60,8 @@ const Guidelines = () => {
             </Button>
             <h1 className="text-4xl font-black tracking-tight">Community Guidelines</h1>
             <p className="text-muted-foreground text-lg leading-relaxed">
-              AskGuy is built on trust, transparency, and the power of the XPR Network community.
+              AskGuy is built on trust, transparency, and the power of the XPR Network community. 
+              These guidelines ensure a safe and effective environment for mutual aid.
             </p>
           </div>
 
@@ -83,6 +84,17 @@ const Guidelines = () => {
                 </ul>
               </div>
             ))}
+          </div>
+
+          <div className="p-8 rounded-3xl bg-primary/5 border border-primary/20 flex items-start gap-4">
+            <Info className="text-primary shrink-0 mt-1" size={20} />
+            <div className="space-y-2">
+              <p className="font-bold text-primary">Disclaimer</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                AskGuy is a decentralized interface for peer-to-peer transfers. We do not guarantee that any request will be funded. 
+                Users are responsible for their own security and should perform their own due diligence before contributing to any request.
+              </p>
+            </div>
           </div>
         </div>
       </main>

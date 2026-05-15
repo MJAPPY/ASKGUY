@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Profile from "./pages/Profile";
 import LeaderboardPage from "./pages/LeaderboardPage";
-import Calculator from "./pages/Calculator";
 import Guidelines from "./pages/Guidelines";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
@@ -22,13 +21,11 @@ const App = () => (
       <Sonner />
       <WalletProvider>
         <RequestsProvider>
-          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/profile" element={<Profile />} />
-              <Route path="/profile/:userAddress" element={<Profile />} />
               <Route path="/leaderboard" element={<LeaderboardPage />} />
-              <Route path="/calculator" element={<Calculator />} />
               <Route path="/guidelines" element={<Guidelines />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="*" element={<NotFound />} />

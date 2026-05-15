@@ -27,11 +27,12 @@ const WalletContext = createContext<WalletState | undefined>(undefined);
 
 const APP_NAME = 'AskGuy';
 
+// Prioritized list of Proton RPC endpoints
 const ENDPOINTS = [
   'https://proton.greymass.com',
   'https://api.protonnz.com',
-  'https://api.protonchain.com',
   'https://proton.protonuk.io',
+  'https://api.protonchain.com',
   'https://proton.eosusa.io',
 ];
 
@@ -51,25 +52,28 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const cleanAccount = String(account).toLowerCase().trim();
     const cleanCode = String(code).toLowerCase().trim();
     
+    // Try each endpoint until one succeeds
     for (const endpoint of ENDPOINTS) {
       try {
         const balanceRes = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ code: cleanCode, account: cleanAccount, symbol }),
+          signal: AbortSignal.timeout(4000) // 4 second timeout per request
         });
 
         if (balanceRes.ok) {
           const data = await balanceRes.json();
           if (Array.isArray(data)) {
             if (data.length === 0) return 0;
-            // Response format: ["123.456000 GUY"]
-            const val = parseFloat(data[0].split(' ')[0] || '0');
-            return val;
+            // Response format example: ["1234.567890 GUY"]
+            const rawValue = data[0].toString().split(' ')[0];
+            const parsed = parseFloat(rawValue);
+            return isNaN(parsed) ? 0 : parsed;
           }
         }
       } catch (err) {
-        continue;
+        continue; // Try next endpoint
       }
     }
     return 0;
@@ -81,29 +85,34 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const cleanAddress = walletAddress.toLowerCase();
     
     try {
-      // Parallel fetch for speed
-      const [banCheck, profileCheck, xprVal, vtokenGuy, xtokensGuy, t777Guy] = await Promise.all([
-        supabase.from('banned_users').select('*').eq('address', cleanAddress).maybeSingle(),
+      // 1. Check ban status and profile in Supabase
+      const [banCheck, profileCheck] = await Promise.all([
+        supabase.from('banned_users').select('address').eq('address', cleanAddress).maybeSingle(),
         supabase.from('profiles').select('membership_expiry').eq('address', cleanAddress).maybeSingle(),
-        fetchChainBalance(cleanAddress, 'eosio.token', 'XPR'),
+      ]);
+
+      setIsBanned(!!banCheck.data);
+      if (profileCheck.data?.membership_expiry) {
+        setMembershipExpiry(profileCheck.data.membership_expiry);
+      }
+
+      // 2. Fetch On-Chain Balances
+      // We check XPR and the three known contracts for GUY (prioritizing proton-vtoken)
+      const xprVal = await fetchChainBalance(cleanAddress, 'eosio.token', 'XPR');
+      setXprBalance(xprVal);
+
+      // Aggregating GUY from multiple potential contracts as a safety measure
+      const guyBalances = await Promise.all([
         fetchChainBalance(cleanAddress, 'proton-vtoken', 'GUY'),
         fetchChainBalance(cleanAddress, 'xtokens', 'GUY'),
         fetchChainBalance(cleanAddress, 'token.777', 'GUY')
       ]);
-
-      setIsBanned(!!banCheck.data);
-      setXprBalance(xprVal);
       
-      // Use the highest balance found across known contracts
-      const totalGuy = Math.max(vtokenGuy, xtokensGuy, t777Guy);
-      setGuyBalance(totalGuy);
-
-      if (profileCheck.data?.membership_expiry) {
-        setMembershipExpiry(profileCheck.data.membership_expiry);
-      }
+      const highestGuyBalance = Math.max(...guyBalances);
+      setGuyBalance(highestGuyBalance);
       
     } catch (err) {
-      console.error('[use-wallet] Failed to sync account data:', err);
+      console.error('[use-wallet] Balance sync failed:', err);
     } finally {
       setIsFetchingBalances(false);
     }
@@ -116,10 +125,17 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         transportOptions: { requestAccount: 'askguy', backButton: true },
         selectorOptions: {
           appName: APP_NAME,
-          customStyleOptions: { modalBackgroundColor: '#0A1428', logoBackgroundColor: '#0A1428', isDark: true }
+          customStyleOptions: { 
+            modalBackgroundColor: '#0A1428', 
+            logoBackgroundColor: '#0A1428', 
+            isDark: true,
+            accentColor: '#1565C0'
+          }
         }
       });
+      
       linkRef.current = result.link;
+      
       if (result.session) {
         const actor = String(result.session.auth.actor);
         setSession(result.session);
@@ -128,7 +144,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         loadBalances(actor);
       }
     } catch (err) {
-      console.error('[use-wallet] Connect error:', err);
+      console.error('[use-wallet] Wallet initialization failed:', err);
     }
   }, [loadBalances]);
 
@@ -138,15 +154,27 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const connect = useCallback(async () => {
     setIsConnecting(true);
-    try { await initWallet(false); } finally { setIsConnecting(false); }
+    try { 
+      await initWallet(false); 
+    } finally { 
+      setIsConnecting(false); 
+    }
   }, [initWallet]);
 
   const disconnect = useCallback(async () => {
     if (session && linkRef.current) {
-      try { await linkRef.current.removeSession(APP_NAME, session.auth); } catch {}
+      try { 
+        await linkRef.current.removeSession(APP_NAME, session.auth); 
+      } catch (e) {
+        console.warn('[use-wallet] Session removal error:', e);
+      }
     }
-    setAddress(''); setSession(null); setIsConnected(false);
-    setGuyBalance(0); setXprBalance(0); setIsBanned(false);
+    setAddress(''); 
+    setSession(null); 
+    setIsConnected(false);
+    setGuyBalance(0); 
+    setXprBalance(0); 
+    setIsBanned(false);
   }, [session]);
 
   const refreshBalances = useCallback(async () => {
@@ -159,6 +187,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const precision = token === 'XPR' ? 4 : 6;
       let account = token === 'XPR' ? 'eosio.token' : 'proton-vtoken';
       
+      // Dynamic contract selection for GUY based on current holdings
       if (token === 'GUY') {
         const vtokenVal = await fetchChainBalance(address, 'proton-vtoken', 'GUY');
         if (vtokenVal < amount) {
@@ -176,13 +205,21 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         account: account,
         name: 'transfer',
         authorization: [session.auth],
-        data: { from: session.auth.actor, to, quantity: `${amount.toFixed(precision)} ${token}`, memo: memo || '' }
+        data: { 
+          from: session.auth.actor, 
+          to, 
+          quantity: `${amount.toFixed(precision)} ${token}`, 
+          memo: memo || '' 
+        }
       };
+      
       await session.transact({ actions: [action] }, { broadcast: true });
-      setTimeout(refreshBalances, 2500);
+      
+      // Refresh balances after a short delay to allow for block propagation
+      setTimeout(refreshBalances, 3000);
       return true;
     } catch (err) {
-      console.error('[use-wallet] Transaction failed:', err);
+      console.error('[use-wallet] Transaction processing error:', err);
       return false;
     }
   }, [session, refreshBalances, address]);
@@ -196,15 +233,24 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [transferTokens, address]);
 
-  const isMember = isConnected; 
-  const hasGuyThreshold = true;
-
   return (
     <WalletContext.Provider value={{
-      address, isConnected, isConnecting, isFetchingBalances,
-      guyBalance, xprBalance, membershipExpiry,
-      isMember, hasGuyThreshold, isBanned, payMembership, connect, disconnect,
-      refreshBalances, transferTokens, requestor: address,
+      address, 
+      isConnected, 
+      isConnecting, 
+      isFetchingBalances,
+      guyBalance, 
+      xprBalance, 
+      membershipExpiry,
+      isMember: isConnected, 
+      hasGuyThreshold: true, 
+      isBanned, 
+      payMembership, 
+      connect, 
+      disconnect,
+      refreshBalances, 
+      transferTokens, 
+      requestor: address,
     }}>
       {children}
     </WalletContext.Provider>

@@ -30,12 +30,12 @@ const WalletContext = createContext<WalletState | undefined>(undefined);
 
 const APP_NAME = 'AskGuy';
 
-// Strictly using reliable public endpoints provided by the user
+// Using the vetted reliable endpoints
 const PROTON_ENDPOINTS = [
   'https://api.protonnz.com',
   'https://proton.eosusa.io',
   'https://proton.cryptolions.io',
-  'https://proton.eoscafeblock.com'
+  'https://api.protonchain.com'
 ];
 
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -68,20 +68,16 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         if (res.ok) {
           const data = await res.json();
-          // The API returns an array of strings: ["100.0000 XPR"]
           if (Array.isArray(data) && data.length > 0) {
             console.log(`✅ Success: Found ${data[0]} at ${rpc} via ${contract}`);
             return data[0];
           }
-          // If array is empty, balance is 0
           if (Array.isArray(data) && data.length === 0) {
             return `0.0000 ${symbol}`;
           }
-        } else {
-          console.warn(`⚠️ Endpoint ${rpc} returned status ${res.status} for ${symbol}`);
         }
       } catch (err) {
-        console.warn(`❌ Failed to fetch from ${rpc}:`, err);
+        console.warn(`Endpoint ${rpc} failed for ${symbol}`);
       }
     }
     return `0.0000 ${symbol}`;
@@ -92,16 +88,15 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setIsFetchingBalances(true);
     const cleanAddress = accountName.toLowerCase().trim();
     
-    console.log(`🔄 Syncing all balances for: ${cleanAddress}`);
+    console.log(`🔄 Syncing balances for: ${cleanAddress}`);
 
     try {
-      // 1. Fetch XPR (always on eosio.token)
+      // 1. Fetch XPR (eosio.token)
       const xprStr = await getTokenBalance(cleanAddress, 'eosio.token', 'XPR');
       const xprVal = parseFloat(xprStr.split(' ')[0]);
 
-      // 2. Fetch GUY with multi-contract fallback
-      // We try 'guy' first as suggested, then common fallbacks
-      const guyContracts = ['guy', 'token.vtoken', 'proton'];
+      // 2. Fetch GUY - Prioritizing 'vtoken' as the verified contract
+      const guyContracts = ['vtoken', 'token.vtoken', 'guy', 'proton'];
       let guyVal = 0;
 
       for (const contract of guyContracts) {
@@ -109,7 +104,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const currentGuyVal = parseFloat(guyStr.split(' ')[0]);
         if (currentGuyVal > 0) {
           guyVal = currentGuyVal;
-          break; // Found it!
+          break; 
         }
       }
 
@@ -134,11 +129,9 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [getTokenBalance]);
 
-  // Handle session detection and auto-sync
   useEffect(() => {
     const accountName = session?.auth?.actor;
     if (accountName) {
-      console.log("=== ACCOUNT DETECTED ===", accountName);
       fetchAllBalances(String(accountName));
     }
   }, [session, fetchAllBalances]);
@@ -197,11 +190,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!session) return false;
     try {
       const precision = token === 'XPR' ? 4 : 6;
-      let account = token === 'XPR' ? 'eosio.token' : 'token.vtoken';
+      let account = token === 'XPR' ? 'eosio.token' : 'vtoken';
       
-      // Verification for GUY contract during transfer
+      // Dynamic contract selection for GUY transfer
       if (token === 'GUY') {
-        const guyContracts = ['guy', 'token.vtoken', 'proton'];
+        const guyContracts = ['vtoken', 'token.vtoken', 'guy', 'proton'];
         for (const contract of guyContracts) {
           const checkStr = await getTokenBalance(address, contract, 'GUY');
           if (parseFloat(checkStr.split(' ')[0]) > 0) {

@@ -27,7 +27,8 @@ import {
   Sparkles,
   Gift,
   Zap,
-  ArrowRight
+  ArrowRight,
+  Trophy
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
@@ -41,7 +42,9 @@ const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [modSearch, setModSearch] = useState('');
-  const [rewardAmount, setRewardAmount] = useState('1000');
+  
+  // State for individual reward amounts for the top 5
+  const [individualRewards, setIndividualRewards] = useState<Record<string, string>>({});
 
   // Platform Analytics & Top 5 Calculation
   const stats = useMemo(() => {
@@ -75,6 +78,17 @@ const Admin = () => {
     };
   }, [requests]);
 
+  // Pre-fill individual rewards when top5 changes (defaulting to 1000 GUY)
+  useEffect(() => {
+    const newRewards: Record<string, string> = { ...individualRewards };
+    stats.top5.forEach(user => {
+      if (!newRewards[user.address]) {
+        newRewards[user.address] = '1000';
+      }
+    });
+    setIndividualRewards(newRewards);
+  }, [stats.top5]);
+
   const filteredRequests = useMemo(() => {
     return requests.filter(r => 
       r.title.toLowerCase().includes(modSearch.toLowerCase()) || 
@@ -106,34 +120,43 @@ const Admin = () => {
   }, [isAdmin]);
 
   const handleDistributeRewards = async () => {
-    const amountPerWinner = parseFloat(rewardAmount);
-    if (isNaN(amountPerWinner) || amountPerWinner <= 0) {
-      showError("Please enter a valid amount.");
+    let totalNeeded = 0;
+    const targets: { address: string, amount: number }[] = [];
+
+    for (const user of stats.top5) {
+      const amt = parseFloat(individualRewards[user.address] || '0');
+      if (amt > 0) {
+        totalNeeded += amt;
+        targets.push({ address: user.address, amount: amt });
+      }
+    }
+
+    if (targets.length === 0) {
+      showError("Please enter valid amounts for distribution.");
       return;
     }
 
-    const totalNeeded = amountPerWinner * stats.top5.length;
     if (guyBalance < totalNeeded) {
       showError(`Insufficient GUY balance. Need ${totalNeeded} GUY.`);
       return;
     }
 
-    if (!confirm(`Distribute ${amountPerWinner} GUY to each of the Top 5 contributors?`)) return;
+    if (!confirm(`Distribute a total of ${totalNeeded} GUY to ${targets.length} contributors?`)) return;
 
     setProcessing(true);
     let successCount = 0;
 
-    for (const winner of stats.top5) {
+    for (const target of targets) {
       try {
         const success = await transferTokens(
-          winner.address, 
-          amountPerWinner, 
+          target.address, 
+          target.amount, 
           'GUY', 
-          `AskGuy Reward: Top Contributor Placement`
+          `AskGuy Reward: Hall of Fame Contributor`
         );
         if (success) successCount++;
       } catch (err) {
-        console.error(`Failed to reward ${winner.address}:`, err);
+        console.error(`Failed to reward ${target.address}:`, err);
       }
     }
 
@@ -289,7 +312,7 @@ const Admin = () => {
                   </div>
                 </Card>
 
-                {/* Reward Distribution Card */}
+                {/* Individual Reward Distribution Card */}
                 <Card className="glass-card border-primary/20 bg-primary/[0.02] p-8 rounded-[32px] relative overflow-hidden group">
                   <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-all">
                     <Gift size={120} className="text-primary" />
@@ -300,34 +323,45 @@ const Admin = () => {
                       <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
                         <Zap size={20} className="fill-primary" />
                       </div>
-                      <h3 className="text-xl font-black">Reward Distribution</h3>
+                      <h3 className="text-xl font-black">Hall of Fame Rewards</h3>
                     </div>
                     
                     <p className="text-sm text-muted-foreground font-medium leading-relaxed">
-                      Send $GUY rewards to the <span className="text-white font-black">Top 5 contributors</span> based on current XPR aid history.
+                      Distribute custom $GUY rewards to the <span className="text-white font-black">Top 5 contributors</span>. Enter the amount for each user below.
                     </p>
 
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">GUY Amount Per Winner</label>
-                        <Input 
-                          type="number"
-                          value={rewardAmount}
-                          onChange={(e) => setRewardAmount(e.target.value)}
-                          className="bg-white/5 border-white/10 h-12 font-black rounded-xl text-lg"
-                        />
-                      </div>
-
+                    <div className="space-y-5">
                       <div className="space-y-3">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-primary/70">Recipients (Current Top 5)</p>
-                        <div className="flex flex-col gap-2">
-                          {stats.top5.map((user, i) => (
-                            <div key={user.address} className="flex items-center justify-between text-xs p-2 rounded-lg bg-white/5 border border-white/5">
-                              <span className="font-bold text-white">#{i+1} @{user.address}</span>
-                              <span className="text-muted-foreground">{user.amount.toLocaleString()} XPR Given</span>
+                        {stats.top5.map((user, i) => (
+                          <div key={user.address} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-black text-xs border border-primary/20">
+                                #{i+1}
+                              </div>
+                              <div className="space-y-0.5">
+                                <span className="font-bold text-white text-sm">@{user.address}</span>
+                                <p className="text-[9px] text-muted-foreground uppercase font-black tracking-tighter">{user.amount.toLocaleString()} XPR Aid</p>
+                              </div>
                             </div>
-                          ))}
-                        </div>
+                            
+                            <div className="relative w-full sm:w-32">
+                              <Input 
+                                type="number"
+                                placeholder="0"
+                                value={individualRewards[user.address] || ''}
+                                onChange={(e) => setIndividualRewards(prev => ({ ...prev, [user.address]: e.target.value }))}
+                                className="bg-black/20 border-white/10 h-9 font-black rounded-lg text-xs pr-10 text-right"
+                              />
+                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-black text-muted-foreground">GUY</span>
+                            </div>
+                          </div>
+                        ))}
+                        
+                        {stats.top5.length === 0 && (
+                          <div className="py-8 text-center border-2 border-dashed border-white/5 rounded-xl text-muted-foreground/40 italic text-xs">
+                            No contributors detected yet.
+                          </div>
+                        )}
                       </div>
 
                       <Button 
@@ -335,8 +369,8 @@ const Admin = () => {
                         disabled={processing || stats.top5.length === 0}
                         className="w-full h-14 bg-primary hover:bg-primary/90 text-black font-black rounded-xl gold-glow text-xs uppercase tracking-widest gap-3"
                       >
-                        {processing ? <Loader2 className="animate-spin" size={18} /> : <Zap size={18} className="fill-current" />}
-                        Distribute {rewardAmount} GUY Each
+                        {processing ? <Loader2 className="animate-spin" size={18} /> : <Gift size={18} />}
+                        Distribute Custom Rewards
                       </Button>
                     </div>
                   </div>

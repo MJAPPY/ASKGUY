@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import Connect, { LinkSession } from '@proton/web-sdk';
+import { ProtonApi } from '@proton/api';
 import { supabase } from '@/integrations/supabase/client';
 
 export const OWNER_ADDRESS = 'tripseven';
@@ -52,81 +53,57 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const isAdmin = address.toLowerCase() === OWNER_ADDRESS.toLowerCase();
 
-  const fetchTokenBalance = async (account: string, contract: string, symbol: string): Promise<number> => {
-    const cleanAccount = String(account).toLowerCase().trim();
-    const cleanContract = String(contract).toLowerCase().trim();
-    
-    for (const endpoint of ENDPOINTS) {
-      try {
-        const response = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            code: cleanContract,
-            account: cleanAccount,
-            symbol: symbol
-          }),
-          signal: AbortSignal.timeout(3000)
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          if (Array.isArray(data)) {
-            if (data.length > 0) {
-              const val = parseFloat(data[0].split(' ')[0]);
-              console.log(`[fetchTokenBalance] Success: ${contract} -> ${val} ${symbol} via ${endpoint}`);
-              return isNaN(val) ? 0 : val;
-            }
-            return 0;
-          }
-        }
-      } catch (err) {
-        // Individual endpoint failures are expected and ignored
-        continue;
-      }
-    }
-    console.warn(`[fetchTokenBalance] Failed to fetch ${symbol} from ${contract} across all nodes.`);
-    return 0;
-  };
+  // Initialize Proton API
+  const api = new ProtonApi({
+    endpoints: ENDPOINTS
+  });
 
   const loadBalances = useCallback(async (walletAddress: string) => {
     if (!walletAddress) return;
     setIsFetchingBalances(true);
     const cleanAddress = walletAddress.toLowerCase().trim();
     
-    console.log(`[loadBalances] Starting sync for @${cleanAddress}...`);
+    console.log(`[loadBalances] Debugging sync for @${cleanAddress}...`);
 
     try {
-      const [
-        xprVal, 
-        guyProton,      // Using the "proton" contract you mentioned
-        guyTokenVtoken, // Standard Vibrr vToken contract
-        guyProtonVtoken, 
-        guyXtokens, 
-        guy777,
-        banResult,
-        profileResult
-      ] = await Promise.all([
-        fetchTokenBalance(cleanAddress, 'eosio.token', 'XPR'),
-        fetchTokenBalance(cleanAddress, 'proton', 'GUY'),
-        fetchTokenBalance(cleanAddress, 'token.vtoken', 'GUY'),
-        fetchTokenBalance(cleanAddress, 'proton-vtoken', 'GUY'),
-        fetchTokenBalance(cleanAddress, 'xtokens', 'GUY'),
-        fetchTokenBalance(cleanAddress, 'token.777', 'GUY'),
+      // 1. Fetch native XPR using the API
+      const xprResponse = await api.chain.getCurrencyBalance('eosio.token', cleanAddress, 'XPR');
+      console.log(`[loadBalances] RAW XPR Response:`, xprResponse);
+      const xprVal = xprResponse.length > 0 ? parseFloat(xprResponse[0].split(' ')[0]) : 0;
+
+      // 2. Fetch specific GUY from the 'proton' contract (Method A)
+      const guyProtonResponse = await api.chain.getCurrencyBalance('proton', cleanAddress, 'GUY');
+      console.log(`[loadBalances] RAW 'proton' Contract Response:`, guyProtonResponse);
+      const guyProton = guyProtonResponse.length > 0 ? parseFloat(guyProtonResponse[0].split(' ')[0]) : 0;
+
+      // 3. Fetch ALL tokens for the account to see if it's under a different contract/symbol (Method B)
+      const allTokens = await api.chain.getAccountTokens(cleanAddress);
+      console.log(`[loadBalances] ALL Account Tokens:`, allTokens);
+
+      // Search for any token with GUY symbol in the list of all tokens
+      const foundGuy = allTokens.find(t => t.symbol === 'GUY' || t.symbol === 'Guy');
+      console.log(`[loadBalances] Found GUY Token Info:`, foundGuy);
+      
+      const vTokenBalance = foundGuy ? parseFloat(foundGuy.amount) : 0;
+
+      // 4. Metadata sync (Supabase)
+      const [banResult, profileResult] = await Promise.all([
         supabase.from('banned_users').select('address').eq('address', cleanAddress).maybeSingle(),
         supabase.from('profiles').select('membership_expiry').eq('address', cleanAddress).maybeSingle()
       ]);
 
-      setXprBalance(xprVal || 0);
+      setXprBalance(xprVal);
       setIsBanned(!!banResult.data);
       if (profileResult.data?.membership_expiry) {
         setMembershipExpiry(profileResult.data.membership_expiry);
       }
       
-      const totalGuy = (guyProton || 0) + (guyTokenVtoken || 0) + (guyProtonVtoken || 0) + (guyXtokens || 0) + (guy777 || 0);
-      setGuyBalance(totalGuy);
+      // We combine the specific check and the general search
+      // Most likely it's in the allTokens response
+      const finalGuy = Math.max(guyProton, vTokenBalance);
+      setGuyBalance(finalGuy);
       
-      console.log(`[loadBalances] Final Sync: XPR: ${xprVal} | GUY: ${totalGuy} (Combined from 5 contracts)`);
+      console.log(`[loadBalances] Sync Complete: XPR: ${xprVal} | GUY: ${finalGuy}`);
     } catch (err) {
       console.error('[loadBalances] Error syncing data:', err);
     } finally {
@@ -192,13 +169,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       let account = token === 'XPR' ? 'eosio.token' : 'token.vtoken';
       
       if (token === 'GUY') {
-        const contracts = ['proton', 'token.vtoken', 'proton-vtoken', 'xtokens', 'token.777'];
-        for (const contract of contracts) {
-          const balance = await fetchTokenBalance(address, contract, 'GUY');
-          if (balance >= amount) {
-            account = contract;
-            break;
-          }
+        const allTokens = await api.chain.getAccountTokens(address);
+        const guyInfo = allTokens.find(t => t.symbol === 'GUY' || t.symbol === 'Guy');
+        if (guyInfo) {
+          account = guyInfo.contract;
         }
       }
       

@@ -155,18 +155,20 @@ const Admin = () => {
   const handleUpdateSettings = async () => {
     setProcessing(true);
     try {
+      // Use update().eq() instead of upsert() for reliable RLS processing
       const { error } = await supabase
         .from('site_settings')
-        .upsert({ 
-          id: 'global',
+        .update({ 
           membership_active: membershipActive,
           membership_fee: parseFloat(membershipFee),
           posting_fee_guy: parseFloat(postingFeeGuy)
-        });
+        })
+        .eq('id', 'global');
 
       if (error) throw error;
       showSuccess("Global settings updated.");
     } catch (err) {
+      console.error("Settings update error:", err);
       showError("Failed to update settings.");
     } finally {
       setProcessing(false);

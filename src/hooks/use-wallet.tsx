@@ -56,6 +56,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const cleanAccount = String(account).toLowerCase().trim();
     const cleanContract = String(contract).toLowerCase().trim();
     
+    // Try each endpoint sequentially until we get a valid non-error response
     for (const endpoint of ENDPOINTS) {
       try {
         const response = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
@@ -65,19 +66,26 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             code: cleanContract,
             account: cleanAccount,
             symbol: symbol
-          })
+          }),
+          // Short timeout to rotate through dead nodes quickly
+          signal: AbortSignal.timeout(4000)
         });
 
         if (response.ok) {
           const data = await response.json();
-          if (Array.isArray(data) && data.length > 0) {
-            const val = parseFloat(data[0].split(' ')[0]);
-            return isNaN(val) ? 0 : val;
+          // The chain returns an array of strings like ["1.0000 XPR"]
+          if (Array.isArray(data)) {
+            if (data.length > 0) {
+              const val = parseFloat(data[0].split(' ')[0]);
+              return isNaN(val) ? 0 : val;
+            }
+            // If data is [], it means the balance is exactly 0
+            return 0;
           }
-          return 0;
         }
       } catch (err) {
-        // Silently fail and try next endpoint
+        // Log individual node failures but continue to the next one
+        console.warn(`[use-wallet] Node ${endpoint} failed for ${symbol}:`, err);
         continue;
       }
     }
@@ -87,24 +95,24 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const loadBalances = useCallback(async (walletAddress: string) => {
     if (!walletAddress) return;
     setIsFetchingBalances(true);
-    const cleanAddress = walletAddress.toLowerCase();
+    const cleanAddress = walletAddress.toLowerCase().trim();
     
     try {
-      // Parallelize blockchain and database calls for performance
+      // Parallelize blockchain calls to multiple contracts and Supabase metadata
       const [
         xprVal, 
-        guyVtoken, 
-        guyXtokens, 
-        guy777, 
         guyTokenVtoken,
+        guyProtonVtoken, 
+        guyXtokens, 
+        guy777,
         banResult,
         profileResult
       ] = await Promise.all([
         fetchTokenBalance(cleanAddress, 'eosio.token', 'XPR'),
-        fetchTokenBalance(cleanAddress, 'proton-vtoken', 'GUY'),
+        fetchTokenBalance(cleanAddress, 'token.vtoken', 'GUY'), // Primary vtoken contract
+        fetchTokenBalance(cleanAddress, 'proton-vtoken', 'GUY'), // Wrapped vtokens
         fetchTokenBalance(cleanAddress, 'xtokens', 'GUY'),
         fetchTokenBalance(cleanAddress, 'token.777', 'GUY'),
-        fetchTokenBalance(cleanAddress, 'token.vtoken', 'GUY'),
         supabase.from('banned_users').select('address').eq('address', cleanAddress).maybeSingle(),
         supabase.from('profiles').select('membership_expiry').eq('address', cleanAddress).maybeSingle()
       ]);
@@ -115,12 +123,13 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setMembershipExpiry(profileResult.data.membership_expiry);
       }
       
-      const totalGuy = (guyVtoken || 0) + (guyXtokens || 0) + (guy777 || 0) + (guyTokenVtoken || 0);
+      // Sum all GUY balances across standard contracts to ensure accuracy for all users
+      const totalGuy = (guyTokenVtoken || 0) + (guyProtonVtoken || 0) + (guyXtokens || 0) + (guy777 || 0);
       setGuyBalance(totalGuy);
       
-      console.log(`[use-wallet] Sync complete for ${cleanAddress}: XPR=${xprVal}, GUY=${totalGuy}`);
+      console.log(`[use-wallet] Balance sync for ${cleanAddress}: XPR=${xprVal}, GUY=${totalGuy}`);
     } catch (err) {
-      console.error('[use-wallet] Global sync error:', err);
+      console.error('[use-wallet] Balance sync error:', err);
     } finally {
       setIsFetchingBalances(false);
     }
@@ -181,10 +190,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!session) return false;
     try {
       const precision = token === 'XPR' ? 4 : 6;
-      let account = token === 'XPR' ? 'eosio.token' : 'proton-vtoken';
+      let account = token === 'XPR' ? 'eosio.token' : 'token.vtoken';
       
       if (token === 'GUY') {
-        const contracts = ['proton-vtoken', 'xtokens', 'token.777', 'token.vtoken'];
+        // Check which contract has the balance needed for this specific transfer
+        const contracts = ['token.vtoken', 'proton-vtoken', 'xtokens', 'token.777'];
         for (const contract of contracts) {
           const balance = await fetchTokenBalance(address, contract, 'GUY');
           if (balance >= amount) {

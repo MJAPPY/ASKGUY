@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { 
   ShieldAlert, 
   UserX, 
@@ -30,14 +31,15 @@ import {
   Zap,
   ArrowRight,
   Trophy,
-  Filter
+  Filter,
+  Settings
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
 import { cn } from '@/lib/utils';
 
 const Admin = () => {
-  const { isConnected, isAdmin, transferTokens, guyBalance } = useWallet();
+  const { isConnected, isAdmin, transferTokens, guyBalance, membershipFee: currentFee, isMembershipEnabled: currentEnabled } = useWallet();
   const { requests, deleteRequest, batchDeleteRequests, loading: requestsLoading } = useRequests();
   const [bannedUsers, setBannedUsers] = useState<{ address: string, created_at: string }[]>([]);
   const [newBanAddress, setNewBanAddress] = useState('');
@@ -46,10 +48,18 @@ const Admin = () => {
   const [modSearch, setModSearch] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   
-  // State for individual reward amounts for the top 5
+  // Settings state
+  const [membershipActive, setMembershipActive] = useState(currentEnabled);
+  const [membershipFee, setMembershipFee] = useState(currentFee.toString());
+
+  // Individual rewards state
   const [individualRewards, setIndividualRewards] = useState<Record<string, string>>({});
 
-  // Platform Analytics & Top 5 Calculation
+  useEffect(() => {
+    setMembershipActive(currentEnabled);
+    setMembershipFee(currentFee.toString());
+  }, [currentEnabled, currentFee]);
+
   const stats = useMemo(() => {
     const contributionMap: Record<string, number> = {};
     let totalXPRGiven = 0;
@@ -81,7 +91,6 @@ const Admin = () => {
     };
   }, [requests]);
 
-  // Pre-fill individual rewards when top5 changes (defaulting to 1000 GUY)
   useEffect(() => {
     const newRewards: Record<string, string> = { ...individualRewards };
     stats.top5.forEach(user => {
@@ -99,7 +108,6 @@ const Admin = () => {
     );
   }, [requests, modSearch]);
 
-  // Grouping requests by status
   const groupedRequests = useMemo(() => {
     const groups: Record<string, typeof requests> = {
       'Open': [],
@@ -111,7 +119,6 @@ const Admin = () => {
       if (groups[req.status]) {
         groups[req.status].push(req);
       } else {
-        // Fallback for any unknown status
         if (!groups['Other']) groups['Other'] = [];
         groups['Other'].push(req);
       }
@@ -142,6 +149,26 @@ const Admin = () => {
       fetchBannedUsers();
     }
   }, [isAdmin]);
+
+  const handleUpdateSettings = async () => {
+    setProcessing(true);
+    try {
+      const { error } = await supabase
+        .from('site_settings')
+        .upsert({ 
+          id: 'global',
+          membership_active: membershipActive,
+          membership_fee: parseFloat(membershipFee)
+        });
+
+      if (error) throw error;
+      showSuccess("Global settings updated.");
+    } catch (err) {
+      showError("Failed to update settings.");
+    } finally {
+      setProcessing(false);
+    }
+  };
 
   const handleDistributeRewards = async () => {
     let totalNeeded = 0;
@@ -322,6 +349,9 @@ const Admin = () => {
               <TabsTrigger value="safety" className="px-8 font-black text-[10px] uppercase tracking-widest h-full rounded-xl data-[state=active]:bg-primary data-[state=active]:text-black transition-all gap-2">
                 <ShieldAlert size={14} /> Safety
               </TabsTrigger>
+              <TabsTrigger value="settings" className="px-8 font-black text-[10px] uppercase tracking-widest h-full rounded-xl data-[state=active]:bg-primary data-[state=active]:text-black transition-all gap-2">
+                <Settings size={14} /> Settings
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="analytics" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -366,7 +396,6 @@ const Admin = () => {
                   </div>
                 </Card>
 
-                {/* Individual Reward Distribution Card */}
                 <Card className="glass-card border-primary/20 bg-primary/[0.02] p-8 rounded-[32px] relative overflow-hidden group">
                   <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-all">
                     <Gift size={120} className="text-primary" />
@@ -381,7 +410,7 @@ const Admin = () => {
                     </div>
                     
                     <p className="text-sm text-muted-foreground font-medium leading-relaxed">
-                      Distribute custom $GUY rewards to the <span className="text-white font-black">Top 5 contributors</span>. Enter the amount for each user below.
+                      Distribute custom $GUY rewards to the <span className="text-white font-black">Top 5 contributors</span>.
                     </p>
 
                     <div className="space-y-5">
@@ -410,12 +439,6 @@ const Admin = () => {
                             </div>
                           </div>
                         ))}
-                        
-                        {stats.top5.length === 0 && (
-                          <div className="py-8 text-center border-2 border-dashed border-white/5 rounded-xl text-muted-foreground/40 italic text-xs">
-                            No contributors detected yet. As members contribute XPR, they will appear here.
-                          </div>
-                        )}
                       </div>
 
                       <Button 
@@ -424,7 +447,7 @@ const Admin = () => {
                         className="w-full h-14 bg-primary hover:bg-primary/90 text-black font-black rounded-xl gold-glow text-xs uppercase tracking-widest gap-3"
                       >
                         {processing ? <Loader2 className="animate-spin" size={18} /> : <Gift size={18} />}
-                        Distribute Custom Rewards
+                        Distribute Rewards
                       </Button>
                     </div>
                   </div>
@@ -529,12 +552,6 @@ const Admin = () => {
                       </div>
                     </div>
                   ))}
-                  
-                  {filteredRequests.length === 0 && (
-                    <div className="py-20 text-center glass-card border-dashed border-white/10 rounded-[32px] text-muted-foreground italic">
-                      No matching requests found for your current search.
-                    </div>
-                  )}
                 </div>
               )}
             </TabsContent>
@@ -549,10 +566,6 @@ const Admin = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-[11px] font-medium text-red-200/80 leading-relaxed">
-                      <AlertTriangle size={14} className="mb-2 text-red-400" />
-                      Blacklisting an address immediately restricts their access to all community features and hides their requests.
-                    </div>
                     <form onSubmit={handleBan} className="space-y-4">
                       <div className="space-y-2">
                         <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Wallet Address</label>
@@ -596,9 +609,6 @@ const Admin = () => {
                               </div>
                               <div>
                                 <p className="font-black text-white italic">@{user.address}</p>
-                                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">
-                                  Banned {new Date(user.created_at).toLocaleDateString()}
-                                </p>
                               </div>
                             </div>
                             <Button 
@@ -606,7 +616,6 @@ const Admin = () => {
                               onClick={() => handleUnban(user.address)}
                               className="h-10 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 font-black text-[10px] uppercase tracking-widest rounded-xl px-5"
                             >
-                              <UserCheck size={16} className="mr-2" />
                               Restore Access
                             </Button>
                           </div>
@@ -614,12 +623,57 @@ const Admin = () => {
                       </div>
                     ) : (
                       <div className="py-24 text-center text-muted-foreground/40 italic font-medium">
-                        Platform integrity is 100%. No active blacklists.
+                        No active blacklists.
                       </div>
                     )}
                   </CardContent>
                 </Card>
               </div>
+            </TabsContent>
+
+            <TabsContent value="settings" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <Card className="glass-card border-white/10 p-8 rounded-[32px] max-w-2xl">
+                <CardHeader className="px-0 pt-0">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                      <Settings size={20} />
+                    </div>
+                    <CardTitle className="text-xl font-black">Global Membership Settings</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="px-0 space-y-8">
+                  <div className="flex items-center justify-between p-6 rounded-2xl bg-white/5 border border-white/10">
+                    <div className="space-y-1">
+                      <p className="font-black text-white">Enable Membership System</p>
+                      <p className="text-xs text-muted-foreground font-medium">When off, users can post requests for free.</p>
+                    </div>
+                    <Switch 
+                      checked={membershipActive} 
+                      onCheckedChange={setMembershipActive}
+                    />
+                  </div>
+
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Membership Fee (XPR)</label>
+                    <div className="flex gap-4">
+                      <Input 
+                        type="number"
+                        value={membershipFee}
+                        onChange={(e) => setMembershipFee(e.target.value)}
+                        className="bg-black/20 border-white/10 h-14 font-black rounded-xl text-lg"
+                        placeholder="7777"
+                      />
+                      <Button 
+                        onClick={handleUpdateSettings}
+                        disabled={processing}
+                        className="h-14 bg-primary hover:bg-primary/90 text-black font-black rounded-xl px-8 uppercase tracking-widest text-[10px]"
+                      >
+                        {processing ? <Loader2 className="animate-spin" size={18} /> : "Update Settings"}
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
         </div>

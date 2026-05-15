@@ -6,7 +6,6 @@ import { supabase } from '@/integrations/supabase/client';
 
 export const OWNER_ADDRESS = 'askguy';
 export const MEMBERSHIP_RECIPIENT = 'tripseven';
-export const MEMBERSHIP_FEE = 7777;
 
 export interface WalletState {
   address: string;
@@ -17,6 +16,8 @@ export interface WalletState {
   guyBalance: number;
   xprBalance: number;
   membershipExpiry: number;
+  membershipFee: number;
+  isMembershipEnabled: boolean;
   isMember: boolean; 
   hasGuyThreshold: boolean; 
   isBanned: boolean;
@@ -46,13 +47,32 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [guyBalance, setGuyBalance] = useState(0);
   const [xprBalance, setXprBalance] = useState(0);
   const [membershipExpiry, setMembershipExpiry] = useState(0);
+  const [membershipFee, setMembershipFee] = useState(7777);
+  const [isMembershipEnabled, setIsMembershipEnabled] = useState(true);
   const [isFetchingBalances, setIsFetchingBalances] = useState(false);
   const [isBanned, setIsBanned] = useState(false);
   const [session, setSession] = useState<LinkSession | null>(null);
   const linkRef = useRef<any>(null);
 
   const isAdmin = address.toLowerCase() === OWNER_ADDRESS.toLowerCase();
-  const isMember = membershipExpiry > Date.now();
+  const isMember = !isMembershipEnabled || membershipExpiry > Date.now();
+
+  const fetchSettings = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('*')
+        .eq('id', 'global')
+        .maybeSingle();
+      
+      if (data) {
+        setMembershipFee(Number(data.membership_fee));
+        setIsMembershipEnabled(data.membership_active);
+      }
+    } catch (err) {
+      console.error('Error fetching settings:', err);
+    }
+  }, []);
 
   const getTokenBalance = useCallback(async (accountName: string, contract: string, symbol: string) => {
     for (const rpc of PROTON_ENDPOINTS) {
@@ -124,11 +144,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [getTokenBalance]);
 
   useEffect(() => {
+    fetchSettings();
     const accountName = session?.auth?.actor;
     if (accountName) {
       fetchAllBalances(String(accountName));
     }
-  }, [session, fetchAllBalances]);
+  }, [session, fetchAllBalances, fetchSettings]);
 
   const initWallet = useCallback(async (restore = true) => {
     try {
@@ -214,18 +235,19 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [session, refreshBalances, address, getTokenBalance]);
 
   const payMembership = useCallback(async () => {
-    const success = await transferTokens(MEMBERSHIP_RECIPIENT, MEMBERSHIP_FEE, 'XPR', 'AskGuy Membership Fee');
+    const success = await transferTokens(MEMBERSHIP_RECIPIENT, membershipFee, 'XPR', 'AskGuy Membership Fee');
     if (success) {
       const nextYear = Date.now() + (365 * 24 * 60 * 60 * 1000);
       setMembershipExpiry(nextYear);
       await supabase.from('profiles').upsert({ address, membership_expiry: nextYear }, { onConflict: 'address' });
     }
-  }, [transferTokens, address]);
+  }, [transferTokens, address, membershipFee]);
 
   return (
     <WalletContext.Provider value={{
       address, isConnected, isConnecting, isAdmin, isFetchingBalances,
       guyBalance, xprBalance, membershipExpiry,
+      membershipFee, isMembershipEnabled,
       isMember, hasGuyThreshold: true, isBanned, 
       payMembership, connect, disconnect,
       refreshBalances, transferTokens, requestor: address,

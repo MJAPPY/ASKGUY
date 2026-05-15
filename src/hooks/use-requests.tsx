@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { showError, showSuccess } from '@/utils/toast';
+import { showError } from '@/utils/toast';
 
 export interface AidRequest {
   id: string;
@@ -35,7 +35,6 @@ interface RequestsContextType {
   addRequest: (req: any) => Promise<any>;
   updateRequest: (id: string, updates: any) => Promise<any>;
   deleteRequest: (id: string) => Promise<void>;
-  clearAllRequests: () => Promise<void>;
   contribute: (requestId: string, contributor: string, amount: number, token: TokenSymbol, message?: string) => Promise<boolean>;
   markCompleted: (id: string, thanksMessage?: string) => Promise<any>;
 }
@@ -151,23 +150,6 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  const clearAllRequests = async () => {
-    try {
-      // Contributions are linked by foreign key, they must be deleted or handled by cascade
-      const { error: contribError } = await supabase.from('contributions').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      if (contribError) throw contribError;
-
-      const { error: reqError } = await supabase.from('aid_requests').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      if (reqError) throw reqError;
-
-      showSuccess("All request cards have been removed.");
-      await fetchRequests();
-    } catch (err) {
-      console.error('[use-requests] Clear all failed:', err);
-      showError("Failed to clear requests.");
-    }
-  };
-
   const contribute = async (requestId: string, contributor: string, amount: number, token: TokenSymbol, message?: string) => {
     try {
       const { error: contribError } = await supabase.from('contributions').insert({
@@ -240,7 +222,6 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       addRequest,
       updateRequest,
       deleteRequest,
-      clearAllRequests,
       contribute,
       markCompleted,
     }}>

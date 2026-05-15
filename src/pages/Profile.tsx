@@ -21,7 +21,8 @@ import {
   ShieldCheck, 
   User, 
   Sparkles,
-  LayoutGrid 
+  LayoutGrid,
+  Coins
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -30,7 +31,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 
 const Profile = () => {
   const { userAddress: routeAddress } = useParams();
-  const { address: myAddress, isConnected, isConnecting, membershipExpiry: myExpiry, payMembership, connect } = useWallet();
+  const { address: myAddress, isConnected, isConnecting, membershipExpiry: myExpiry, xprBalance, guyBalance, payMembership, connect } = useWallet();
   const { requests } = useRequests();
 
   const targetAddress = routeAddress || myAddress;
@@ -210,7 +211,22 @@ const Profile = () => {
       <main className="flex-1 container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           <div className="lg:col-span-2 space-y-10">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Balance and Impact Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {isOwnProfile && (
+                <Card className="glass-card border-primary/20 bg-primary/5 group rounded-[32px] overflow-hidden">
+                  <CardContent className="p-8 flex items-center gap-6">
+                    <div className="w-16 h-16 rounded-[24px] bg-primary/10 flex items-center justify-center border border-primary/20 group-hover:scale-110 transition-transform duration-500 shadow-[0_0_20px_rgba(134,112,77,0.1)]">
+                      <Coins className="text-primary" size={32} />
+                    </div>
+                    <div>
+                      <p className="text-[11px] text-muted-foreground uppercase font-black tracking-widest mb-1">Your GUY</p>
+                      <p className="text-3xl font-black text-primary">{guyBalance.toLocaleString()}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+              
               <Card className="glass-card border-white/5 bg-white/[0.02] group rounded-[32px] overflow-hidden">
                 <CardContent className="p-8 flex items-center gap-6">
                   <div className="w-16 h-16 rounded-[24px] bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:scale-110 transition-transform duration-500 shadow-[0_0_20px_rgba(16,185,129,0.1)]">

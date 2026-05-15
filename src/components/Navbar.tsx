@@ -26,7 +26,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import logo from '@/assets/logo.jpg';
 
 const Navbar = () => {
-  const { isConnected, isConnecting, isFetchingBalances, address, xprBalance, disconnect, refreshBalances, connect } = useWallet();
+  const { isConnected, isConnecting, isFetchingBalances, address, xprBalance, guyBalance, disconnect, refreshBalances, connect } = useWallet();
   const location = useLocation();
 
   const navItems = [
@@ -80,6 +80,7 @@ const Navbar = () => {
           {isConnected ? (
             <>
               <div className="flex items-center gap-1.5 md:gap-2">
+                {/* XPR Balance */}
                 <div className="flex items-center gap-1.5 px-2.5 md:px-4 py-1.5 md:py-2 rounded-full bg-white/5 border border-white/10 text-[10px] md:text-[11px] font-bold hover:bg-white/10 transition-colors cursor-default">
                   {isFetchingBalances ? (
                     <Loader2 size={12} className="animate-spin text-muted-foreground" />
@@ -87,6 +88,18 @@ const Navbar = () => {
                     <>
                       <span className="text-muted-foreground font-black">{xprBalance.toLocaleString(undefined, { minimumFractionDigits: 1 })}</span>
                       <span className="text-white/40">XPR</span>
+                    </>
+                  )}
+                </div>
+
+                {/* GUY Balance */}
+                <div className="hidden sm:flex items-center gap-1.5 px-2.5 md:px-4 py-1.5 md:py-2 rounded-full bg-primary/10 border border-primary/20 text-[10px] md:text-[11px] font-bold hover:bg-primary/20 transition-colors cursor-default">
+                  {isFetchingBalances ? (
+                    <Loader2 size={12} className="animate-spin text-primary" />
+                  ) : (
+                    <>
+                      <span className="text-primary font-black">{guyBalance.toLocaleString()}</span>
+                      <span className="text-primary/40">GUY</span>
                     </>
                   )}
                 </div>
@@ -111,9 +124,16 @@ const Navbar = () => {
                 <DropdownMenuContent align="end" className="w-64 glass-card border-white/10 p-2 mt-2 animate-in fade-in zoom-in-95 duration-200">
                   <div className="p-3 space-y-3">
                     <div className="space-y-1">
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Live Balance</p>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-black">{xprBalance.toLocaleString()} XPR</span>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Live Balances</p>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[10px] text-muted-foreground">XPR</span>
+                          <span className="text-sm font-black">{xprBalance.toLocaleString()} XPR</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-[10px] text-primary/70">GUY</span>
+                          <span className="text-sm font-black text-primary">{guyBalance.toLocaleString()} GUY</span>
+                        </div>
                       </div>
                     </div>
 

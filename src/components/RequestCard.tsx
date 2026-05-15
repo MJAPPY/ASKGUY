@@ -78,6 +78,25 @@ const RequestCard: React.FC<RequestCardProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
 
+  const getCategoryColor = () => {
+    switch (category) {
+      case 'Medical / Healthcare':
+        return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+      case 'Rent / Housing':
+        return 'bg-purple-500/10 text-purple-400 border-purple-500/20';
+      case 'Groceries / Food':
+        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+      case 'Utilities (Electricity, Water, Internet)':
+        return 'bg-orange-500/10 text-orange-400 border-orange-500/20';
+      case 'Emergency / Crisis':
+        return 'bg-red-500/10 text-red-400 border-red-500/20';
+      case 'Transportation':
+        return 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
+      default:
+        return 'bg-white/5 text-muted-foreground border-white/10';
+    }
+  };
+
   const progress = Math.min((raised / amount) * 100, 100);
   
   const currentAddr = address?.toLowerCase()?.trim() || "";

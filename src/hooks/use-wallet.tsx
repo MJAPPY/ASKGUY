@@ -18,6 +18,8 @@ export interface WalletState {
   isMember: boolean; 
   hasGuyThreshold: boolean; 
   isBanned: boolean;
+  membershipRequired: boolean;
+  membershipFee: number;
   payMembership: () => Promise<void>;
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
@@ -30,7 +32,6 @@ const WalletContext = createContext<WalletState | undefined>(undefined);
 
 const APP_NAME = 'AskGuy';
 
-// Using the vetted reliable endpoints
 const PROTON_ENDPOINTS = [
   'https://api.protonnz.com',
   'https://proton.eosusa.io',
@@ -45,12 +46,26 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [guyBalance, setGuyBalance] = useState(0);
   const [xprBalance, setXprBalance] = useState(0);
   const [membershipExpiry, setMembershipExpiry] = useState(0);
+  const [membershipRequired, setMembershipRequired] = useState(true);
+  const [membershipFee, setMembershipFee] = useState(7777);
   const [isFetchingBalances, setIsFetchingBalances] = useState(false);
   const [isBanned, setIsBanned] = useState(false);
   const [session, setSession] = useState<LinkSession | null>(null);
   const linkRef = useRef<any>(null);
 
   const isAdmin = address.toLowerCase() === OWNER_ADDRESS.toLowerCase();
+
+  const fetchSettings = useCallback(async () => {
+    try {
+      const { data: reqData } = await supabase.from('settings').select('*').eq('id', 'membership_required').maybeSingle();
+      const { data: feeData } = await supabase.from('settings').select('*').eq('id', 'membership_fee').maybeSingle();
+      
+      if (reqData) setMembershipRequired(reqData.value_bool);
+      if (feeData) setMembershipFee(feeData.value_num);
+    } catch (err) {
+      console.error("Failed to fetch settings:", err);
+    }
+  }, []);
 
   const getTokenBalance = useCallback(async (accountName: string, contract: string, symbol: string) => {
     for (const rpc of PROTON_ENDPOINTS) {
@@ -69,7 +84,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data) && data.length > 0) {
-            console.log(`✅ Success: Found ${data[0]} at ${rpc} via ${contract}`);
             return data[0];
           }
           if (Array.isArray(data) && data.length === 0) {
@@ -88,14 +102,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setIsFetchingBalances(true);
     const cleanAddress = accountName.toLowerCase().trim();
     
-    console.log(`🔄 Syncing balances for: ${cleanAddress}`);
-
     try {
-      // 1. Fetch XPR (eosio.token)
       const xprStr = await getTokenBalance(cleanAddress, 'eosio.token', 'XPR');
       const xprVal = parseFloat(xprStr.split(' ')[0]);
 
-      // 2. Fetch GUY - Prioritizing 'vtoken' as the verified contract
       const guyContracts = ['vtoken', 'token.vtoken', 'guy', 'proton'];
       let guyVal = 0;
 
@@ -108,7 +118,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
       }
 
-      // 3. Metadata sync (Supabase)
       const [banResult, profileResult] = await Promise.all([
         supabase.from('banned_users').select('address').eq('address', cleanAddress).maybeSingle(),
         supabase.from('profiles').select('membership_expiry').eq('address', cleanAddress).maybeSingle()
@@ -120,21 +129,20 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (profileResult.data?.membership_expiry) {
         setMembershipExpiry(profileResult.data.membership_expiry);
       }
-      
-      console.log(`✨ Sync Finished: XPR: ${xprVal} | GUY: ${guyVal}`);
     } catch (err) {
-      console.error('❌ Error during fetchAllBalances:', err);
+      console.error('Error during fetchAllBalances:', err);
     } finally {
       setIsFetchingBalances(false);
     }
   }, [getTokenBalance]);
 
   useEffect(() => {
+    fetchSettings();
     const accountName = session?.auth?.actor;
     if (accountName) {
       fetchAllBalances(String(accountName));
     }
-  }, [session, fetchAllBalances]);
+  }, [session, fetchAllBalances, fetchSettings]);
 
   const initWallet = useCallback(async (restore = true) => {
     try {
@@ -184,26 +192,14 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const refreshBalances = useCallback(async () => {
     if (address) await fetchAllBalances(address);
-  }, [address, fetchAllBalances]);
+    await fetchSettings();
+  }, [address, fetchAllBalances, fetchSettings]);
 
   const transferTokens = useCallback(async (to: string, amount: number, token: 'XPR' | 'GUY', memo?: string) => {
     if (!session) return false;
     try {
-      // FIX: Standard Proton/XPR tokens like GUY (on vtoken) use 4 decimals.
       const precision = 4;
       let account = token === 'XPR' ? 'eosio.token' : 'vtoken';
-      
-      // Dynamic contract selection for GUY transfer
-      if (token === 'GUY') {
-        const guyContracts = ['vtoken', 'token.vtoken', 'guy', 'proton'];
-        for (const contract of guyContracts) {
-          const checkStr = await getTokenBalance(address, contract, 'GUY');
-          if (parseFloat(checkStr.split(' ')[0]) > 0) {
-            account = contract;
-            break;
-          }
-        }
-      }
       
       const action = {
         account: account,
@@ -219,22 +215,25 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       console.error('[transferTokens] Transaction failed:', err);
       return false;
     }
-  }, [session, refreshBalances, address, getTokenBalance]);
+  }, [session, refreshBalances]);
 
   const payMembership = useCallback(async () => {
-    const success = await transferTokens('askguy', 1, 'XPR', 'AskGuy Membership Fee');
+    const success = await transferTokens('askguy', membershipFee, 'XPR', 'AskGuy Membership Fee');
     if (success) {
       const nextYear = Date.now() + (365 * 24 * 60 * 60 * 1000);
       setMembershipExpiry(nextYear);
       await supabase.from('profiles').upsert({ address, membership_expiry: nextYear }, { onConflict: 'address' });
     }
-  }, [transferTokens, address]);
+  }, [transferTokens, address, membershipFee]);
+
+  const isMember = isConnected && (!membershipRequired || (membershipExpiry && membershipExpiry > Date.now()));
 
   return (
     <WalletContext.Provider value={{
       address, isConnected, isConnecting, isAdmin, isFetchingBalances,
       guyBalance, xprBalance, membershipExpiry,
-      isMember: isConnected, hasGuyThreshold: true, isBanned, 
+      isMember: !!isMember, hasGuyThreshold: true, isBanned, 
+      membershipRequired, membershipFee,
       payMembership, connect, disconnect,
       refreshBalances, transferTokens, requestor: address,
     }}>

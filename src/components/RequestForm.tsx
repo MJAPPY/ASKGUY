@@ -9,10 +9,29 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Upload, X, AlertCircle, ShieldCheck, Sparkles, AlertTriangle, Coins, Loader2, Zap } from 'lucide-react';
+import { Upload, X, AlertCircle, ShieldCheck, Sparkles, AlertTriangle, Coins, Loader2, Zap, Lock, Calendar } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useRequests, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
+
+interface RequestFormProps {
+  onSuccess<dyad-write path="src/components/RequestForm.tsx" description="Enforcing membership requirements in the request posting form.">
+"use client";
+
+import React, { useState, useRef, useMemo } from 'react';
+import { CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Upload, X, AlertCircle, ShieldCheck, Sparkles, AlertTriangle, Coins, Loader2, Zap, Lock, Calendar } from 'lucide-react';
+import { showSuccess, showError } from '@/utils/toast';
+import { useRequests, TokenSymbol } from '@/hooks/use-requests';
+import { useWallet } from '@/hooks/use-wallet';
+import { Link } from 'react-router-dom';
 
 interface RequestFormProps {
   onSuccess?: () => void;
@@ -25,7 +44,7 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
   const [skipProof, setSkipProof] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { requests, addRequest } = useRequests();
-  const { address, requestor, guyBalance, transferTokens } = useWallet();
+  const { address, requestor, guyBalance, transferTokens, isMember, membershipFee, membershipRequired } = useWallet();
   
   const [formData, setFormData] = useState({
     title: '',
@@ -62,7 +81,7 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!address || isLimitReached) return;
+    if (!address || isLimitReached || !isMember) return;
     
     if (!hasEnoughGuy) {
       showError("You need at least 25 GUY to post a request.");
@@ -73,7 +92,6 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
     setSubmittingStep('authorizing');
     
     try {
-      // Step 1: Process the 25 GUY payment
       const paymentSuccess = await transferTokens(
         'askguy', 
         25, 
@@ -90,7 +108,6 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
 
       setSubmittingStep('finalizing');
 
-      // Step 2: Save the request to the database
       const categoryToSubmit = formData.category === 'Other' 
         ? formData.customCategory || 'Other' 
         : formData.category;
@@ -136,6 +153,27 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
     "Transportation",
     "Other"
   ];
+
+  if (!isMember && membershipRequired) {
+    return (
+      <div className="flex flex-col h-full items-center justify-center p-8 text-center space-y-6">
+        <div className="w-20 h-20 rounded-[32px] bg-[#1565C0]/10 flex items-center justify-center border border-[#1565C0]/20 shadow-[0_0_30px_rgba(21,101,192,0.2)]">
+          <Lock className="text-[#1565C0]" size={40} />
+        </div>
+        <div className="space-y-3">
+          <h2 className="text-2xl font-black tracking-tight">Membership Required</h2>
+          <p className="text-muted-foreground text-sm leading-relaxed font-medium">
+            You must be a verified community member to post requests. Membership requires a one-time fee of <span className="text-white font-bold">{membershipFee.toLocaleString()} XPR</span> per year.
+          </p>
+        </div>
+        <Button asChild className="w-full h-14 bg-[#1565C0] hover:bg-[#1565C0]/90 text-white font-black rounded-2xl shadow-[0_0_40px_rgba(21,101,192,0.3)] btn-premium text-base gap-3 border-none">
+          <Link to="/profile">
+            <Calendar size={20} /> Join Community
+          </Link>
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full max-h-[85vh]">
@@ -319,7 +357,7 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
         <Button 
           form="request-form"
           type="submit" 
-          className="w-full gap-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black h-16 rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] uppercase tracking-[0.15em] text-[11px]" 
+          className="w-full gap-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black h-16 rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.25)] uppercase tracking-[0.15em] text-[11px]" 
           disabled={loading || isLimitReached || !hasEnoughGuy}
         >
           {loading ? (

@@ -86,8 +86,8 @@ const Index = () => {
                   Built on XPR Network
                 </div>
                 <h1 className="text-5xl md:text-7xl font-black tracking-tight leading-none">
-                  Real Help, <br />
-                  <span className="text-[#1565C0] drop-shadow-[0_0_20px_rgba(21,101,192,0.4)]">Real People</span>
+                  Diamond Hands. <br />
+                  <span className="text-[#1565C0] drop-shadow-[0_0_20px_rgba(21,101,192,0.4)]">Golden Hearts.</span>
                 </h1>
                 <p className="text-muted-foreground text-lg md:text-xl max-w-xl leading-relaxed font-medium">
                   AskGuy is a mutual assistance platform where XPR Network members help each other with real-life expenses. Post a need, send tokens, lift each other up.

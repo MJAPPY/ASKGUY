@@ -20,7 +20,7 @@ import {
   AlertDialogTrigger 
 } from "@/components/ui/alert-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Heart, X, Loader2, CheckCircle2, Zap, Sparkles, Image as ImageIcon, MessageSquare, Quote, AlertTriangle, Share2, Info } from 'lucide-react';
+import { Heart, X, Loader2, CheckCircle2, Zap, Sparkles, Image as ImageIcon, MessageSquare, Quote, AlertTriangle, Share2 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useRequests, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
@@ -79,12 +79,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
 
   const progress = Math.min((raised / amount) * 100, 100);
-  
-  // Robust owner check
-  const currentAddr = address?.toLowerCase()?.trim() || "";
-  const ownerAddr = requestor?.toLowerCase()?.trim() || "";
-  const isOwner = currentAddr !== "" && currentAddr === ownerAddr;
-  
+  const isOwner = address?.toLowerCase() === requestor?.toLowerCase();
   const isCompleted = status === 'Completed';
   const isFunded = progress >= 100;
 
@@ -93,12 +88,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
   const getCategoryColor = () => {
     const cat = category.toLowerCase();
     if (cat.includes('medical')) return 'bg-red-500/10 text-red-400 border-red-500/20';
-    if (cat.includes('rent') || cat.includes('housing')) return 'bg-purple-500/10 text-purple-400 border-purple-500/20';
-    if (cat.includes('utilities')) return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
-    if (cat.includes('groceries') || cat.includes('food')) return 'bg-green-500/10 text-green-400 border-green-500/20';
-    if (cat.includes('emergency') || cat.includes('crisis')) return 'bg-orange-500/10 text-orange-400 border-orange-500/20';
-    if (cat.includes('transportation')) return 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20';
-    return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+    return 'bg-white/5 text-brand-offWhite border-white/10';
   };
 
   const handleContribute = async () => {
@@ -139,7 +129,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
     e.stopPropagation();
     const shareData = {
       title: `Help @${requestor} with ${title}`,
-      text: `Support @${requestor} on AskGuy! They need help with ${category}. ${description.substring(0, 50)}...`,
+      text: `Support @${requestor} on AskGuy! They need help with ${category}.`,
       url: `${window.location.origin}/profile/${requestor}`
     };
 
@@ -157,8 +147,6 @@ const RequestCard: React.FC<RequestCardProps> = ({
     }
   };
 
-  const sortedContributions = [...contributions].sort((a, b) => b.timestamp - a.timestamp);
-
   const cardInner = (
     <div className={cn("p-0 cursor-pointer hover:bg-white/[0.02] transition-colors flex-1", variant === 'list' && "flex flex-col md:flex-row items-stretch")}>
       {proofUrl && (
@@ -168,7 +156,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
         )}>
           <img src={proofUrl} alt="Request Proof" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
           <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
-          <div className="absolute bottom-2 left-2 flex items-center gap-1 px-2 py-1 rounded-md bg-black/60 backdrop-blur-md border border-white/10 text-[10px] font-black uppercase tracking-widest text-primary">
+          <div className="absolute bottom-2 left-2 flex items-center gap-1 px-2 py-1 rounded-md bg-black/60 backdrop-blur-md border border-white/10 text-[10px] font-black uppercase tracking-widest metallic-pantone">
             <ImageIcon size={10} /> Proof
           </div>
         </div>
@@ -185,19 +173,16 @@ const RequestCard: React.FC<RequestCardProps> = ({
             </span>
           </div>
 
-          <h3 className={cn("font-black group-hover:text-primary transition-colors line-clamp-2 tracking-tight leading-tight", variant === 'list' ? "text-xl" : "text-xl")}>
+          <h3 className={cn("font-black group-hover:text-brand-gold transition-colors line-clamp-2 tracking-tight leading-tight text-brand-offWhite", variant === 'list' ? "text-xl" : "text-xl")}>
             {title}
           </h3>
 
           <div className="flex items-center gap-2 mt-2 group/user">
-            <div className="relative">
-              <div className="absolute -inset-0.5 bg-primary/30 rounded-full blur-[2px] opacity-0 group-hover/user:opacity-100 transition-opacity" />
-              <Avatar className="w-6 h-6 border border-white/20 relative z-10 transition-transform group-hover/user:scale-110 p-0.5 bg-black/20">
-                <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${requestor}`} />
-                <AvatarFallback className="text-[8px] bg-primary text-black font-black">{requestor.substring(0, 2).toUpperCase()}</AvatarFallback>
-              </Avatar>
-            </div>
-            <div className="text-xs font-black text-muted-foreground group-hover/user:text-primary transition-colors uppercase tracking-widest">
+            <Avatar className="w-6 h-6 border border-white/20 relative z-10 p-0.5 bg-black/20">
+              <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${requestor}`} />
+              <AvatarFallback className="text-[8px] bg-brand-gold text-brand-dark font-black">{requestor.substring(0, 2).toUpperCase()}</AvatarFallback>
+            </Avatar>
+            <div className="text-xs font-black text-muted-foreground group-hover/user:text-brand-gold transition-colors uppercase tracking-widest">
               @{requestor}
             </div>
           </div>
@@ -205,8 +190,8 @@ const RequestCard: React.FC<RequestCardProps> = ({
 
         <div className={cn(variant === 'list' ? "md:col-span-4" : "space-y-3")}>
           <div className="flex items-center justify-between text-xs font-black uppercase tracking-widest mb-2">
-            <div className="flex items-center gap-1.5 text-primary">
-              <Zap size={14} className="fill-primary" />
+            <div className="flex items-center gap-1.5 text-brand-gold">
+              <Zap size={14} className="fill-brand-gold" />
               <span className="text-sm">{raised.toLocaleString()} {token}</span>
             </div>
             <span className="text-muted-foreground opacity-50">/ {amount.toLocaleString()}</span>
@@ -216,7 +201,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
             <div 
               className={cn(
                 "h-full rounded-full transition-all duration-1000 ease-out relative",
-                isFunded ? "bg-emerald-500" : "bg-primary shadow-[0_0_10px_rgba(244,201,93,0.3)]"
+                isFunded ? "success-green-bg" : "bg-brand-gold"
               )} 
               style={{ width: `${progress}%` }}
             >
@@ -228,25 +213,19 @@ const RequestCard: React.FC<RequestCardProps> = ({
         {variant === 'list' && (
            <div className="md:col-span-3 flex flex-wrap gap-3 justify-end items-center">
               {isCompleted ? (
-                <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full flex items-center gap-1.5 border border-emerald-500/20 uppercase tracking-widest shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+                <span className="text-[10px] font-black success-green-text bg-white/5 px-3 py-1 rounded-full flex items-center gap-1.5 border border-brand-success/20 uppercase tracking-widest">
                   <CheckCircle2 size={12} /> Done
                 </span>
               ) : isFunded ? (
-                <span className="text-[10px] font-black text-primary bg-primary/10 px-3 py-1 rounded-full flex items-center gap-1.5 border border-primary/20 uppercase tracking-widest animate-pulse shadow-[0_0_15px_rgba(244,201,93,0.1)]">
+                <span className="text-[10px] font-black text-brand-gold bg-white/5 px-3 py-1 rounded-full flex items-center gap-1.5 border border-brand-gold/20 uppercase tracking-widest animate-pulse">
                   <Sparkles size={12} /> Funded
                 </span>
               ) : (
-                <span className="text-[10px] font-black text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full flex items-center gap-1.5 border border-blue-500/20 uppercase tracking-widest">
+                <span className="text-[10px] font-black text-brand-blue bg-white/5 px-3 py-1 rounded-full flex items-center gap-1.5 border border-brand-blue/20 uppercase tracking-widest">
                   Open
                 </span>
               )}
            </div>
-        )}
-
-        {variant === 'grid' && (
-          <p className="text-sm font-bold text-foreground/90 leading-relaxed line-clamp-3 min-h-[60px] italic bg-white/5 p-4 rounded-xl border border-white/5">
-            "{description}"
-          </p>
         )}
       </div>
     </div>
@@ -254,29 +233,20 @@ const RequestCard: React.FC<RequestCardProps> = ({
 
   return (
     <Card className={cn(
-      "glass-card overflow-hidden group hover:border-primary/40 transition-all duration-500 flex flex-col h-full",
-      variant === 'list' ? "flex-row h-auto min-h-[160px]" : "h-full",
-      isUrgent && !isCompleted ? 'border-red-500/40 shadow-[0_0_30px_rgba(239,68,68,0.1)]' : '',
-      isFunded && !isCompleted ? 'border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.1)]' : ''
+      "glass-card overflow-hidden group hover:border-brand-gold/40 transition-all duration-500 flex flex-col h-full",
+      variant === 'list' ? "flex-row h-auto min-h-[160px]" : "h-full"
     )}>
-      {variant === 'grid' && <div className={cn("h-1 transition-all duration-1000 shadow-[0_0_10px_currentColor]", isFunded ? "bg-emerald-500 text-emerald-500" : "bg-primary text-primary")} style={{ width: `${progress}%` }} />}
-      
       <Dialog>
         <DialogTrigger asChild>
           {cardInner}
         </DialogTrigger>
-        <DialogContent className="glass-card border-white/10 max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+        <DialogContent className="glass-card border-white/10 max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0 shadow-2xl">
           <DialogHeader className="p-6 border-b border-white/5 shrink-0">
             <div className="flex items-center justify-between">
-              <DialogTitle className="text-3xl font-black tracking-tight leading-tight">{title}</DialogTitle>
-              <div className="flex items-center gap-2 shrink-0 ml-4">
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  onClick={handleShare}
-                  className="h-8 w-8 rounded-full border-white/10 hover:bg-white/10"
-                >
-                  <Share2 size={14} />
+              <DialogTitle className="text-3xl font-black tracking-tight text-brand-offWhite">{title}</DialogTitle>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="icon" onClick={handleShare} className="h-8 w-8 rounded-full border-white/10 hover:bg-white/10">
+                  <Share2 size={14} className="text-brand-offWhite" />
                 </Button>
                 <span className={cn("text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest border", getCategoryColor())}>
                   {category}
@@ -284,115 +254,50 @@ const RequestCard: React.FC<RequestCardProps> = ({
               </div>
             </div>
             <div className="flex items-center gap-2 mt-2">
-              <div className="relative group/user">
-                <div className="absolute -inset-1 bg-primary/20 rounded-full blur-[2px] opacity-0 group-hover/user:opacity-100 transition-opacity" />
-                <Avatar className="w-8 h-8 border border-white/20 relative z-10 transition-all group-hover/user:border-primary/50 p-0.5 bg-black/20">
-                  <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${requestor}`} />
-                  <AvatarFallback className="text-[10px] bg-primary text-black font-black">{requestor.substring(0, 2).toUpperCase()}</AvatarFallback>
-                </Avatar>
-              </div>
-              <span className="text-sm font-black text-white uppercase tracking-wider">@{requestor}</span>
-              <span className="text-muted-foreground/30">•</span>
-              <span className="text-[10px] text-muted-foreground font-black uppercase tracking-tighter">
+              <Avatar className="w-8 h-8 border border-white/20 p-0.5 bg-black/20">
+                <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${requestor}`} />
+                <AvatarFallback className="text-[10px] bg-brand-gold text-brand-dark font-black">{requestor.substring(0, 2).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <span className="text-sm font-black text-brand-offWhite uppercase tracking-wider">@{requestor}</span>
+              <span className="text-[10px] text-muted-foreground font-black uppercase tracking-tighter ml-2">
                 Posted {formatDistanceToNow(timestamp, { addSuffix: true })}
               </span>
             </div>
           </DialogHeader>
 
-          <ScrollArea className="flex-1 overflow-y-auto">
-            <div className="p-6 space-y-10 pb-12">
-              <div className="space-y-4">
-                <h4 className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                  <Quote size={14} /> The Situation
-                </h4>
-                <div className="text-lg font-black leading-relaxed italic text-foreground/90 bg-white/5 p-8 rounded-[24px] border border-white/10 shadow-inner">
-                  "{description}"
-                </div>
+          <ScrollArea className="flex-1">
+            <div className="p-6 space-y-8">
+              <div className="p-8 rounded-[24px] bg-white/[0.03] border border-white/5 italic text-brand-offWhite font-bold leading-relaxed">
+                "{description}"
               </div>
-
+              
               {proofUrl && (
-                <div className="space-y-4">
-                  <h4 className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                    <ImageIcon size={14} /> Proof of Need
-                  </h4>
-                  <div className="rounded-[24px] overflow-hidden border border-white/10 bg-black/40 aspect-video relative group shadow-2xl">
-                    <img src={proofUrl} alt="Proof of Need" className="w-full h-full object-contain" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
-                  </div>
+                <div className="rounded-[24px] overflow-hidden border border-white/10 bg-black/40 aspect-video relative group">
+                  <img src={proofUrl} alt="Proof" className="w-full h-full object-contain" />
+                  <div className="absolute top-2 left-2 px-3 py-1 bg-black/60 rounded-lg metallic-pantone text-[10px] font-black">IMAGE PROOF</div>
                 </div>
               )}
-
-              <div className="space-y-4">
-                <h4 className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                  <MessageSquare size={14} /> Community Support ({contributions.length})
-                </h4>
-                {sortedContributions.length > 0 ? (
-                  <div className="grid grid-cols-1 gap-4">
-                    {sortedContributions.map((msg, idx) => (
-                      <div key={idx} className="p-5 rounded-[20px] bg-white/5 border border-white/10 space-y-3 hover:bg-white/[0.08] transition-colors group">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="relative">
-                              <div className="absolute -inset-0.5 bg-primary/20 rounded-full blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity" />
-                              <Avatar className="w-8 h-8 border border-white/20 relative z-10 transition-all group-hover:border-primary/50 p-0.5 bg-black/20">
-                                <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${msg.user}`} />
-                                <AvatarFallback className="text-[8px] bg-primary text-black font-black">{msg.user.substring(0, 1)}</AvatarFallback>
-                              </Avatar>
-                            </div>
-                            <div>
-                              <span className="text-[11px] font-black text-primary uppercase tracking-widest">@{msg.user}</span>
-                              <p className="text-[8px] text-muted-foreground uppercase font-black tracking-tighter">
-                                {formatDistanceToNow(msg.timestamp, { addSuffix: true })}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.05)]">
-                            <span className="text-xs font-black text-emerald-400">+{msg.amount} {msg.token}</span>
-                          </div>
-                        </div>
-                        {msg.message ? (
-                          <p className="text-sm font-black text-white/90 leading-relaxed italic border-l-2 border-primary/30 pl-4 py-1">
-                            "{msg.message}"
-                          </p>
-                        ) : (
-                          <p className="text-[10px] font-black text-muted-foreground italic uppercase tracking-widest opacity-50">
-                            Sent support with no message
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="py-16 text-center border-2 border-dashed border-white/5 rounded-[24px] bg-white/[0.02]">
-                    <Heart className="mx-auto text-muted-foreground/20 mb-3" size={32} />
-                    <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">No support yet. Be the first to help!</p>
-                  </div>
-                )}
-              </div>
             </div>
           </ScrollArea>
 
-          <div className="p-8 bg-[#0a0a0c]/90 backdrop-blur-xl border-t border-white/10 shrink-0 shadow-[0_-10px_30px_rgba(0,0,0,0.3)]">
-            <div className="flex items-center justify-between mb-6">
+          <div className="p-8 bg-black/80 border-t border-white/10">
+            <div className="flex items-center justify-between mb-4">
               <div className="space-y-1">
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Progress</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Raised</p>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-black text-white">{raised.toLocaleString()}</span>
-                  <span className="text-lg font-black text-muted-foreground">/ {amount.toLocaleString()} {token}</span>
+                  <span className="text-3xl font-black text-brand-gold">{raised.toLocaleString()}</span>
+                  <span className="text-sm font-bold text-muted-foreground">/ {amount.toLocaleString()} {token}</span>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{contributions.length} Supports</p>
-                <p className={cn("text-4xl font-black drop-shadow-sm transition-colors", isFunded ? "text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]" : "text-primary")}>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Progress</p>
+                <p className={cn("text-4xl font-black", isFunded ? "success-green-text" : "text-brand-offWhite")}>
                   {Math.round(progress)}%
                 </p>
               </div>
             </div>
-            
             <DialogTrigger asChild>
-               <Button className="w-full bg-primary hover:bg-primary/90 text-black font-black h-16 rounded-[20px] text-lg shadow-[0_0_30px_rgba(244,201,93,0.2)] uppercase tracking-widest transition-all hover:scale-[1.01] active:scale-[0.99]">
-                Close Details
-               </Button>
+               <Button className="w-full btn-primary-blue h-14 rounded-xl uppercase tracking-widest text-xs">Close Details</Button>
             </DialogTrigger>
           </div>
         </DialogContent>
@@ -400,175 +305,63 @@ const RequestCard: React.FC<RequestCardProps> = ({
 
       <div className={cn(
         "flex flex-col gap-3",
-        variant === 'list' ? "p-6 border-l border-white/5 shrink-0 justify-center min-w-[160px]" : "p-6 pt-0"
+        variant === 'list' ? "p-6 border-l border-white/5 shrink-0 justify-center min-w-[180px]" : "p-6 pt-0"
       )}>
-        <div className="flex gap-2">
-          {!isOwner && !isCompleted && (
-            <Dialog open={isHelpModalOpen} onOpenChange={setIsHelpModalOpen}>
-              <DialogTrigger asChild>
-                <Button 
-                  className={cn(
-                    "flex-1 bg-primary hover:bg-primary/90 text-black font-black rounded-xl gold-glow uppercase tracking-widest gap-2 transition-all",
-                    variant === 'list' ? "h-12 text-[11px]" : "h-14 text-sm btn-premium"
-                  )} 
-                >
-                  <Heart size={14} className="fill-current" />
-                  Help Now
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="glass-card border-white/10 max-w-sm p-6 space-y-6 shadow-2xl">
-                <DialogHeader>
-                  <DialogTitle className="text-2xl font-black tracking-tight">Send Support</DialogTitle>
-                  <DialogDescription className="text-muted-foreground font-medium">
-                    Helping <span className="text-primary font-bold">@{requestor}</span> with {title}
-                  </DialogDescription>
-                </DialogHeader>
-
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Quick Amounts</p>
-                    <div className="grid grid-cols-4 gap-2">
-                      {quickAmounts.map(amt => (
-                        <Button 
-                          key={amt} 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => setContributionAmount(amt.toString())}
-                          className={cn("h-8 text-[10px] font-black border-white/10 rounded-lg", contributionAmount === amt.toString() ? "bg-primary text-black border-primary shadow-[0_0_10px_rgba(244,201,93,0.2)]" : "hover:bg-white/5")}
-                        >
-                          {amt}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Amount & Token</p>
-                    <div className="flex gap-2">
-                      <Input
-                        type="number"
-                        value={contributionAmount}
-                        onChange={(e) => setContributionAmount(e.target.value)}
-                        className="bg-white/5 border-white/10 h-10 font-black rounded-xl"
-                      />
-                      <Select value={contributionToken} onValueChange={(v: TokenSymbol) => setContributionToken(v)}>
-                        <SelectTrigger className="w-24 h-10 bg-white/5 border-white/10 font-black rounded-xl">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="glass-card">
-                          <SelectItem value="XPR">XPR</SelectItem>
-                          <SelectItem value="GUY">GUY</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Message (Optional)</p>
-                    <Input
-                      placeholder="WAGMI! Stay strong."
-                      value={contributionMessage}
-                      onChange={(e) => setContributionMessage(e.target.value)}
-                      className="bg-white/5 border-white/10 h-10 italic rounded-xl"
-                    />
-                  </div>
-                </div>
-
-                <DialogFooter>
-                  <Button 
-                    className="w-full bg-primary hover:bg-primary/90 text-black font-black h-12 rounded-xl gold-glow transition-all shadow-[0_0_20px_rgba(244,201,93,0.2)]" 
-                    onClick={handleContribute}
-                    disabled={isProcessing}
-                  >
-                    {isProcessing ? <Loader2 className="animate-spin mr-2" size={16} /> : <Zap size={16} className="mr-2 fill-current" />}
-                    Confirm & Send
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          )}
-
-          {variant === 'grid' && (
-            <Button 
-              variant="outline" 
-              size="icon" 
-              onClick={handleShare}
-              className="h-14 w-14 rounded-xl border-white/10 hover:bg-white/5 shrink-0"
-            >
-              <Share2 size={18} className="text-muted-foreground" />
-            </Button>
-          )}
-        </div>
+        {!isOwner && !isCompleted && (
+          <Dialog open={isHelpModalOpen} onOpenChange={setIsHelpModalOpen}>
+            <DialogTrigger asChild>
+              <Button className={cn("w-full btn-gold-high gold-glow uppercase tracking-widest text-[11px] gap-2", variant === 'list' ? "h-12" : "h-14")}>
+                <Heart size={16} className="fill-current" />
+                GIFT HELP
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="glass-card border-white/10 max-w-sm p-6 space-y-6">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-black tracking-tight text-brand-gold">Send Support</DialogTitle>
+                <DialogDescription className="text-brand-offWhite">Helping @{requestor}</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <Input type="number" value={contributionAmount} onChange={(e) => setContributionAmount(e.target.value)} className="bg-white/5 border-white/10 h-12 text-brand-gold font-black" />
+                <Select value={contributionToken} onValueChange={(v: TokenSymbol) => setContributionToken(v)}>
+                  <SelectTrigger className="h-12 bg-white/5 border-white/10 font-black"><SelectValue /></SelectTrigger>
+                  <SelectContent className="glass-card"><SelectItem value="XPR">XPR</SelectItem><SelectItem value="GUY">GUY</SelectItem></SelectContent>
+                </Select>
+                <Input placeholder="Message..." value={contributionMessage} onChange={(e) => setContributionMessage(e.target.value)} className="bg-white/5 border-white/10 h-12 italic" />
+              </div>
+              <Button className="w-full btn-gold-high h-12" onClick={handleContribute} disabled={isProcessing}>
+                {isProcessing ? <Loader2 className="animate-spin" /> : "Confirm Gift"}
+              </Button>
+            </DialogContent>
+          </Dialog>
+        )}
 
         {isOwner && !isCompleted && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button 
-                variant="outline" 
-                className={cn(
-                  "w-full border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 font-black rounded-xl gap-2 uppercase tracking-widest transition-all",
-                  variant === 'list' ? "h-12 text-[10px]" : "h-14 text-xs"
-                )}
-                disabled={isProcessing}
-              >
-                {isProcessing ? <Loader2 className="animate-spin" size={14} /> : <><CheckCircle2 size={14} /> Mark as Done</>}
+              <Button className={cn("w-full border-brand-success/30 text-brand-success hover:bg-brand-success/10 font-black rounded-xl", variant === 'list' ? "h-12 text-[10px]" : "h-14 text-xs")}>
+                MARK DONE
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent className="glass-card border-white/10 max-md shadow-2xl">
+            <AlertDialogContent className="glass-card border-white/10">
               <AlertDialogHeader>
-                <AlertDialogTitle className="flex items-center gap-2 text-2xl font-black tracking-tight">
-                  <CheckCircle2 className="text-emerald-400" size={24} />
-                  Mark as Done
-                </AlertDialogTitle>
-                <AlertDialogDescription className="text-muted-foreground font-medium">
-                  Complete your request and send a final message of thanks to your supporters.
-                </AlertDialogDescription>
+                <AlertDialogTitle className="text-brand-gold">Complete Request?</AlertDialogTitle>
+                <AlertDialogDescription className="text-brand-offWhite">Send thanks to your supporters.</AlertDialogDescription>
               </AlertDialogHeader>
-              
-              <div className="space-y-3 py-4">
-                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Your Closing Message</label>
-                <Textarea 
-                  value={thanksMessage}
-                  onChange={(e) => setThanksMessage(e.target.value)}
-                  placeholder="Share your gratitude..."
-                  className="min-h-[100px] bg-white/5 border-white/10 leading-relaxed font-medium focus:border-emerald-500/50 rounded-2xl"
-                />
-                <p className="text-[9px] text-muted-foreground italic">This message will be visible in the request history for all supporters.</p>
-              </div>
-
-              <AlertDialogFooter className="gap-3">
-                <AlertDialogCancel className="bg-white/5 border-white/10 text-muted-foreground hover:text-white rounded-xl h-12 font-bold px-6">
-                  Not Yet
-                </AlertDialogCancel>
-                <AlertDialogAction 
-                  onClick={handleComplete}
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl h-12 px-8 shadow-[0_0_20px_rgba(16,185,129,0.2)]"
-                >
-                  Confirm & Send Thanks
-                </AlertDialogAction>
+              <Textarea value={thanksMessage} onChange={(e) => setThanksMessage(e.target.value)} className="bg-white/5 border-white/10 mt-4 h-32" />
+              <AlertDialogFooter className="mt-6">
+                <AlertDialogCancel className="bg-white/5 text-brand-offWhite">Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleComplete} className="bg-brand-success text-white">Confirm & Complete</AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
         )}
 
         {isCompleted && (
-          <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10 space-y-1">
-            <span className="text-[10px] font-black text-emerald-400 flex items-center gap-1.5 border-none uppercase tracking-widest shadow-none">
+          <div className="p-3 rounded-xl bg-white/5 border border-brand-success/20 text-center">
+            <span className="text-[10px] font-black success-green-text uppercase tracking-widest flex items-center justify-center gap-2">
               <CheckCircle2 size={12} /> COMPLETED
             </span>
-            <span className="text-[8px] text-muted-foreground font-bold uppercase tracking-tight">Gifts received!</span>
           </div>
-        )}
-        
-        {variant === 'list' && !isCompleted && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={handleShare}
-            className="text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors gap-2"
-          >
-            <Share2 size={12} /> Share Request
-          </Button>
         )}
       </div>
     </Card>

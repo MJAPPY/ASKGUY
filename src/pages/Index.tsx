@@ -15,7 +15,6 @@ import LiveTicker from '@/components/LiveTicker';
 import BannedOverlay from '@/components/BannedOverlay';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Heart, ArrowRight, Search, Loader2, LayoutGrid, List, Sparkles, PlusCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -23,7 +22,6 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
-// Importing the new PNG hero image
 import heroGuy from '@/assets/hero-guy.png';
 
 type FilterType = 'all' | 'active' | 'funded' | 'my-requests';
@@ -31,7 +29,7 @@ type SortType = 'newest' | 'oldest';
 type ViewMode = 'grid' | 'list';
 
 const Index = () => {
-  const { isConnected, address, connect, isFetchingBalances, isConnecting, isBanned } = useWallet();
+  const { isConnected, address, connect, isBanned } = useWallet();
   const { requests, loading: requestsLoading } = useRequests();
   const [filter, setFilter] = useState<FilterType>('active');
   const [sortBy, setSortBy] = useState<SortType>('oldest');
@@ -41,16 +39,13 @@ const Index = () => {
 
   const filteredRequests = useMemo(() => {
     let result = [...requests];
-    
     if (searchQuery) {
       result = result.filter(req => 
         req.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
         req.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        req.requestor.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        req.category.toLowerCase().includes(searchQuery.toLowerCase())
+        req.requestor.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-
     if (filter === 'my-requests' && address) {
       result = result.filter(req => req.requestor === address);
     } else if (filter === 'active') {
@@ -58,12 +53,7 @@ const Index = () => {
     } else if (filter === 'funded') {
       result = result.filter(req => req.status === 'Funded' || req.status === 'Completed');
     }
-
-    result.sort((a, b) => {
-      if (sortBy === 'newest') return b.timestamp - a.timestamp;
-      return a.timestamp - b.timestamp;
-    });
-
+    result.sort((a, b) => sortBy === 'newest' ? b.timestamp - a.timestamp : a.timestamp - b.timestamp);
     return result;
   }, [requests, filter, searchQuery, address, sortBy]);
 
@@ -71,56 +61,43 @@ const Index = () => {
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
+      <div className="min-h-screen bg-background text-brand-offWhite flex flex-col">
         <Navbar />
-        {/* Background glow effects */}
-        <div className="absolute top-[20%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/10 blur-[120px] rounded-full pointer-events-none" />
-        <div className="absolute bottom-[20%] right-[-10%] w-[50%] h-[50%] bg-primary/10 blur-[120px] rounded-full pointer-events-none" />
-
-        <div className="flex-1 relative z-10 flex flex-col justify-center">
-          <div className="container mx-auto px-4 pt-4 pb-12 lg:pt-8 lg:pb-24">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div className="flex-1 flex flex-col justify-center py-20">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
               <div className="space-y-8 animate-in fade-in slide-in-from-left-8 duration-1000">
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/5 text-emerald-400 text-sm font-black uppercase tracking-widest">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  Built on XPR Network
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-brand-gold/40 bg-brand-gold/5 text-brand-gold text-sm font-black uppercase tracking-widest">
+                  <div className="w-2 h-2 rounded-full success-green-bg" />
+                  XPR Network Mutual Aid
                 </div>
-                <h1 className="text-5xl md:text-7xl font-black tracking-tight leading-none">
-                  Real Help, <br />
-                  <span className="text-emerald-400 drop-shadow-[0_0_20px_rgba(16,185,129,0.4)]">Real People</span>
+                <h1 className="text-6xl md:text-8xl font-black tracking-tight leading-[0.9] text-white">
+                  Mutual Aid <br />
+                  <span className="text-brand-goldBright drop-shadow-xl">Simplified.</span>
                 </h1>
-                <p className="text-muted-foreground text-lg md:text-xl max-w-xl leading-relaxed font-medium">
-                  AskGuy is a mutual assistance platform where XPR Network members help each other with real-life expenses. Post a need, send tokens, lift each other up.
+                <p className="text-brand-offWhite/80 text-xl max-w-xl leading-relaxed font-medium">
+                  Support the community through transparent, feeless XPR gifting. Real help, directly to those who need it most.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 pt-2">
-                  <Button onClick={connect} size="lg" className="h-14 px-8 text-lg font-black bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl flex gap-3 group transition-all shadow-[0_0_40px_rgba(16,185,129,0.3)] btn-premium uppercase tracking-widest">
-                    <Heart size={20} className="fill-white" />
-                    Connect & Join
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button onClick={connect} size="lg" className="h-16 px-10 text-lg btn-gold-high rounded-2xl flex gap-3 group">
+                    <Heart size={20} className="fill-brand-dark" />
+                    CONNECT WALLET
                     <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                   </Button>
-                  <Button asChild variant="outline" size="lg" className="h-14 px-8 text-lg font-black border-primary/20 bg-primary/5 text-primary rounded-2xl flex gap-3 hover:bg-primary/10 transition-all gold-glow uppercase tracking-widest">
-                    <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer">
-                      Buy GUY Tokens
-                    </a>
+                  <Button asChild variant="outline" size="lg" className="h-16 px-10 text-lg font-black border-brand-blue/30 bg-brand-blue/5 text-brand-blue rounded-2xl">
+                    <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer">BUY $GUY</a>
                   </Button>
                 </div>
               </div>
-              <div className="relative animate-in fade-in slide-in-from-right-8 duration-1000 lg:-translate-y-6 lg:-translate-x-12">
-                <div className="relative z-10 w-full max-w-[480px] mx-auto lg:mr-auto lg:ml-0 group">
-                   <div className="absolute -inset-10 bg-emerald-500/10 rounded-full blur-[100px] opacity-50 group-hover:opacity-80 transition-opacity duration-1000" />
-                   <img 
-                    src={heroGuy} 
-                    alt="AskGuy Hero" 
-                    className="w-full h-auto drop-shadow-[0_0_60px_rgba(16,185,129,0.2)] transition-transform duration-700 group-hover:scale-105" 
-                   />
+              <div className="relative animate-in fade-in slide-in-from-right-8 duration-1000">
+                <div className="relative z-10 w-full max-w-[500px] mx-auto group">
+                   <div className="absolute -inset-10 bg-brand-gold/10 rounded-full blur-[100px]" />
+                   <img src={heroGuy} alt="Hero" className="w-full h-auto drop-shadow-2xl transition-transform duration-700 group-hover:scale-105" />
                 </div>
               </div>
             </div>
-          </div>
-          <div className="container mx-auto px-4">
             <HowItWorks />
             <SuccessStories />
-            <CTASection />
           </div>
         </div>
         <Footer />
@@ -129,110 +106,60 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
+    <div className="min-h-screen bg-background text-brand-offWhite flex flex-col">
       <Navbar />
       <LiveTicker />
-      <main className="flex-1 container mx-auto px-4 py-8 relative z-10">
+      <main className="flex-1 container mx-auto px-4 py-12">
         <CommunityStats />
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-4 space-y-6">
-            <div className="space-y-6">
-              <Dialog open={isRequestModalOpen} onOpenChange={setIsRequestModalOpen}>
-                <DialogTrigger asChild>
-                  <Button className="w-full h-20 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-[24px] shadow-[0_0_30px_rgba(16,185,129,0.2)] flex flex-col items-center justify-center gap-1 group transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]">
-                    <div className="flex items-center gap-2">
-                      <PlusCircle size={24} className="transition-transform group-hover:rotate-90 duration-500" />
-                      <span className="text-lg uppercase tracking-widest">Post New Request</span>
-                    </div>
-                    <span className="text-[10px] text-emerald-100/60 uppercase font-black tracking-tighter">Ask the community for support</span>
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="glass-card border-white/10 max-w-xl p-8 rounded-[32px] shadow-2xl">
-                  <RequestForm onSuccess={() => setIsRequestModalOpen(false)} />
-                </DialogContent>
-              </Dialog>
-
-              <ActivityFeed />
-              
-              <Card className="glass-card bg-primary/5 border-primary/20 p-6 rounded-[24px] space-y-4">
-                <div className="flex items-center gap-2 text-primary">
-                  <Sparkles size={18} />
-                  <h3 className="font-black text-sm uppercase tracking-widest">Member Tip</h3>
-                </div>
-                <p className="text-xs text-muted-foreground leading-relaxed font-medium">
-                  Requests with clear descriptions and photo proof are funded <span className="text-white font-bold">3x faster</span> by the community. Be transparent and honest!
-                </p>
-              </Card>
-            </div>
+            <Dialog open={isRequestModalOpen} onOpenChange={setIsRequestModalOpen}>
+              <DialogTrigger asChild>
+                <Button className="w-full h-24 btn-gold-high rounded-[24px] gold-glow flex flex-col gap-1 group">
+                  <div className="flex items-center gap-2">
+                    <PlusCircle size={28} className="transition-transform group-hover:rotate-90 duration-500" />
+                    <span className="text-xl uppercase tracking-widest">POST REQUEST</span>
+                  </div>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="glass-card border-white/10 max-w-xl p-8 rounded-[32px]">
+                <RequestForm onSuccess={() => setIsRequestModalOpen(false)} />
+              </DialogContent>
+            </Dialog>
+            <ActivityFeed />
           </div>
           
-          <div className="lg:col-span-8 space-y-6">
-            <div id="browse-requests" className="flex flex-col space-y-6">
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                <div className="space-y-1">
-                  <h2 className="text-3xl font-black tracking-tight">Browse Requests</h2>
-                  <p className="text-xs text-muted-foreground font-black uppercase tracking-widest">Supporting the community</p>
-                </div>
-                
-                <div className="flex flex-wrap items-center gap-3">
-                  <div className="relative w-full sm:w-56">
-                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/50" size={16} />
-                    <Input 
-                      placeholder="Search needs..." 
-                      className="pl-10 h-11 bg-white/5 border-white/10 rounded-2xl focus:border-primary/50 transition-all font-medium" 
-                      value={searchQuery} 
-                      onChange={(e) => setSearchQuery(e.target.value)} 
-                    />
-                  </div>
-                  
-                  <div className="flex bg-white/5 border border-white/10 p-1.5 rounded-2xl">
-                    <ToggleGroup type="single" value={viewMode} onValueChange={(v) => v && setViewMode(v as ViewMode)}>
-                      <ToggleGroupItem value="grid" className="h-8 px-3 rounded-xl data-[state=on]:bg-primary data-[state=on]:text-black transition-all">
-                        <LayoutGrid size={16} />
-                      </ToggleGroupItem>
-                      <ToggleGroupItem value="list" className="h-8 px-3 rounded-xl data-[state=on]:bg-primary data-[state=on]:text-black transition-all">
-                        <List size={16} />
-                      </ToggleGroupItem>
-                    </ToggleGroup>
-                  </div>
-
-                  <div className="flex bg-white/5 border border-white/10 p-1.5 rounded-2xl">
-                    <ToggleGroup type="single" value={sortBy} onValueChange={(v) => v && setSortBy(v as SortType)}>
-                      <ToggleGroupItem value="oldest" className="h-8 px-4 text-[9px] font-black uppercase tracking-widest rounded-xl data-[state=on]:bg-primary data-[state=on]:text-black transition-all">
-                        Oldest
-                      </ToggleGroupItem>
-                      <ToggleGroupItem value="newest" className="h-8 px-4 text-[9px] font-black uppercase tracking-widest rounded-xl data-[state=on]:bg-primary data-[state=on]:text-black transition-all">
-                        Newest
-                      </ToggleGroupItem>
-                    </ToggleGroup>
-                  </div>
-                </div>
+          <div className="lg:col-span-8 space-y-8">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+              <div className="space-y-1">
+                <h2 className="text-4xl font-black tracking-tight text-white">Community Needs</h2>
+                <p className="text-[11px] text-brand-gold font-black uppercase tracking-widest">Support your fellow members</p>
               </div>
-
-              <Tabs value={filter} onValueChange={(v: any) => setFilter(v)} className="w-full">
-                <TabsList className="bg-white/5 border border-white/10 h-12 p-1.5 w-full justify-start overflow-x-auto no-scrollbar rounded-2xl">
-                  <TabsTrigger value="active" className="text-[10px] font-black uppercase tracking-widest rounded-xl px-8 h-full data-[state=active]:bg-primary data-[state=active]:text-black transition-all">Active</TabsTrigger>
-                  <TabsTrigger value="all" className="text-[10px] font-black uppercase tracking-widest rounded-xl px-8 h-full data-[state=active]:bg-primary data-[state=active]:text-black transition-all">All</TabsTrigger>
-                  <TabsTrigger value="funded" className="text-[10px] font-black uppercase tracking-widest rounded-xl px-8 h-full data-[state=active]:bg-primary data-[state=active]:text-black transition-all">Archive</TabsTrigger>
-                </TabsList>
-              </Tabs>
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="relative">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-offWhite/40" size={16} />
+                  <Input 
+                    placeholder="Search..." 
+                    className="pl-10 h-12 bg-white/5 border-white/10 rounded-2xl text-brand-offWhite w-full md:w-64" 
+                    value={searchQuery} 
+                    onChange={(e) => setSearchQuery(e.target.value)} 
+                  />
+                </div>
+                <ToggleGroup type="single" value={viewMode} onValueChange={(v) => v && setViewMode(v as ViewMode)} className="bg-white/5 border border-white/10 p-1 rounded-2xl">
+                  <ToggleGroupItem value="grid" className="h-10 px-4 rounded-xl data-[state=on]:bg-brand-gold data-[state=on]:text-brand-dark"><LayoutGrid size={18} /></ToggleGroupItem>
+                  <ToggleGroupItem value="list" className="h-10 px-4 rounded-xl data-[state=on]:bg-brand-gold data-[state=on]:text-brand-dark"><List size={18} /></ToggleGroupItem>
+                </ToggleGroup>
+              </div>
             </div>
 
-            <div className={cn(
-              "animate-in fade-in duration-500",
-              viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 gap-6" : "flex flex-col gap-4"
-            )}>
+            <div className={cn("grid gap-6", viewMode === 'grid' ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1")}>
               {requestsLoading ? (
-                <div className="col-span-full text-center py-24">
-                  <Loader2 className="animate-spin mx-auto text-primary" size={32} />
-                  <p className="mt-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Syncing Blockchain Data...</p>
-                </div>
+                <div className="col-span-full text-center py-24"><Loader2 className="animate-spin mx-auto text-brand-gold" size={32} /></div>
               ) : filteredRequests.length > 0 ? (
                 filteredRequests.map((req) => <RequestCard key={req.id} {...req} variant={viewMode} />)
               ) : (
-                <div className="col-span-full py-24 text-center glass-card border-dashed border-white/10 rounded-[32px]">
-                  <Heart className="mx-auto text-muted-foreground/20 mb-4" size={48} />
-                  <p className="text-muted-foreground font-black uppercase tracking-widest text-xs">No needs found matching your filters.</p>
+                <div className="col-span-full py-24 text-center glass-card rounded-[32px]">
+                  <p className="text-brand-offWhite/40 font-black uppercase tracking-widest">No active requests found.</p>
                 </div>
               )}
             </div>

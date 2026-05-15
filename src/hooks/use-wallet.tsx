@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import Connect, { LinkSession } from '@proton/web-sdk';
-import { ProtonApi } from '@proton/api';
 import { supabase } from '@/integrations/supabase/client';
 
 export const OWNER_ADDRESS = 'tripseven';
@@ -53,10 +52,22 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const isAdmin = address.toLowerCase() === OWNER_ADDRESS.toLowerCase();
 
-  // Initialize Proton API
-  const api = new ProtonApi({
-    endpoints: ENDPOINTS
-  });
+  const rpcCall = async (path: string, body: any) => {
+    for (const endpoint of ENDPOINTS) {
+      try {
+        const response = await fetch(`${endpoint}${path}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+          signal: AbortSignal.timeout(4000)
+        });
+        if (response.ok) return await response.json();
+      } catch (e) {
+        continue;
+      }
+    }
+    return null;
+  };
 
   const loadBalances = useCallback(async (walletAddress: string) => {
     if (!walletAddress) return;
@@ -66,25 +77,38 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     console.log(`[loadBalances] Debugging sync for @${cleanAddress}...`);
 
     try {
-      // 1. Fetch native XPR using the API
-      const xprResponse = await api.chain.getCurrencyBalance('eosio.token', cleanAddress, 'XPR');
-      console.log(`[loadBalances] RAW XPR Response:`, xprResponse);
-      const xprVal = xprResponse.length > 0 ? parseFloat(xprResponse[0].split(' ')[0]) : 0;
+      // 1. Fetch native XPR
+      const xprData = await rpcCall('/v1/chain/get_currency_balance', {
+        code: 'eosio.token',
+        account: cleanAddress,
+        symbol: 'XPR'
+      });
+      console.log(`[loadBalances] XPR Response:`, xprData);
+      const xprVal = xprData && xprData.length > 0 ? parseFloat(xprData[0].split(' ')[0]) : 0;
 
-      // 2. Fetch specific GUY from the 'proton' contract (Method A)
-      const guyProtonResponse = await api.chain.getCurrencyBalance('proton', cleanAddress, 'GUY');
-      console.log(`[loadBalances] RAW 'proton' Contract Response:`, guyProtonResponse);
-      const guyProton = guyProtonResponse.length > 0 ? parseFloat(guyProtonResponse[0].split(' ')[0]) : 0;
+      // 2. Fetch specific GUY from the 'proton' contract
+      const guyData = await rpcCall('/v1/chain/get_currency_balance', {
+        code: 'proton',
+        account: cleanAddress,
+        symbol: 'GUY'
+      });
+      console.log(`[loadBalances] 'proton' GUY Response:`, guyData);
+      const guyProton = guyData && guyData.length > 0 ? parseFloat(guyData[0].split(' ')[0]) : 0;
 
-      // 3. Fetch ALL tokens for the account to see if it's under a different contract/symbol (Method B)
-      const allTokens = await api.chain.getAccountTokens(cleanAddress);
-      console.log(`[loadBalances] ALL Account Tokens:`, allTokens);
+      // 3. Fetch ALL tokens for the account (The "Vibrr" check)
+      const allTokensData = await rpcCall('/v1/chain/get_account_tokens', { account: cleanAddress });
+      console.log(`[loadBalances] ALL Account Tokens:`, allTokensData);
 
-      // Search for any token with GUY symbol in the list of all tokens
-      const foundGuy = allTokens.find(t => t.symbol === 'GUY' || t.symbol === 'Guy');
-      console.log(`[loadBalances] Found GUY Token Info:`, foundGuy);
-      
-      const vTokenBalance = foundGuy ? parseFloat(foundGuy.amount) : 0;
+      let vTokenBalance = 0;
+      if (allTokensData && allTokensData.tokens) {
+        const foundGuy = allTokensData.tokens.find((t: any) => 
+          t.symbol === 'GUY' || t.symbol === 'Guy' || t.symbol === '777 GUY'
+        );
+        if (foundGuy) {
+          console.log(`[loadBalances] Found GUY in Account Tokens:`, foundGuy);
+          vTokenBalance = parseFloat(foundGuy.amount);
+        }
+      }
 
       // 4. Metadata sync (Supabase)
       const [banResult, profileResult] = await Promise.all([
@@ -98,8 +122,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setMembershipExpiry(profileResult.data.membership_expiry);
       }
       
-      // We combine the specific check and the general search
-      // Most likely it's in the allTokens response
       const finalGuy = Math.max(guyProton, vTokenBalance);
       setGuyBalance(finalGuy);
       
@@ -169,8 +191,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       let account = token === 'XPR' ? 'eosio.token' : 'token.vtoken';
       
       if (token === 'GUY') {
-        const allTokens = await api.chain.getAccountTokens(address);
-        const guyInfo = allTokens.find(t => t.symbol === 'GUY' || t.symbol === 'Guy');
+        const allTokensData = await rpcCall('/v1/chain/get_account_tokens', { account: address });
+        const guyInfo = allTokensData?.tokens?.find((t: any) => t.symbol === 'GUY' || t.symbol === 'Guy');
         if (guyInfo) {
           account = guyInfo.contract;
         }

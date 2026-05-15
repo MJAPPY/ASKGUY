@@ -32,9 +32,9 @@ const APP_NAME = 'AskGuy';
 
 const ENDPOINTS = [
   'https://proton.greymass.com',
-  'https://api.protonnz.com',
   'https://api.protonchain.com',
   'https://proton.protonuk.io',
+  'https://api.protonnz.com',
   'https://proton.eosusa.io',
 ];
 
@@ -56,7 +56,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const cleanAccount = String(account).toLowerCase().trim();
     const cleanContract = String(contract).toLowerCase().trim();
     
-    // Try multiple endpoints to ensure we get a response
     for (const endpoint of ENDPOINTS) {
       try {
         const response = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
@@ -66,8 +65,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             code: cleanContract,
             account: cleanAccount,
             symbol: symbol
-          }),
-          signal: AbortSignal.timeout(3000) // Don't hang forever on one endpoint
+          })
         });
 
         if (response.ok) {
@@ -76,11 +74,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             const val = parseFloat(data[0].split(' ')[0]);
             return isNaN(val) ? 0 : val;
           }
-          // Successfully talked to the chain and confirmed 0 balance
           return 0;
         }
       } catch (err) {
-        // Continue to next endpoint on failure
+        // Silently fail and try next endpoint
         continue;
       }
     }
@@ -93,37 +90,37 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const cleanAddress = walletAddress.toLowerCase();
     
     try {
-      // Sync with Supabase for profile data and bans
-      const { data: banData } = await supabase.from('banned_users').select('address').eq('address', cleanAddress).maybeSingle();
-      setIsBanned(!!banData);
-
-      const { data: profileData } = await supabase.from('profiles').select('membership_expiry').eq('address', cleanAddress).maybeSingle();
-      if (profileData?.membership_expiry) {
-        setMembershipExpiry(profileData.membership_expiry);
-      }
-    } catch (err) {
-      console.warn('[use-wallet] Supabase sync warning:', err);
-    }
-
-    try {
-      // Fetch balances from multiple possible GUY contracts and sum them
-      const [xprVal, guyVtoken, guyXtokens, guy777] = await Promise.all([
+      // Parallelize blockchain and database calls for performance
+      const [
+        xprVal, 
+        guyVtoken, 
+        guyXtokens, 
+        guy777, 
+        guyTokenVtoken,
+        banResult,
+        profileResult
+      ] = await Promise.all([
         fetchTokenBalance(cleanAddress, 'eosio.token', 'XPR'),
         fetchTokenBalance(cleanAddress, 'proton-vtoken', 'GUY'),
         fetchTokenBalance(cleanAddress, 'xtokens', 'GUY'),
-        fetchTokenBalance(cleanAddress, 'token.777', 'GUY')
+        fetchTokenBalance(cleanAddress, 'token.777', 'GUY'),
+        fetchTokenBalance(cleanAddress, 'token.vtoken', 'GUY'),
+        supabase.from('banned_users').select('address').eq('address', cleanAddress).maybeSingle(),
+        supabase.from('profiles').select('membership_expiry').eq('address', cleanAddress).maybeSingle()
       ]);
 
-      setXprBalance(xprVal);
+      setXprBalance(xprVal || 0);
+      setIsBanned(!!banResult.data);
+      if (profileResult.data?.membership_expiry) {
+        setMembershipExpiry(profileResult.data.membership_expiry);
+      }
       
-      // Some users might have GUY spread across contracts, so we sum them
-      // instead of taking max to ensure accuracy
-      const totalGuy = (guyVtoken || 0) + (guyXtokens || 0) + (guy777 || 0);
+      const totalGuy = (guyVtoken || 0) + (guyXtokens || 0) + (guy777 || 0) + (guyTokenVtoken || 0);
       setGuyBalance(totalGuy);
       
-      console.log(`[use-wallet] Loaded balances for ${cleanAddress}: XPR=${xprVal}, GUY=${totalGuy}`);
+      console.log(`[use-wallet] Sync complete for ${cleanAddress}: XPR=${xprVal}, GUY=${totalGuy}`);
     } catch (err) {
-      console.error('[use-wallet] Blockchain sync error:', err);
+      console.error('[use-wallet] Global sync error:', err);
     } finally {
       setIsFetchingBalances(false);
     }
@@ -186,16 +183,13 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const precision = token === 'XPR' ? 4 : 6;
       let account = token === 'XPR' ? 'eosio.token' : 'proton-vtoken';
       
-      // For GUY, determine which contract holds the balance needed
       if (token === 'GUY') {
-        const vtokenVal = await fetchTokenBalance(address, 'proton-vtoken', 'GUY');
-        if (vtokenVal < amount) {
-          const xtokensVal = await fetchTokenBalance(address, 'xtokens', 'GUY');
-          if (xtokensVal >= amount) {
-            account = 'xtokens';
-          } else {
-            const t777Val = await fetchTokenBalance(address, 'token.777', 'GUY');
-            if (t777Val >= amount) account = 'token.777';
+        const contracts = ['proton-vtoken', 'xtokens', 'token.777', 'token.vtoken'];
+        for (const contract of contracts) {
+          const balance = await fetchTokenBalance(address, contract, 'GUY');
+          if (balance >= amount) {
+            account = contract;
+            break;
           }
         }
       }
@@ -208,8 +202,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       };
       
       await session.transact({ actions: [action] }, { broadcast: true });
-      
-      // Delay balance refresh slightly to allow chain to update
       setTimeout(refreshBalances, 3000);
       return true;
     } catch (err) {

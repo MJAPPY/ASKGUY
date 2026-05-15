@@ -305,7 +305,7 @@ const Calculator = () => {
                       asChild
                       className="h-10 bg-primary hover:bg-primary/90 text-black font-black text-[10px] uppercase tracking-widest px-6 rounded-xl shadow-lg gold-glow gap-2"
                     >
-                      <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer">
+                      <a href="https://alcor.exchange/v/xpr/swap?input=xusdc-xtokens&output=xpr-eosio.token" target="_blank" rel="noopener noreferrer">
                         Get XPR <ArrowRight size={12} />
                       </a>
                     </Button>

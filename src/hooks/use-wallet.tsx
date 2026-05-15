@@ -30,6 +30,7 @@ const WalletContext = createContext<WalletState | undefined>(undefined);
 
 const APP_NAME = 'AskGuy';
 
+// Prioritizing the most stable public endpoints
 const PROTON_ENDPOINTS = [
   'https://proton.greymass.com',
   'https://api.protonchain.com',
@@ -55,7 +56,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const getTokenBalance = useCallback(async (accountName: string, contract: string, symbol: string) => {
     for (const rpc of PROTON_ENDPOINTS) {
       try {
-        // Try get_currency_balance first as it's often more stable than table rows
+        // We use get_currency_balance as it's the standard for token assets
         const res = await fetch(`${rpc}/v1/chain/get_currency_balance`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -69,38 +70,15 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         if (res.ok) {
           const data = await res.json();
-          if (data && data.length > 0) {
-            console.log(`✅ ${symbol} (${contract}) from ${rpc}:`, data[0]);
+          if (Array.isArray(data) && data.length > 0) {
             return data[0];
           }
-        }
-        
-        // Fallback to get_table_rows if get_currency_balance returns nothing
-        const resTable = await fetch(`${rpc}/v1/chain/get_table_rows`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            json: true,
-            code: contract,
-            scope: accountName,
-            table: "accounts",
-            lower_bound: symbol,
-            upper_bound: symbol,
-            limit: 1
-          }),
-          signal: AbortSignal.timeout(3000)
-        });
-
-        if (resTable.ok) {
-          const tableData = await resTable.json();
-          const balance = tableData.rows[0]?.balance;
-          if (balance) {
-            console.log(`✅ ${symbol} (Table) from ${rpc}:`, balance);
-            return balance;
+          if (Array.isArray(data) && data.length === 0) {
+            return `0.0000 ${symbol}`;
           }
         }
       } catch (err) {
-        console.warn(`⚠️ Node ${rpc} failed for ${symbol}`);
+        // Silently fail to next node
       }
     }
     return `0.0000 ${symbol}`;
@@ -118,7 +96,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const xprStr = await getTokenBalance(cleanAddress, 'eosio.token', 'XPR');
       const xprVal = parseFloat(xprStr.split(' ')[0]);
 
-      // 2. Fetch GUY (tried on common contracts: 'token.vtoken' and 'proton')
+      // 2. Fetch GUY - GUY is often on 'token.vtoken' (bridge) or 'proton' (native)
+      // We check both to be sure
       let guyStr = await getTokenBalance(cleanAddress, 'token.vtoken', 'GUY');
       let guyVal = parseFloat(guyStr.split(' ')[0]);
 
@@ -142,7 +121,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       
       console.log(`✨ Sync Finished: XPR: ${xprVal} | GUY: ${guyVal}`);
     } catch (err) {
-      console.error('❌ Sync failed:', err);
+      console.error('❌ Wallet sync encountered an error:', err);
     } finally {
       setIsFetchingBalances(false);
     }
@@ -213,8 +192,14 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const precision = token === 'XPR' ? 4 : 6;
       let account = token === 'XPR' ? 'eosio.token' : 'token.vtoken';
       
-      // GUY can be on different contracts, let's try to verify via transfer failure if needed, 
-      // but usually it's token.vtoken for the bridge or proton for native.
+      // Verification for GUY contract during transfer
+      if (token === 'GUY') {
+        const nativeCheck = await getTokenBalance(address, 'proton', 'GUY');
+        if (parseFloat(nativeCheck.split(' ')[0]) > 0) {
+          account = 'proton';
+        }
+      }
+      
       const action = {
         account: account,
         name: 'transfer',
@@ -229,7 +214,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       console.error('[transferTokens] Transaction failed:', err);
       return false;
     }
-  }, [session, refreshBalances]);
+  }, [session, refreshBalances, address, getTokenBalance]);
 
   const payMembership = useCallback(async () => {
     const success = await transferTokens('askguy', 1, 'XPR', 'AskGuy Membership Fee');

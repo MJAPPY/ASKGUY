@@ -10,9 +10,10 @@ export default defineConfig(() => ({
   },
   plugins: [dyadComponentTagger(), react()],
   define: {
-    // Ensuring global and process are available for blockchain SDKs
+    // Ensuring global and Buffer are available for blockchain SDKs
     global: 'window',
     'process.env': {},
+    Buffer: ['buffer', 'Buffer'],
   },
   resolve: {
     alias: {

@@ -157,9 +157,18 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const precision = token === 'XPR' ? 4 : 6;
       let account = token === 'XPR' ? 'eosio.token' : 'proton-vtoken';
       
+      // If sending GUY, check which contract actually has the funds
       if (token === 'GUY') {
-        const xtokensVal = await fetchChainBalance(address, 'xtokens', 'GUY');
-        if (xtokensVal > 0) account = 'xtokens';
+        const vtokenVal = await fetchChainBalance(address, 'proton-vtoken', 'GUY');
+        if (vtokenVal < amount) {
+          const xtokensVal = await fetchChainBalance(address, 'xtokens', 'GUY');
+          if (xtokensVal >= amount) {
+            account = 'xtokens';
+          } else {
+            const t777Val = await fetchChainBalance(address, 'token.777', 'GUY');
+            if (t777Val >= amount) account = 'token.777';
+          }
+        }
       }
       
       const action = {

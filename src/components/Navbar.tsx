@@ -12,7 +12,8 @@ import {
   ChevronDown,
   ExternalLink,
   Loader2,
-  Calculator
+  Calculator,
+  ShieldCheck
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -26,7 +27,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import logo from '@/assets/logo.jpg';
 
 const Navbar = () => {
-  const { isConnected, isConnecting, isFetchingBalances, address, xprBalance, guyBalance, disconnect, refreshBalances, connect } = useWallet();
+  const { isConnected, isConnecting, isFetchingBalances, isAdmin, address, xprBalance, guyBalance, disconnect, refreshBalances, connect } = useWallet();
   const location = useLocation();
 
   const navItems = [
@@ -80,7 +81,6 @@ const Navbar = () => {
           {isConnected ? (
             <>
               <div className="flex items-center gap-1.5 md:gap-2">
-                {/* XPR Balance */}
                 <div className="flex items-center gap-1.5 px-2.5 md:px-4 py-1.5 md:py-2 rounded-full bg-white/5 border border-white/10 text-[10px] md:text-[11px] font-bold hover:bg-white/10 transition-colors cursor-default">
                   {isFetchingBalances ? (
                     <Loader2 size={12} className="animate-spin text-muted-foreground" />
@@ -92,7 +92,6 @@ const Navbar = () => {
                   )}
                 </div>
 
-                {/* GUY Balance - Always visible on all screen sizes */}
                 <div className="flex items-center gap-1.5 px-2.5 md:px-4 py-1.5 md:py-2 rounded-full bg-primary/10 border border-primary/20 text-[10px] md:text-[11px] font-bold hover:bg-primary/20 transition-colors cursor-default">
                   {isFetchingBalances ? (
                     <Loader2 size={12} className="animate-spin text-primary" />
@@ -146,6 +145,15 @@ const Navbar = () => {
 
                   <DropdownMenuSeparator className="bg-white/5" />
                   
+                  {isAdmin && (
+                    <DropdownMenuItem asChild className="cursor-pointer focus:bg-primary/10 rounded-lg transition-colors">
+                      <Link to="/admin" className="flex items-center gap-2 py-2 text-primary font-bold">
+                        <ShieldCheck size={16} />
+                        <span className="text-sm">Admin Panel</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+
                   <DropdownMenuItem asChild className="cursor-pointer focus:bg-white/10 rounded-lg transition-colors">
                     <Link to="/profile" className="flex items-center gap-2 py-2">
                       <User size={16} className="text-muted-foreground" />

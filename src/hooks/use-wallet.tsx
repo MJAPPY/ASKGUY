@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import Connect, { LinkSession } from '@proton/web-sdk';
 import { supabase } from '@/integrations/supabase/client';
 
-export const OWNER_ADDRESS = 'tripseven'; // Your master wallet address
+export const OWNER_ADDRESS = 'tripseven';
 
 export interface WalletState {
   address: string;
@@ -56,7 +56,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const cleanAccount = String(account).toLowerCase().trim();
     const cleanContract = String(contract).toLowerCase().trim();
     
-    // Try each endpoint sequentially until we get a valid non-error response
     for (const endpoint of ENDPOINTS) {
       try {
         const response = await fetch(`${endpoint}/v1/chain/get_currency_balance`, {
@@ -67,28 +66,26 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             account: cleanAccount,
             symbol: symbol
           }),
-          // Short timeout to rotate through dead nodes quickly
-          signal: AbortSignal.timeout(4000)
+          signal: AbortSignal.timeout(3000)
         });
 
         if (response.ok) {
           const data = await response.json();
-          // The chain returns an array of strings like ["1.0000 XPR"]
           if (Array.isArray(data)) {
             if (data.length > 0) {
               const val = parseFloat(data[0].split(' ')[0]);
+              console.log(`[fetchTokenBalance] Success: ${contract} -> ${val} ${symbol} via ${endpoint}`);
               return isNaN(val) ? 0 : val;
             }
-            // If data is [], it means the balance is exactly 0
             return 0;
           }
         }
       } catch (err) {
-        // Log individual node failures but continue to the next one
-        console.warn(`[use-wallet] Node ${endpoint} failed for ${symbol}:`, err);
+        // Individual endpoint failures are expected and ignored
         continue;
       }
     }
+    console.warn(`[fetchTokenBalance] Failed to fetch ${symbol} from ${contract} across all nodes.`);
     return 0;
   };
 
@@ -97,11 +94,13 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setIsFetchingBalances(true);
     const cleanAddress = walletAddress.toLowerCase().trim();
     
+    console.log(`[loadBalances] Starting sync for @${cleanAddress}...`);
+
     try {
-      // Parallelize blockchain calls to multiple contracts and Supabase metadata
       const [
         xprVal, 
-        guyTokenVtoken,
+        guyProton,      // Using the "proton" contract you mentioned
+        guyTokenVtoken, // Standard Vibrr vToken contract
         guyProtonVtoken, 
         guyXtokens, 
         guy777,
@@ -109,8 +108,9 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         profileResult
       ] = await Promise.all([
         fetchTokenBalance(cleanAddress, 'eosio.token', 'XPR'),
-        fetchTokenBalance(cleanAddress, 'token.vtoken', 'GUY'), // Primary vtoken contract
-        fetchTokenBalance(cleanAddress, 'proton-vtoken', 'GUY'), // Wrapped vtokens
+        fetchTokenBalance(cleanAddress, 'proton', 'GUY'),
+        fetchTokenBalance(cleanAddress, 'token.vtoken', 'GUY'),
+        fetchTokenBalance(cleanAddress, 'proton-vtoken', 'GUY'),
         fetchTokenBalance(cleanAddress, 'xtokens', 'GUY'),
         fetchTokenBalance(cleanAddress, 'token.777', 'GUY'),
         supabase.from('banned_users').select('address').eq('address', cleanAddress).maybeSingle(),
@@ -123,13 +123,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setMembershipExpiry(profileResult.data.membership_expiry);
       }
       
-      // Sum all GUY balances across standard contracts to ensure accuracy for all users
-      const totalGuy = (guyTokenVtoken || 0) + (guyProtonVtoken || 0) + (guyXtokens || 0) + (guy777 || 0);
+      const totalGuy = (guyProton || 0) + (guyTokenVtoken || 0) + (guyProtonVtoken || 0) + (guyXtokens || 0) + (guy777 || 0);
       setGuyBalance(totalGuy);
       
-      console.log(`[use-wallet] Balance sync for ${cleanAddress}: XPR=${xprVal}, GUY=${totalGuy}`);
+      console.log(`[loadBalances] Final Sync: XPR: ${xprVal} | GUY: ${totalGuy} (Combined from 5 contracts)`);
     } catch (err) {
-      console.error('[use-wallet] Balance sync error:', err);
+      console.error('[loadBalances] Error syncing data:', err);
     } finally {
       setIsFetchingBalances(false);
     }
@@ -161,7 +160,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         loadBalances(actor);
       }
     } catch (err) {
-      console.error('[use-wallet] Wallet init error:', err);
+      console.error('[initWallet] Connection error:', err);
     }
   }, [loadBalances]);
 
@@ -193,8 +192,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       let account = token === 'XPR' ? 'eosio.token' : 'token.vtoken';
       
       if (token === 'GUY') {
-        // Check which contract has the balance needed for this specific transfer
-        const contracts = ['token.vtoken', 'proton-vtoken', 'xtokens', 'token.777'];
+        const contracts = ['proton', 'token.vtoken', 'proton-vtoken', 'xtokens', 'token.777'];
         for (const contract of contracts) {
           const balance = await fetchTokenBalance(address, contract, 'GUY');
           if (balance >= amount) {
@@ -215,7 +213,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setTimeout(refreshBalances, 3000);
       return true;
     } catch (err) {
-      console.error('[use-wallet] Transfer failed:', err);
+      console.error('[transferTokens] Transaction failed:', err);
       return false;
     }
   }, [session, refreshBalances, address]);

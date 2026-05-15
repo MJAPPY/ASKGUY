@@ -24,38 +24,55 @@ import {
   AlertTriangle,
   Globe,
   ExternalLink,
-  Sparkles
+  Sparkles,
+  Gift,
+  Zap,
+  ArrowRight
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
 import { cn } from '@/lib/utils';
 
 const Admin = () => {
-  const { isConnected, isAdmin } = useWallet();
+  const { isConnected, isAdmin, transferTokens, guyBalance } = useWallet();
   const { requests, deleteRequest, loading: requestsLoading } = useRequests();
   const [bannedUsers, setBannedUsers] = useState<{ address: string, created_at: string }[]>([]);
   const [newBanAddress, setNewBanAddress] = useState('');
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [modSearch, setModSearch] = useState('');
+  const [rewardAmount, setRewardAmount] = useState('1000');
 
-  // Platform Analytics calculations
+  // Platform Analytics & Top 5 Calculation
   const stats = useMemo(() => {
-    const totalRequests = requests.length;
-    const activeRequests = requests.filter(r => r.status === 'Open').length;
-    const completedRequests = requests.filter(r => r.status === 'Completed').length;
-    
+    const contributionMap: Record<string, number> = {};
     let totalXPRGiven = 0;
     let totalGUYGiven = 0;
     
     requests.forEach(req => {
       req.contributions.forEach(c => {
-        if (c.token === 'XPR') totalXPRGiven += c.amount;
-        else if (c.token === 'GUY') totalGUYGiven += c.amount;
+        if (c.token === 'XPR') {
+          totalXPRGiven += c.amount;
+          contributionMap[c.user] = (contributionMap[c.user] || 0) + c.amount;
+        } else if (c.token === 'GUY') {
+          totalGUYGiven += c.amount;
+        }
       });
     });
 
-    return { totalRequests, activeRequests, completedRequests, totalXPRGiven, totalGUYGiven };
+    const top5 = Object.entries(contributionMap)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5)
+      .map(([address, amount]) => ({ address, amount }));
+
+    return { 
+      totalRequests: requests.length, 
+      activeRequests: requests.filter(r => r.status === 'Open').length, 
+      completedRequests: requests.filter(r => r.status === 'Completed').length, 
+      totalXPRGiven, 
+      totalGUYGiven,
+      top5 
+    };
   }, [requests]);
 
   const filteredRequests = useMemo(() => {
@@ -87,6 +104,46 @@ const Admin = () => {
       fetchBannedUsers();
     }
   }, [isAdmin]);
+
+  const handleDistributeRewards = async () => {
+    const amountPerWinner = parseFloat(rewardAmount);
+    if (isNaN(amountPerWinner) || amountPerWinner <= 0) {
+      showError("Please enter a valid amount.");
+      return;
+    }
+
+    const totalNeeded = amountPerWinner * stats.top5.length;
+    if (guyBalance < totalNeeded) {
+      showError(`Insufficient GUY balance. Need ${totalNeeded} GUY.`);
+      return;
+    }
+
+    if (!confirm(`Distribute ${amountPerWinner} GUY to each of the Top 5 contributors?`)) return;
+
+    setProcessing(true);
+    let successCount = 0;
+
+    for (const winner of stats.top5) {
+      try {
+        const success = await transferTokens(
+          winner.address, 
+          amountPerWinner, 
+          'GUY', 
+          `AskGuy Reward: Top Contributor Placement`
+        );
+        if (success) successCount++;
+      } catch (err) {
+        console.error(`Failed to reward ${winner.address}:`, err);
+      }
+    }
+
+    setProcessing(false);
+    if (successCount > 0) {
+      showSuccess(`Successfully rewarded ${successCount} contributors!`);
+    } else {
+      showError("Distribution failed or was cancelled.");
+    }
+  };
 
   const handleBan = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -190,7 +247,7 @@ const Admin = () => {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="analytics" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <TabsContent value="analytics" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
                   { label: "Total Volume", value: `${stats.totalXPRGiven.toLocaleString()} XPR`, icon: <Coins />, color: "text-primary" },
@@ -207,29 +264,84 @@ const Admin = () => {
                   </Card>
                 ))}
               </div>
-              
-              <Card className="glass-card border-white/5 p-8 rounded-[32px]">
-                <div className="flex items-center justify-between mb-8">
-                  <h3 className="text-xl font-black">Status Distribution</h3>
-                </div>
-                <div className="grid grid-cols-3 gap-4">
-                  {[
-                    { label: "Open", count: stats.activeRequests, color: "bg-primary" },
-                    { label: "Funded", count: requests.filter(r => r.status === 'Funded').length, color: "bg-blue-500" },
-                    { label: "Completed", count: stats.completedRequests, color: "bg-emerald-500" }
-                  ].map((s, i) => (
-                    <div key={i} className="space-y-2">
-                      <div className="flex justify-between items-end">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{s.label}</span>
-                        <span className="text-lg font-black">{s.count}</span>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <Card className="glass-card border-white/5 p-8 rounded-[32px]">
+                  <div className="flex items-center justify-between mb-8">
+                    <h3 className="text-xl font-black">Status Distribution</h3>
+                  </div>
+                  <div className="space-y-6">
+                    {[
+                      { label: "Open", count: stats.activeRequests, color: "bg-primary" },
+                      { label: "Funded", count: requests.filter(r => r.status === 'Funded').length, color: "bg-blue-500" },
+                      { label: "Completed", count: stats.completedRequests, color: "bg-emerald-500" }
+                    ].map((s, i) => (
+                      <div key={i} className="space-y-2">
+                        <div className="flex justify-between items-end">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{s.label}</span>
+                          <span className="text-lg font-black">{s.count}</span>
+                        </div>
+                        <div className="w-full bg-white/5 rounded-full h-2">
+                          <div className={cn("h-full rounded-full", s.color)} style={{ width: `${(s.count / stats.totalRequests) * 100}%` }} />
+                        </div>
                       </div>
-                      <div className="w-full bg-white/5 rounded-full h-2">
-                        <div className={cn("h-full rounded-full", s.color)} style={{ width: `${(s.count / stats.totalRequests) * 100}%` }} />
+                    ))}
+                  </div>
+                </Card>
+
+                {/* Reward Distribution Card */}
+                <Card className="glass-card border-primary/20 bg-primary/[0.02] p-8 rounded-[32px] relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-all">
+                    <Gift size={120} className="text-primary" />
+                  </div>
+                  
+                  <div className="space-y-6 relative z-10">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                        <Zap size={20} className="fill-primary" />
                       </div>
+                      <h3 className="text-xl font-black">Reward Distribution</h3>
                     </div>
-                  ))}
-                </div>
-              </Card>
+                    
+                    <p className="text-sm text-muted-foreground font-medium leading-relaxed">
+                      Send $GUY rewards to the <span className="text-white font-black">Top 5 contributors</span> based on current XPR aid history.
+                    </p>
+
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">GUY Amount Per Winner</label>
+                        <Input 
+                          type="number"
+                          value={rewardAmount}
+                          onChange={(e) => setRewardAmount(e.target.value)}
+                          className="bg-white/5 border-white/10 h-12 font-black rounded-xl text-lg"
+                        />
+                      </div>
+
+                      <div className="space-y-3">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-primary/70">Recipients (Current Top 5)</p>
+                        <div className="flex flex-col gap-2">
+                          {stats.top5.map((user, i) => (
+                            <div key={user.address} className="flex items-center justify-between text-xs p-2 rounded-lg bg-white/5 border border-white/5">
+                              <span className="font-bold text-white">#{i+1} @{user.address}</span>
+                              <span className="text-muted-foreground">{user.amount.toLocaleString()} XPR Given</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <Button 
+                        onClick={handleDistributeRewards}
+                        disabled={processing || stats.top5.length === 0}
+                        className="w-full h-14 bg-primary hover:bg-primary/90 text-black font-black rounded-xl gold-glow text-xs uppercase tracking-widest gap-3"
+                      >
+                        {processing ? <Loader2 className="animate-spin" size={18} /> : <Zap size={18} className="fill-current" />}
+                        Distribute {rewardAmount} GUY Each
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              </div>
             </TabsContent>
 
             <TabsContent value="moderation" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">

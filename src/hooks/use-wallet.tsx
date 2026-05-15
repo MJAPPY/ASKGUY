@@ -26,6 +26,7 @@ export interface WalletState {
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   refreshBalances: () => Promise<void>;
+  fetchSettings: () => Promise<void>;
   transferTokens: (to: string, amount: number, token: 'XPR' | 'GUY', memo?: string) => Promise<boolean>;
   requestor: string;
 }
@@ -253,7 +254,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       membershipFee, postingFeeGuy, isMembershipEnabled,
       isMember, hasGuyThreshold: true, isBanned, 
       payMembership, connect, disconnect,
-      refreshBalances, transferTokens, requestor: address,
+      refreshBalances, fetchSettings, transferTokens, requestor: address,
     }}>
       {children}
     </WalletContext.Provider>

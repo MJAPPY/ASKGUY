@@ -39,7 +39,7 @@ import { showSuccess, showError } from '@/utils/toast';
 import { cn } from '@/lib/utils';
 
 const Admin = () => {
-  const { isConnected, isAdmin, transferTokens, guyBalance, membershipFee: currentFee, isMembershipEnabled: currentEnabled, postingFeeGuy: currentPostingFee } = useWallet();
+  const { isConnected, isAdmin, transferTokens, guyBalance, membershipFee: currentFee, isMembershipEnabled: currentEnabled, postingFeeGuy: currentPostingFee, fetchSettings } = useWallet();
   const { requests, deleteRequest, batchDeleteRequests, loading: requestsLoading } = useRequests();
   const [bannedUsers, setBannedUsers] = useState<{ address: string, created_at: string }[]>([]);
   const [newBanAddress, setNewBanAddress] = useState('');
@@ -155,7 +155,6 @@ const Admin = () => {
   const handleUpdateSettings = async () => {
     setProcessing(true);
     try {
-      // Use update().eq() instead of upsert() for reliable RLS processing
       const { error } = await supabase
         .from('site_settings')
         .update({ 
@@ -166,6 +165,9 @@ const Admin = () => {
         .eq('id', 'global');
 
       if (error) throw error;
+      
+      // Refresh the global wallet state so the whole app knows about the new settings
+      await fetchSettings();
       showSuccess("Global settings updated.");
     } catch (err) {
       console.error("Settings update error:", err);

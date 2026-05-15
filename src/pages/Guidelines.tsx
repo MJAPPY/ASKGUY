@@ -6,15 +6,18 @@ import Footer from '@/components/Footer';
 import { ShieldCheck, Heart, Zap, Scale, Info, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { useWallet } from '@/hooks/use-wallet';
 
 const Guidelines = () => {
+  const { membershipFee } = useWallet();
+
   const sections = [
     {
       icon: <ShieldCheck className="text-emerald-400" size={24} />,
       title: "Membership & Eligibility",
       content: [
         "AskGuy is open to all XPR Network wallet holders. Anyone can connect and support the community.",
-        "To post a request, a yearly membership fee of 7,777 XPR is required. This fee supports platform maintenance and prevents spam.",
+        `To post a request, a yearly membership fee of ${membershipFee.toLocaleString()} XPR is required. This fee supports platform maintenance and prevents spam.`,
         "The membership fee is paid directly on-chain and grants full posting rights for 365 days."
       ]
     },

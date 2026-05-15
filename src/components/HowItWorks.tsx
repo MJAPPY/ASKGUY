@@ -3,8 +3,11 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ShieldCheck, Zap, Users, Trophy } from 'lucide-react';
+import { useWallet } from '@/hooks/use-wallet';
 
 const HowItWorks = () => {
+  const { membershipFee, postingFeeGuy } = useWallet();
+
   const features = [
     {
       icon: <ShieldCheck className="text-primary" size={20} />,
@@ -42,7 +45,7 @@ const HowItWorks = () => {
     {
       number: "03",
       title: "Trusted Member",
-      description: "Join for 7,777 XPR to become a trusted member and pay 25 GUY per request posting."
+      description: `Join for ${membershipFee.toLocaleString()} XPR to become a trusted member and pay ${postingFeeGuy.toLocaleString()} GUY per request posting.`
     },
     {
       number: "04",

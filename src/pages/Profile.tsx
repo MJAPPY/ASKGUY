@@ -48,7 +48,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 const Profile = () => {
   const { userAddress: routeAddress } = useParams();
-  const { address: myAddress, isConnected, isConnecting, membershipExpiry: myExpiry, xprBalance, guyBalance, payMembership, connect } = useWallet();
+  const { address: myAddress, isConnected, isConnecting, membershipExpiry: myExpiry, xprBalance, guyBalance, payMembership, connect, membershipFee } = useWallet();
   const { requests } = useRequests();
 
   const targetAddress = routeAddress || myAddress;
@@ -116,7 +116,10 @@ const Profile = () => {
 
   const profileRequests = requests.filter(req => req.requestor === targetAddress);
   const profileContributions = requests.filter(req => 
-    req.contributions.some(c => c.user === targetAddress)
+    req.contributions.some(c => {
+      const actor = typeof c.user === 'string' ? c.user : '';
+      return actor.toLowerCase() === targetAddress.toLowerCase();
+    })
   );
 
   const receivedMessages = useMemo(() => {
@@ -263,7 +266,7 @@ const Profile = () => {
                         <AlertDialogHeader>
                           <AlertDialogTitle className="text-3xl font-black tracking-tight mb-2">Yearly Membership</AlertDialogTitle>
                           <AlertDialogDescription className="text-muted-foreground text-base leading-relaxed font-medium">
-                            Become a verified member to post community requests. Membership costs <span className="text-white font-black underline decoration-primary underline-offset-4">7,777 XPR</span> per year.
+                            Become a verified member to post community requests. Membership costs <span className="text-white font-black underline decoration-primary underline-offset-4">{membershipFee.toLocaleString()} XPR</span> per year.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <div className="py-8 space-y-4">
@@ -273,7 +276,7 @@ const Profile = () => {
                               <span>Duration</span>
                             </div>
                             <div className="flex justify-between items-center text-2xl font-black">
-                              <span className="text-primary">7,777.00 XPR</span>
+                              <span className="text-primary">{membershipFee.toLocaleString(undefined, { minimumFractionDigits: 2 })} XPR</span>
                               <span>365 Days</span>
                             </div>
                           </div>

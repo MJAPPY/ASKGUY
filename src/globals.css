@@ -4,12 +4,15 @@
 
 @layer base {
   :root {
-    --background: 220 60% 10%;
-    --foreground: 210 40% 98%;
-    --card: 215 25% 17%;
-    --card-foreground: 210 40% 98%;
-    --popover: 215 25% 17%;
-    --popover-foreground: 210 40% 98%;
+    --background: 220 60% 6%;
+    /* Softened white from 98% to 92% brightness to reduce glare */
+    --foreground: 210 20% 92%;
+    
+    /* Darker cards for better contrast with light text */
+    --card: 220 40% 12%;
+    --card-foreground: 210 20% 92%;
+    --popover: 220 40% 12%;
+    --popover-foreground: 210 20% 92%;
     
     --primary: 46 97% 65%;
     --primary-foreground: 220 60% 10%;
@@ -18,19 +21,19 @@
     --brand-red: 0 84% 60%;
     --brand-green: 142 71% 45%;
     
-    --secondary: 215 25% 27%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 215 25% 27%;
-    /* Increased brightness of muted foreground for better legibility */
-    --muted-foreground: 215 20% 75%;
+    --secondary: 215 25% 22%;
+    --secondary-foreground: 210 20% 92%;
+    --muted: 215 25% 18%;
+    /* Brightened muted text to ensure it's still readable */
+    --muted-foreground: 215 15% 70%;
     --accent: 46 97% 65%;
     --accent-foreground: 220 60% 10%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 215 25% 27%;
-    --input: 215 25% 27%;
+    --destructive-foreground: 210 20% 92%;
+    --border: 215 25% 22%;
+    --input: 215 25% 22%;
     --ring: 46 97% 65%;
-    --radius: 1rem;
+    --radius: 1.25rem;
   }
 }
 
@@ -40,48 +43,48 @@
   }
   body {
     @apply bg-background text-foreground selection:bg-primary/30;
-    /* Improved text sharpening for dark mode */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     font-feature-settings: "ss01", "ss02", "cv01", "cv02";
     
-    background-color: #0A1428;
-    background-image: linear-gradient(180deg, #0A1428 0%, #1E2937 100%);
+    background-color: #060912;
+    background-image: radial-gradient(at 0% 0%, hsla(220, 60%, 15%, 1) 0, transparent 50%), 
+                      radial-gradient(at 100% 0%, hsla(46, 97%, 10%, 0.1) 0, transparent 50%);
     background-attachment: fixed;
   }
 }
 
 .glass-card {
-  /* Reduced blur from 2xl to xl to prevent text bleed/fuzziness */
-  @apply bg-[#1E2937]/90 backdrop-blur-xl border border-white/10 transition-all duration-300;
+  /* Significantly darker and less blurred for text clarity */
+  @apply bg-[#0f172a]/95 backdrop-blur-md border border-white/10 transition-all duration-300;
 }
 
 .glass-card:hover {
-  @apply border-primary/30 bg-[#253241]/95 shadow-2xl;
+  @apply border-primary/40 bg-[#1e293b]/98 shadow-[0_0_40px_rgba(0,0,0,0.4)];
 }
 
 .gold-glow {
-  box-shadow: 0 0 25px rgba(251, 212, 81, 0.1), 0 0 50px rgba(251, 212, 81, 0.02);
-  @apply transition-all duration-300 hover:scale-[1.02] active:scale-[0.98];
+  box-shadow: 0 0 25px rgba(251, 212, 81, 0.1);
+  @apply transition-all duration-300 hover:scale-[1.01] active:scale-[0.99];
 }
 
 .gold-glow:hover {
-  box-shadow: 0 0 35px rgba(251, 212, 81, 0.2), 0 0 70px rgba(251, 212, 81, 0.1);
+  box-shadow: 0 0 35px rgba(251, 212, 81, 0.2);
 }
 
 .btn-premium {
-  @apply relative overflow-hidden transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none font-bold;
+  @apply relative overflow-hidden transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] font-black uppercase tracking-widest;
 }
 
-/* Ensure headings and titles are always crisp */
+/* Ensure all headings are bold and clear */
 h1, h2, h3, h4, h5, h6 {
-  @apply tracking-tight text-white;
+  @apply tracking-tight text-white font-black;
 }
 
-/* Helper to force high contrast on important labels */
-.text-label {
-  @apply text-[10px] font-black uppercase tracking-widest text-white/90;
+/* Base text for paragraphs and descriptions */
+p {
+  @apply font-medium leading-relaxed;
 }
 
 button, a, .cursor-pointer {

@@ -255,45 +255,45 @@ const RequestCard: React.FC<RequestCardProps> = ({
             </div>
           </div>
         </DialogTrigger>
-        <DialogContent className="glass-card border-white/10 max-w-3xl max-h-[95vh] overflow-hidden flex flex-col p-0 rounded-[32px] shadow-[0_0_80px_rgba(0,0,0,0.5)]">
-          <DialogHeader className="p-8 pb-10 border-b border-white/5 shrink-0 bg-white/[0.015] relative overflow-hidden">
+        <DialogContent className="glass-card border-white/10 max-w-3xl max-h-[90vh] md:max-h-[85vh] overflow-hidden flex flex-col p-0 rounded-[32px] shadow-[0_0_80px_rgba(0,0,0,0.5)]">
+          <DialogHeader className="p-6 md:p-8 border-b border-white/5 shrink-0 bg-white/[0.015] relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[100px] -translate-y-1/2 translate-x-1/2 rounded-full pointer-events-none" />
             
-            <div className="flex items-start justify-between relative z-10">
-              <div className="space-y-4 flex-1">
+            <div className="flex items-start justify-between relative z-10 gap-4">
+              <div className="space-y-3 flex-1 min-w-0">
                 <div className="flex items-center gap-3">
                   <span className={cn("text-[10px] font-black px-3 py-1 rounded-lg uppercase tracking-[0.2em] border", getCategoryColor())}>
                     {category}
                   </span>
                   {isUrgent && <span className="bg-rose-500/20 text-rose-400 border border-rose-500/30 text-[10px] font-black px-3 py-1 rounded-lg uppercase tracking-[0.2em]">Urgent</span>}
                 </div>
-                <DialogTitle className="text-4xl font-black tracking-tight leading-none text-white max-w-xl">{title}</DialogTitle>
+                <DialogTitle className="text-2xl md:text-4xl font-black tracking-tight leading-tight text-white line-clamp-2">{title}</DialogTitle>
                 
-                <div className="flex flex-wrap items-center gap-6 pt-2">
-                  <div className="flex items-center gap-3 group/user cursor-pointer">
-                    <Avatar className="w-10 h-10 border-2 border-white/20 p-1 bg-black/20 group-hover/user:border-primary/50 transition-all">
+                <div className="flex flex-wrap items-center gap-4 pt-1">
+                  <div className="flex items-center gap-2.5 group/user cursor-pointer">
+                    <Avatar className="w-8 h-8 md:w-10 md:h-10 border-2 border-white/20 p-1 bg-black/20 group-hover/user:border-primary/50 transition-all">
                       <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${requestor}`} />
                     </Avatar>
                     <div className="flex flex-col">
-                      <span className="text-sm font-black text-white group-hover/user:text-primary transition-colors">@{requestor}</span>
-                      <span className="text-[10px] text-muted-foreground font-black uppercase tracking-tighter">Verified Member</span>
+                      <span className="text-xs md:text-sm font-black text-white group-hover/user:text-primary transition-colors">@{requestor}</span>
+                      <span className="text-[9px] md:text-[10px] text-muted-foreground font-black uppercase tracking-tighter">Verified Member</span>
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-2 text-muted-foreground font-black uppercase tracking-tighter text-[10px]">
-                    <Calendar size={14} className="text-primary" />
-                    Posted {formatDistanceToNow(timestamp, { addSuffix: true })}
+                  <div className="flex items-center gap-2 text-muted-foreground font-black uppercase tracking-tighter text-[9px] md:text-[10px]">
+                    <Calendar size={12} className="text-primary" />
+                    {formatDistanceToNow(timestamp, { addSuffix: true })}
                   </div>
                 </div>
               </div>
 
-              <div className="flex flex-col items-end gap-3">
+              <div className="flex flex-col items-end gap-3 shrink-0">
                  <div className="flex gap-2">
                   {isAdmin && (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 border border-rose-500/10">
-                          <Trash2 size={18} />
+                        <Button variant="ghost" size="icon" className="h-9 w-9 md:h-10 md:w-10 rounded-xl text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 border border-rose-500/10">
+                          <Trash2 size={16} />
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent className="glass-card border-white/10 p-8 rounded-[32px]">
@@ -310,17 +310,17 @@ const RequestCard: React.FC<RequestCardProps> = ({
                       </AlertDialogContent>
                     </AlertDialog>
                   )}
-                  <Button variant="outline" size="icon" onClick={handleShare} className="h-10 w-10 rounded-xl border-white/10 hover:bg-white/10 hover:border-primary/30 transition-all">
-                    <Share2 size={18} />
+                  <Button variant="outline" size="icon" onClick={handleShare} className="h-9 w-9 md:h-10 md:w-10 rounded-xl border-white/10 hover:bg-white/10 hover:border-primary/30 transition-all">
+                    <Share2 size={16} />
                   </Button>
                 </div>
 
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-right min-w-[160px] space-y-1">
-                  <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Raised So Far</div>
-                  <div className="text-2xl font-black text-primary flex items-center justify-end gap-2">
-                    {raised.toLocaleString()} <span className="text-xs text-white/40">{token}</span>
+                <div className="bg-white/5 border border-white/10 rounded-xl md:rounded-2xl p-3 md:p-4 text-right min-w-[120px] md:min-w-[160px] space-y-1">
+                  <div className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-muted-foreground">Raised</div>
+                  <div className="text-lg md:text-2xl font-black text-primary flex items-center justify-end gap-1.5">
+                    {raised.toLocaleString()} <span className="text-[10px] md:text-xs text-white/40">{token}</span>
                   </div>
-                  <div className="w-full bg-white/10 rounded-full h-1.5 overflow-hidden">
+                  <div className="w-full bg-white/10 rounded-full h-1 md:h-1.5 overflow-hidden">
                     <div className="bg-primary h-full" style={{ width: `${progress}%` }} />
                   </div>
                 </div>
@@ -328,80 +328,80 @@ const RequestCard: React.FC<RequestCardProps> = ({
             </div>
           </DialogHeader>
 
-          <ScrollArea className="flex-1 bg-[#0a0a0c]">
-            <div className="p-8 md:p-12 space-y-16 pb-24">
-              <section className="space-y-6">
+          <ScrollArea className="flex-1 bg-[#0a0a0c] min-h-0">
+            <div className="p-6 md:p-12 space-y-12 md:space-y-16 pb-24">
+              <section className="space-y-4 md:space-y-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-lg shadow-primary/5">
-                    <MessageSquare size={20} />
+                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-lg shadow-primary/5">
+                    <MessageSquare size={16} />
                   </div>
-                  <h4 className="text-sm font-black uppercase tracking-[0.2em] text-white/90">The Situation</h4>
+                  <h4 className="text-[11px] md:text-sm font-black uppercase tracking-[0.2em] text-white/90">The Situation</h4>
                 </div>
                 <div className="relative group">
-                  <Quote className="absolute -top-4 -left-4 text-primary/10 w-24 h-24 rotate-12 transition-transform group-hover:rotate-0 duration-700" />
-                  <div className="text-xl md:text-2xl font-bold leading-relaxed italic text-white/90 bg-white/[0.02] p-10 rounded-[40px] border border-white/5 relative z-10 shadow-inner">
+                  <Quote className="absolute -top-4 -left-4 text-primary/10 w-16 h-16 md:w-24 md:h-24 rotate-12 transition-transform group-hover:rotate-0 duration-700" />
+                  <div className="text-lg md:text-2xl font-bold leading-relaxed italic text-white/90 bg-white/[0.02] p-6 md:p-10 rounded-[28px] md:rounded-[40px] border border-white/5 relative z-10 shadow-inner">
                     "{description}"
                   </div>
                 </div>
               </section>
 
               {proofUrl && (
-                <section className="space-y-6">
+                <section className="space-y-4 md:space-y-6">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-[#1565C0]/10 border border-[#1565C0]/20 flex items-center justify-center text-[#1565C0] shadow-lg shadow-[#1565C0]/5">
-                      <ImageIcon size={20} />
+                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-[#1565C0]/10 border border-[#1565C0]/20 flex items-center justify-center text-[#1565C0] shadow-lg shadow-[#1565C0]/5">
+                      <ImageIcon size={16} />
                     </div>
-                    <h4 className="text-sm font-black uppercase tracking-[0.2em] text-white/90">Verification Proof</h4>
+                    <h4 className="text-[11px] md:text-sm font-black uppercase tracking-[0.2em] text-white/90">Verification Proof</h4>
                   </div>
-                  <div className="rounded-[40px] overflow-hidden border border-white/10 bg-black/40 aspect-video relative group shadow-2xl p-4 cursor-zoom-in">
+                  <div className="rounded-[28px] md:rounded-[40px] overflow-hidden border border-white/10 bg-black/40 aspect-video relative group shadow-2xl p-2 md:p-4">
                     <img src={proofUrl} alt="Proof" className="w-full h-full object-contain transition-transform duration-1000 group-hover:scale-105" />
-                    <div className="absolute bottom-8 left-8 flex items-center gap-2 px-4 py-2 rounded-xl bg-black/60 backdrop-blur-md border border-white/10 text-xs font-black text-emerald-400">
-                      <ShieldCheck size={16} /> Image Verified
+                    <div className="absolute bottom-4 left-4 md:bottom-8 md:left-8 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/60 backdrop-blur-md border border-white/10 text-[9px] md:text-xs font-black text-emerald-400">
+                      <ShieldCheck size={14} /> Image Verified
                     </div>
                   </div>
                 </section>
               )}
 
-              <section className="space-y-8">
+              <section className="space-y-6 md:space-y-8">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 shadow-lg shadow-rose-500/5">
-                      <Heart size={20} className="fill-current" />
+                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 shadow-lg shadow-rose-500/5">
+                      <Heart size={16} className="fill-current" />
                     </div>
-                    <h4 className="text-sm font-black uppercase tracking-[0.2em] text-white/90">Community Support</h4>
+                    <h4 className="text-[11px] md:text-sm font-black uppercase tracking-[0.2em] text-white/90">Community Support</h4>
                   </div>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground bg-white/5 px-3 py-1.5 rounded-lg border border-white/10">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground bg-white/5 px-2.5 py-1 rounded-lg border border-white/10">
                     {contributions.length} Contributions
                   </span>
                 </div>
 
                 {sortedContributions.length > 0 ? (
-                  <div className="grid grid-cols-1 gap-6">
+                  <div className="grid grid-cols-1 gap-4 md:gap-6">
                     {sortedContributions.map((msg, idx) => (
-                      <div key={idx} className="p-8 rounded-[32px] bg-white/[0.015] border border-white/5 space-y-4 hover:bg-white/[0.03] transition-all group relative overflow-hidden">
+                      <div key={idx} className="p-6 md:p-8 rounded-[24px] md:rounded-[32px] bg-white/[0.015] border border-white/5 space-y-3 md:space-y-4 hover:bg-white/[0.03] transition-all group relative overflow-hidden">
                         <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
-                          <Zap size={60} />
+                          <Zap size={48} />
                         </div>
                         
                         <div className="flex items-center justify-between relative z-10">
-                          <div className="flex items-center gap-4">
-                            <Avatar className="w-10 h-10 border-2 border-white/10 p-1 bg-black/20">
+                          <div className="flex items-center gap-3 md:gap-4">
+                            <Avatar className="w-8 h-8 md:w-10 md:h-10 border-2 border-white/10 p-1 bg-black/20">
                               <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${msg.user}`} />
                             </Avatar>
                             <div>
-                              <span className="text-sm font-black text-primary uppercase tracking-widest">@{msg.user}</span>
-                              <p className="text-[10px] text-muted-foreground uppercase font-black tracking-tighter opacity-60">
+                              <span className="text-xs md:text-sm font-black text-primary uppercase tracking-widest">@{msg.user}</span>
+                              <p className="text-[9px] text-muted-foreground uppercase font-black tracking-tighter opacity-60">
                                 {formatDistanceToNow(msg.timestamp, { addSuffix: true })}
                               </p>
                             </div>
                           </div>
-                          <div className="px-5 py-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.1)]">
-                            <span className="text-base font-black text-emerald-400">+{msg.amount.toLocaleString()} {msg.token}</span>
+                          <div className="px-3 py-1.5 md:px-5 md:py-2.5 rounded-xl md:rounded-2xl bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.1)]">
+                            <span className="text-sm md:text-base font-black text-emerald-400">+{msg.amount.toLocaleString()} {msg.token}</span>
                           </div>
                         </div>
                         {msg.message && (
-                          <div className="pl-14 relative z-10">
-                            <p className="text-base font-medium text-white/80 leading-relaxed italic border-l-2 border-primary/30 pl-6 py-1">
+                          <div className="pl-11 md:pl-14 relative z-10">
+                            <p className="text-sm md:text-base font-medium text-white/80 leading-relaxed italic border-l-2 border-primary/30 pl-4 md:pl-6 py-0.5 md:py-1">
                               "{msg.message}"
                             </p>
                           </div>
@@ -410,11 +410,11 @@ const RequestCard: React.FC<RequestCardProps> = ({
                     ))}
                   </div>
                 ) : (
-                  <div className="py-24 text-center border-2 border-dashed border-white/5 rounded-[40px] bg-white/[0.01] space-y-4">
-                    <Heart className="mx-auto text-muted-foreground/10" size={48} />
+                  <div className="py-16 md:py-24 text-center border-2 border-dashed border-white/5 rounded-[28px] md:rounded-[40px] bg-white/[0.01] space-y-3 md:space-y-4">
+                    <Heart className="mx-auto text-muted-foreground/10" size={32} md:size={48} />
                     <div className="space-y-1">
-                      <p className="text-sm font-black text-muted-foreground uppercase tracking-[0.2em]">No gifts yet</p>
-                      <p className="text-[11px] text-muted-foreground/60 font-medium">Be the first to show support for @{requestor}!</p>
+                      <p className="text-[11px] md:text-sm font-black text-muted-foreground uppercase tracking-[0.2em]">No gifts yet</p>
+                      <p className="text-[9px] md:text-[11px] text-muted-foreground/60 font-medium">Be the first to show support for @{requestor}!</p>
                     </div>
                   </div>
                 )}
@@ -522,7 +522,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
               </div>
               <AlertDialogFooter className="gap-3">
                 <AlertDialogCancel className="rounded-xl font-bold h-12">Not Yet</AlertDialogCancel>
-                <AlertDialogAction onClick={handleComplete} className="bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl h-12 shadow-[0_0_20px_rgba(16,185,129,0.2)]">Confirm & Send Thanks</AlertDialogAction>
+                <AlertDialogAction onClick={handleComplete} className="bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl h-12 shadow-[0_0_20px_rgba(16,185,129,0.25)]">Confirm & Send Thanks</AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>

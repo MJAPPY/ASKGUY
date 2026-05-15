@@ -344,15 +344,15 @@ const Admin = () => {
                               </div>
                             </div>
                             
-                            <div className="relative w-full sm:w-32">
+                            <div className="relative w-full sm:w-auto sm:min-w-[160px]">
                               <Input 
                                 type="number"
                                 placeholder="0"
                                 value={individualRewards[user.address] || ''}
                                 onChange={(e) => setIndividualRewards(prev => ({ ...prev, [user.address]: e.target.value }))}
-                                className="bg-black/20 border-white/10 h-9 font-black rounded-lg text-xs pr-10 text-right"
+                                className="bg-black/20 border-white/10 h-10 font-black rounded-lg text-sm pr-12 text-right w-full"
                               />
-                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-black text-muted-foreground">GUY</span>
+                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-black text-muted-foreground pointer-events-none">GUY</span>
                             </div>
                           </div>
                         ))}

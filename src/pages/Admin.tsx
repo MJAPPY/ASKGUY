@@ -7,20 +7,16 @@ import Footer from '@/components/Footer';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ShieldAlert, UserX, UserCheck, Search, Loader2, ShieldCheck } from 'lucide-react';
+import { ShieldAlert, UserX, UserCheck, Loader2, ShieldCheck } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
 
-const OWNER_ADDRESS = 'tripseven'; // Replace with your actual wallet address
-
 const Admin = () => {
-  const { address, isConnected } = useWallet();
+  const { isConnected, isAdmin } = useWallet();
   const [bannedUsers, setBannedUsers] = useState<{ address: string, created_at: string }[]>([]);
   const [newBanAddress, setNewBanAddress] = useState('');
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
-
-  const isOwner = address === OWNER_ADDRESS;
 
   const fetchBannedUsers = async () => {
     setLoading(true);
@@ -40,10 +36,10 @@ const Admin = () => {
   };
 
   useEffect(() => {
-    if (isOwner) {
+    if (isAdmin) {
       fetchBannedUsers();
     }
-  }, [isOwner]);
+  }, [isAdmin]);
 
   const handleBan = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,7 +82,7 @@ const Admin = () => {
     }
   };
 
-  if (!isConnected || !isOwner) {
+  if (!isConnected || !isAdmin) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="max-w-md w-full glass-card p-12 text-center space-y-6 border-red-500/20">

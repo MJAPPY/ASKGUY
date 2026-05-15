@@ -4,10 +4,13 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import Connect, { LinkSession } from '@proton/web-sdk';
 import { supabase } from '@/integrations/supabase/client';
 
+export const OWNER_ADDRESS = 'tripseven'; // Your master wallet address
+
 export interface WalletState {
   address: string;
   isConnected: boolean;
   isConnecting: boolean;
+  isAdmin: boolean;
   isFetchingBalances: boolean;
   guyBalance: number;
   xprBalance: number;
@@ -47,6 +50,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [session, setSession] = useState<LinkSession | null>(null);
   const linkRef = useRef<any>(null);
 
+  const isAdmin = address.toLowerCase() === OWNER_ADDRESS.toLowerCase();
+
   const fetchTokenBalance = async (account: string, contract: string, symbol: string): Promise<number> => {
     const cleanAccount = String(account).toLowerCase().trim();
     const cleanContract = String(contract).toLowerCase().trim();
@@ -83,7 +88,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setIsFetchingBalances(true);
     const cleanAddress = walletAddress.toLowerCase();
     
-    // 1. Fetch Supabase Data (Bans and Membership) - Handled separately so it won't block balances
     try {
       const { data: banData } = await supabase.from('banned_users').select('address').eq('address', cleanAddress).maybeSingle();
       setIsBanned(!!banData);
@@ -93,10 +97,9 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setMembershipExpiry(profileData.membership_expiry);
       }
     } catch (err) {
-      console.warn('[use-wallet] Supabase sync error (non-critical):', err);
+      console.warn('[use-wallet] Supabase sync error:', err);
     }
 
-    // 2. Fetch Blockchain Balances (Independent of Supabase)
     try {
       const [xprVal, guyVtoken, guyXtokens, guy777] = await Promise.all([
         fetchTokenBalance(cleanAddress, 'eosio.token', 'XPR'),
@@ -212,7 +215,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   return (
     <WalletContext.Provider value={{
-      address, isConnected, isConnecting, isFetchingBalances,
+      address, isConnected, isConnecting, isAdmin, isFetchingBalances,
       guyBalance, xprBalance, membershipExpiry,
       isMember: isConnected, hasGuyThreshold: true, isBanned, 
       payMembership, connect, disconnect,

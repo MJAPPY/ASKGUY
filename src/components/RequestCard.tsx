@@ -20,7 +20,7 @@ import {
   AlertDialogTrigger 
 } from "@/components/ui/alert-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Heart, X, Loader2, CheckCircle2, Zap, Sparkles, Image as ImageIcon, MessageSquare, Quote, AlertTriangle, Share2, Info, Wallet, Trash2 } from 'lucide-react';
+import { Heart, X, Loader2, CheckCircle2, Zap, Sparkles, Image as ImageIcon, MessageSquare, Quote, AlertTriangle, Share2, Info, Wallet, Trash2, Calendar, User, ShieldCheck } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useRequests, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
@@ -255,98 +255,170 @@ const RequestCard: React.FC<RequestCardProps> = ({
             </div>
           </div>
         </DialogTrigger>
-        <DialogContent className="glass-card border-white/10 max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0">
-          <DialogHeader className="p-6 border-b border-white/5 shrink-0">
-            <div className="flex items-center justify-between">
-              <DialogTitle className="text-3xl font-black tracking-tight leading-tight">{title}</DialogTitle>
-              <div className="flex items-center gap-2 ml-4">
-                {isAdmin && (
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-red-400 hover:text-red-300 hover:bg-red-500/10">
-                        <Trash2 size={16} />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent className="glass-card border-white/10 p-8 rounded-[32px]">
-                      <AlertDialogHeader>
-                        <AlertDialogTitle className="text-2xl font-black tracking-tight">Delete Request?</AlertDialogTitle>
-                        <AlertDialogDescription className="text-muted-foreground font-medium">
-                          This action will permanently remove this request and all associated activity from the platform. This cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter className="gap-3">
-                        <AlertDialogCancel className="rounded-xl font-bold h-12">Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-500 text-white font-black rounded-xl h-12 shadow-[0_0_20px_rgba(220,38,38,0.2)]">Delete Permanently</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                )}
-                <Button variant="outline" size="icon" onClick={handleShare} className="h-8 w-8 rounded-full border-white/10 hover:bg-white/10">
-                  <Share2 size={14} />
-                </Button>
+        <DialogContent className="glass-card border-white/10 max-w-3xl max-h-[95vh] overflow-hidden flex flex-col p-0 rounded-[32px] shadow-[0_0_80px_rgba(0,0,0,0.5)]">
+          <DialogHeader className="p-8 pb-10 border-b border-white/5 shrink-0 bg-white/[0.015] relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[100px] -translate-y-1/2 translate-x-1/2 rounded-full pointer-events-none" />
+            
+            <div className="flex items-start justify-between relative z-10">
+              <div className="space-y-4 flex-1">
+                <div className="flex items-center gap-3">
+                  <span className={cn("text-[10px] font-black px-3 py-1 rounded-lg uppercase tracking-[0.2em] border", getCategoryColor())}>
+                    {category}
+                  </span>
+                  {isUrgent && <span className="bg-rose-500/20 text-rose-400 border border-rose-500/30 text-[10px] font-black px-3 py-1 rounded-lg uppercase tracking-[0.2em]">Urgent</span>}
+                </div>
+                <DialogTitle className="text-4xl font-black tracking-tight leading-none text-white max-w-xl">{title}</DialogTitle>
+                
+                <div className="flex flex-wrap items-center gap-6 pt-2">
+                  <div className="flex items-center gap-3 group/user cursor-pointer">
+                    <Avatar className="w-10 h-10 border-2 border-white/20 p-1 bg-black/20 group-hover/user:border-primary/50 transition-all">
+                      <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${requestor}`} />
+                    </Avatar>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-black text-white group-hover/user:text-primary transition-colors">@{requestor}</span>
+                      <span className="text-[10px] text-muted-foreground font-black uppercase tracking-tighter">Verified Member</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-muted-foreground font-black uppercase tracking-tighter text-[10px]">
+                    <Calendar size={14} className="text-primary" />
+                    Posted {formatDistanceToNow(timestamp, { addSuffix: true })}
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-2 mt-2">
-              <Avatar className="w-8 h-8 border border-white/20 p-0.5 bg-black/20">
-                <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${requestor}`} />
-                <AvatarFallback className="text-[10px] bg-primary text-black font-black">{requestor.substring(0, 2).toUpperCase()}</AvatarFallback>
-              </Avatar>
-              <span className="text-sm font-black text-white uppercase tracking-wider">@{requestor}</span>
-              <span className="text-muted-foreground/30">•</span>
-              <span className="text-[10px] text-muted-foreground font-black uppercase tracking-tighter">
-                {formatDistanceToNow(timestamp, { addSuffix: true })}
-              </span>
+
+              <div className="flex flex-col items-end gap-3">
+                 <div className="flex gap-2">
+                  {isAdmin && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 border border-rose-500/10">
+                          <Trash2 size={18} />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="glass-card border-white/10 p-8 rounded-[32px]">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle className="text-2xl font-black tracking-tight">Delete Request?</AlertDialogTitle>
+                          <AlertDialogDescription className="text-muted-foreground font-medium">
+                            This action will permanently remove this request and all associated activity from the platform. This cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter className="gap-3">
+                          <AlertDialogCancel className="rounded-xl font-bold h-12">Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleDelete} className="bg-rose-600 hover:bg-rose-500 text-white font-black rounded-xl h-12 shadow-[0_0_20px_rgba(220,38,38,0.2)]">Delete Permanently</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                  <Button variant="outline" size="icon" onClick={handleShare} className="h-10 w-10 rounded-xl border-white/10 hover:bg-white/10 hover:border-primary/30 transition-all">
+                    <Share2 size={18} />
+                  </Button>
+                </div>
+
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-right min-w-[160px] space-y-1">
+                  <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Raised So Far</div>
+                  <div className="text-2xl font-black text-primary flex items-center justify-end gap-2">
+                    {raised.toLocaleString()} <span className="text-xs text-white/40">{token}</span>
+                  </div>
+                  <div className="w-full bg-white/10 rounded-full h-1.5 overflow-hidden">
+                    <div className="bg-primary h-full" style={{ width: `${progress}%` }} />
+                  </div>
+                </div>
+              </div>
             </div>
           </DialogHeader>
 
-          <ScrollArea className="flex-1">
-            <div className="p-6 space-y-10 pb-12">
-              <div className="space-y-4">
-                <h4 className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><Quote size={14} /> The Situation</h4>
-                <div className="text-lg font-black leading-relaxed italic text-foreground/90 bg-white/5 p-8 rounded-[24px] border border-white/10">
-                  "{description}"
+          <ScrollArea className="flex-1 bg-[#0a0a0c]">
+            <div className="p-8 md:p-12 space-y-16 pb-24">
+              <section className="space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-lg shadow-primary/5">
+                    <MessageSquare size={20} />
+                  </div>
+                  <h4 className="text-sm font-black uppercase tracking-[0.2em] text-white/90">The Situation</h4>
                 </div>
-              </div>
-
-              {proofUrl && (
-                <div className="space-y-4">
-                  <h4 className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><ImageIcon size={14} /> Proof</h4>
-                  <div className="rounded-[24px] overflow-hidden border border-white/10 bg-black/40 aspect-video relative group shadow-2xl">
-                    <img src={proofUrl} alt="Proof" className="w-full h-full object-contain" />
+                <div className="relative group">
+                  <Quote className="absolute -top-4 -left-4 text-primary/10 w-24 h-24 rotate-12 transition-transform group-hover:rotate-0 duration-700" />
+                  <div className="text-xl md:text-2xl font-bold leading-relaxed italic text-white/90 bg-white/[0.02] p-10 rounded-[40px] border border-white/5 relative z-10 shadow-inner">
+                    "{description}"
                   </div>
                 </div>
+              </section>
+
+              {proofUrl && (
+                <section className="space-y-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-[#1565C0]/10 border border-[#1565C0]/20 flex items-center justify-center text-[#1565C0] shadow-lg shadow-[#1565C0]/5">
+                      <ImageIcon size={20} />
+                    </div>
+                    <h4 className="text-sm font-black uppercase tracking-[0.2em] text-white/90">Verification Proof</h4>
+                  </div>
+                  <div className="rounded-[40px] overflow-hidden border border-white/10 bg-black/40 aspect-video relative group shadow-2xl p-4 cursor-zoom-in">
+                    <img src={proofUrl} alt="Proof" className="w-full h-full object-contain transition-transform duration-1000 group-hover:scale-105" />
+                    <div className="absolute bottom-8 left-8 flex items-center gap-2 px-4 py-2 rounded-xl bg-black/60 backdrop-blur-md border border-white/10 text-xs font-black text-emerald-400">
+                      <ShieldCheck size={16} /> Image Verified
+                    </div>
+                  </div>
+                </section>
               )}
 
-              <div className="space-y-4">
-                <h4 className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><MessageSquare size={14} /> Activity ({contributions.length})</h4>
+              <section className="space-y-8">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 shadow-lg shadow-rose-500/5">
+                      <Heart size={20} className="fill-current" />
+                    </div>
+                    <h4 className="text-sm font-black uppercase tracking-[0.2em] text-white/90">Community Support</h4>
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground bg-white/5 px-3 py-1.5 rounded-lg border border-white/10">
+                    {contributions.length} Contributions
+                  </span>
+                </div>
+
                 {sortedContributions.length > 0 ? (
-                  <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-1 gap-6">
                     {sortedContributions.map((msg, idx) => (
-                      <div key={idx} className="p-5 rounded-[20px] bg-white/5 border border-white/10 space-y-3 hover:bg-white/[0.08] transition-colors group">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <Avatar className="w-8 h-8 border border-white/20 p-0.5 bg-black/20">
+                      <div key={idx} className="p-8 rounded-[32px] bg-white/[0.015] border border-white/5 space-y-4 hover:bg-white/[0.03] transition-all group relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
+                          <Zap size={60} />
+                        </div>
+                        
+                        <div className="flex items-center justify-between relative z-10">
+                          <div className="flex items-center gap-4">
+                            <Avatar className="w-10 h-10 border-2 border-white/10 p-1 bg-black/20">
                               <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${msg.user}`} />
-                              <AvatarFallback className="text-[8px] bg-primary text-black font-black">{msg.user.substring(0, 1)}</AvatarFallback>
                             </Avatar>
                             <div>
-                              <span className="text-[11px] font-black text-primary uppercase tracking-widest">@{msg.user}</span>
-                              <p className="text-[8px] text-muted-foreground uppercase font-black tracking-tighter">{formatDistanceToNow(msg.timestamp, { addSuffix: true })}</p>
+                              <span className="text-sm font-black text-primary uppercase tracking-widest">@{msg.user}</span>
+                              <p className="text-[10px] text-muted-foreground uppercase font-black tracking-tighter opacity-60">
+                                {formatDistanceToNow(msg.timestamp, { addSuffix: true })}
+                              </p>
                             </div>
                           </div>
-                          <div className="px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20"><span className="text-xs font-black text-emerald-400">+{msg.amount} {msg.token}</span></div>
+                          <div className="px-5 py-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.1)]">
+                            <span className="text-base font-black text-emerald-400">+{msg.amount.toLocaleString()} {msg.token}</span>
+                          </div>
                         </div>
-                        {msg.message && <p className="text-sm font-black text-white/90 leading-relaxed italic border-l-2 border-primary/30 pl-4 py-1">"{msg.message}"</p>}
+                        {msg.message && (
+                          <div className="pl-14 relative z-10">
+                            <p className="text-base font-medium text-white/80 leading-relaxed italic border-l-2 border-primary/30 pl-6 py-1">
+                              "{msg.message}"
+                            </p>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="py-16 text-center border-2 border-dashed border-white/5 rounded-[24px] bg-white/[0.02]">
-                    <Heart className="mx-auto text-muted-foreground/20 mb-3" size={32} />
-                    <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">No activity yet.</p>
+                  <div className="py-24 text-center border-2 border-dashed border-white/5 rounded-[40px] bg-white/[0.01] space-y-4">
+                    <Heart className="mx-auto text-muted-foreground/10" size={48} />
+                    <div className="space-y-1">
+                      <p className="text-sm font-black text-muted-foreground uppercase tracking-[0.2em]">No gifts yet</p>
+                      <p className="text-[11px] text-muted-foreground/60 font-medium">Be the first to show support for @{requestor}!</p>
+                    </div>
                   </div>
                 )}
-              </div>
+              </section>
             </div>
           </ScrollArea>
         </DialogContent>

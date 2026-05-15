@@ -353,8 +353,8 @@ const RequestCard: React.FC<RequestCardProps> = ({
                     </div>
                     <h4 className="text-[11px] md:text-sm font-black uppercase tracking-[0.2em] text-white/90">Verification Proof</h4>
                   </div>
-                  <div className="rounded-[28px] md:rounded-[40px] overflow-hidden border border-white/10 bg-black/40 aspect-video relative group shadow-2xl p-2 md:p-4">
-                    <img src={proofUrl} alt="Proof" className="w-full h-full object-contain transition-transform duration-1000 group-hover:scale-105" />
+                  <div className="rounded-[28px] md:rounded-[40px] overflow-hidden border border-white/10 bg-black/40 relative group shadow-2xl p-2 md:p-4 flex justify-center">
+                    <img src={proofUrl} alt="Proof" className="w-full h-auto max-h-[800px] object-contain transition-transform duration-1000 group-hover:scale-[1.02]" />
                     <div className="absolute bottom-4 left-4 md:bottom-8 md:left-8 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/60 backdrop-blur-md border border-white/10 text-[9px] md:text-xs font-black text-emerald-400">
                       <ShieldCheck size={14} /> Image Verified
                     </div>

@@ -30,12 +30,11 @@ const WalletContext = createContext<WalletState | undefined>(undefined);
 
 const APP_NAME = 'AskGuy';
 
-const ENDPOINTS = [
-  'https://proton.greymass.com',
-  'https://api.protonchain.com',
+const PROTON_ENDPOINTS = [
   'https://proton.protonuk.io',
   'https://api.protonnz.com',
-  'https://proton.eosusa.io',
+  'https://proton.cryptolions.io',
+  'https://proton.eoscafeblock.com'
 ];
 
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -52,42 +51,41 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const isAdmin = address.toLowerCase() === OWNER_ADDRESS.toLowerCase();
 
-  const rpcCall = async (path: string, body: any) => {
-    for (const endpoint of ENDPOINTS) {
+  const getTokenBalance = useCallback(async (accountName: string, contract: string, symbol: string) => {
+    for (const rpc of PROTON_ENDPOINTS) {
       try {
-        const response = await fetch(`${endpoint}${path}`, {
+        console.log(`🔍 Trying ${symbol} on ${rpc}...`);
+
+        const res = await fetch(`${rpc}/v1/chain/get_table_rows`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
+          body: JSON.stringify({
+            json: true,
+            code: contract,
+            scope: accountName,
+            table: "accounts",
+            lower_bound: symbol,
+            upper_bound: symbol,
+            limit: 1
+          }),
           signal: AbortSignal.timeout(4000)
         });
-        if (response.ok) return await response.json();
-      } catch (e) {
-        continue;
+
+        if (!res.ok) continue;
+
+        const data = await res.json();
+        const balance = data.rows[0]?.balance || `0.0000 ${symbol}`;
+
+        console.log(`✅ ${symbol} Balance from ${rpc}:`, balance);
+        return balance;
+
+      } catch (err) {
+        console.warn(`❌ ${rpc} failed for ${symbol}`);
       }
     }
-    return null;
-  };
 
-  const getTokenBalance = useCallback(async (
-    accountName: string, 
-    contract: string, 
-    symbol: string
-  ) => {
-    try {
-      const data = await rpcCall('/v1/chain/get_table_rows', {
-        json: true,
-        code: contract,
-        scope: accountName,
-        table: "accounts",
-        lower_bound: symbol,
-        upper_bound: symbol,
-        limit: 1
-      });
-      return data?.rows[0]?.balance || `0.0000 ${symbol}`;
-    } catch (err) {
-      return `0.0000 ${symbol}`;
-    }
+    console.error(`Failed to fetch ${symbol} from all endpoints`);
+    return `0.0000 ${symbol}`;
   }, []);
 
   const fetchAllBalances = useCallback(async (accountName: string) => {
@@ -95,43 +93,24 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setIsFetchingBalances(true);
     const cleanAddress = accountName.toLowerCase().trim();
     
-    console.log(`🔄 Fetching balances for: ${cleanAddress}`);
+    console.log(`🔄 Syncing all balances for: ${cleanAddress}`);
 
     try {
-      // 1. Fetch native XPR
-      const xprData = await rpcCall('/v1/chain/get_currency_balance', {
-        code: 'eosio.token',
-        account: cleanAddress,
-        symbol: 'XPR'
-      });
-      const xprVal = xprData && xprData.length > 0 ? parseFloat(xprData[0].split(' ')[0]) : 0;
-      console.log(`✅ XPR Balance:`, xprVal);
+      // 1. Fetch XPR (eosio.token)
+      const xprStr = await getTokenBalance(cleanAddress, 'eosio.token', 'XPR');
+      const xprVal = parseFloat(xprStr.split(' ')[0]);
 
-      // 2. Fetch GUY using table rows
-      const guyBalanceStr = await getTokenBalance(cleanAddress, 'proton', 'GUY');
-      let guyVal = parseFloat(guyBalanceStr.split(' ')[0]);
-      console.log(`📊 GUY Balance:`, guyBalanceStr);
+      // 2. Fetch GUY (proton contract)
+      const guyStr = await getTokenBalance(cleanAddress, 'proton', 'GUY');
+      let guyVal = parseFloat(guyStr.split(' ')[0]);
 
       // Try "Guy" as fallback
       if (guyVal === 0) {
         const guy2Str = await getTokenBalance(cleanAddress, 'proton', 'Guy');
         guyVal = parseFloat(guy2Str.split(' ')[0]);
-        console.log(`📊 Guy Fallback Balance:`, guy2Str);
       }
 
-      // 3. Fallback: Search all tokens
-      if (guyVal === 0) {
-        const allTokensData = await rpcCall('/v1/chain/get_account_tokens', { account: cleanAddress });
-        const foundGuy = allTokensData?.tokens?.find((t: any) => 
-          t.symbol === 'GUY' || t.symbol === 'Guy' || t.symbol === '777 GUY'
-        );
-        if (foundGuy) {
-          guyVal = parseFloat(foundGuy.amount);
-          console.log(`💎 Found in AllTokens search:`, guyVal);
-        }
-      }
-
-      // 4. Metadata sync (Supabase)
+      // 3. Metadata sync (Supabase)
       const [banResult, profileResult] = await Promise.all([
         supabase.from('banned_users').select('address').eq('address', cleanAddress).maybeSingle(),
         supabase.from('profiles').select('membership_expiry').eq('address', cleanAddress).maybeSingle()
@@ -144,38 +123,27 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setMembershipExpiry(profileResult.data.membership_expiry);
       }
       
-      console.log(`✨ Load Complete: XPR: ${xprVal} | GUY: ${guyVal}`);
+      console.log(`✨ Sync Finished: XPR: ${xprVal} | GUY: ${guyVal}`);
     } catch (err) {
-      console.error('❌ Error syncing wallet data:', err);
+      console.error('❌ Error in fetchAllBalances:', err);
     } finally {
       setIsFetchingBalances(false);
     }
   }, [getTokenBalance]);
 
-  // Diagnostic Effect
+  // Handle session detection and auto-sync
   useEffect(() => {
     const accountName = session?.auth?.actor;
-    
     if (accountName) {
       console.log("=== ACCOUNT DETECTED ===", accountName);
-      const name = String(accountName);
-
-      // Perform main sync
-      fetchAllBalances(name);
-
-      // Diagnostic logs as requested
-      getTokenBalance(name, 'eosio.token', 'XPR')
-        .then(balance => console.log("✅ XPR Test:", balance));
-
-      getTokenBalance(name, 'proton', 'GUY')
-        .then(balance => console.log("✅ GUY Test:", balance));
+      fetchAllBalances(String(accountName));
     }
-  }, [session, fetchAllBalances, getTokenBalance]);
+  }, [session, fetchAllBalances]);
 
   const initWallet = useCallback(async (restore = true) => {
     try {
       const result = await Connect({
-        linkOptions: { endpoints: ENDPOINTS, restoreSession: restore },
+        linkOptions: { endpoints: PROTON_ENDPOINTS, restoreSession: restore },
         transportOptions: { requestAccount: 'askguy', backButton: true },
         selectorOptions: {
           appName: APP_NAME,
@@ -251,6 +219,24 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return false;
     }
   }, [session, refreshBalances, address]);
+
+  // Helper for internal RPC calls if needed (e.g. transfer metadata)
+  const rpcCall = async (path: string, body: any) => {
+    for (const endpoint of PROTON_ENDPOINTS) {
+      try {
+        const response = await fetch(`${endpoint}${path}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+          signal: AbortSignal.timeout(4000)
+        });
+        if (response.ok) return await response.json();
+      } catch (e) {
+        continue;
+      }
+    }
+    return null;
+  };
 
   const payMembership = useCallback(async () => {
     const success = await transferTokens('askguy', 1, 'XPR', 'AskGuy Membership Fee');

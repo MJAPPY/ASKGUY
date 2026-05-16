@@ -10,10 +10,34 @@ import Calculator from "./pages/Calculator";
 import Guidelines from "./pages/Guidelines";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
-import { WalletProvider } from "./hooks/use-wallet";
+import Maintenance from "./pages/Maintenance"; // Added
+import { WalletProvider, useWallet } from "./hooks/use-wallet";
 import { RequestsProvider } from "./hooks/use-requests";
 
 const queryClient = new QueryClient();
+
+const AppContent = () => {
+  const { isMaintenanceMode, isAdmin } = useWallet();
+
+  if (isMaintenanceMode && !isAdmin) {
+    return <Maintenance />;
+  }
+
+  return (
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/profile/:userAddress" element={<Profile />} />
+        <Route path="/leaderboard" element={<LeaderboardPage />} />
+        <Route path="/calculator" element={<Calculator />} />
+        <Route path="/guidelines" element={<Guidelines />} />
+        <Route path="/admin" element={<Admin />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -22,18 +46,7 @@ const App = () => (
       <Sonner />
       <WalletProvider>
         <RequestsProvider>
-          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/profile/:userAddress" element={<Profile />} />
-              <Route path="/leaderboard" element={<LeaderboardPage />} />
-              <Route path="/calculator" element={<Calculator />} />
-              <Route path="/guidelines" element={<Guidelines />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
+          <AppContent />
         </RequestsProvider>
       </WalletProvider>
     </TooltipProvider>

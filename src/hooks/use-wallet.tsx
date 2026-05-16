@@ -16,11 +16,13 @@ export interface WalletState {
   guyBalance: number;
   xprBalance: number;
   avatarUrl: string;
-  avatarSet: string; // Added avatarSet
+  avatarSet: string;
   membershipExpiry: number;
   membershipFee: number;
   postingFeeGuy: number;
   isMembershipEnabled: boolean;
+  isMaintenanceMode: boolean; // Added
+  maintenanceMessage: string; // Added
   isMember: boolean; 
   hasGuyThreshold: boolean; 
   isBanned: boolean;
@@ -51,11 +53,13 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [guyBalance, setGuyBalance] = useState(0);
   const [xprBalance, setXprBalance] = useState(0);
   const [avatarUrl, setAvatarUrl] = useState('');
-  const [avatarSet, setAvatarSet] = useState('pixel-art'); // Default avatar set
+  const [avatarSet, setAvatarSet] = useState('pixel-art');
   const [membershipExpiry, setMembershipExpiry] = useState(0);
   const [membershipFee, setMembershipFee] = useState(7777);
   const [postingFeeGuy, setPostingFeeGuy] = useState(25);
   const [isMembershipEnabled, setIsMembershipEnabled] = useState(true);
+  const [isMaintenanceMode, setIsMaintenanceMode] = useState(false); // Added
+  const [maintenanceMessage, setMaintenanceMessage] = useState(''); // Added
   const [isFetchingBalances, setIsFetchingBalances] = useState(false);
   const [isBanned, setIsBanned] = useState(false);
   const [session, setSession] = useState<LinkSession | null>(null);
@@ -77,6 +81,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setIsMembershipEnabled(data.membership_active);
         setPostingFeeGuy(Number(data.posting_fee_guy ?? 25));
         setAvatarSet(data.avatar_set || 'pixel-art');
+        setIsMaintenanceMode(!!data.maintenance_mode); // Using optional columns
+        setMaintenanceMessage(data.maintenance_message || ''); // Using optional columns
       }
     } catch (err) {
       console.error('Error fetching settings:', err);
@@ -265,6 +271,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       address, isConnected, isConnecting, isAdmin, isFetchingBalances,
       guyBalance, xprBalance, avatarUrl, avatarSet, membershipExpiry,
       membershipFee, postingFeeGuy, isMembershipEnabled,
+      isMaintenanceMode, maintenanceMessage, // Added
       isMember, hasGuyThreshold: true, isBanned, 
       payMembership, connect, disconnect,
       refreshBalances, fetchSettings, transferTokens, requestor: address,

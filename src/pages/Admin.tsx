@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea'; // Added
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
@@ -39,14 +40,29 @@ import {
   Eye,
   CheckCircle2,
   Clock,
-  Heart
+  Heart,
+  Hammer // Added
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
 import { cn } from '@/lib/utils';
 
 const Admin = () => {
-  const { isConnected, isAdmin, transferTokens, guyBalance, membershipFee: currentFee, isMembershipEnabled: currentEnabled, postingFeeGuy: currentPostingFee, avatarSet: currentAvatarSet, fetchSettings, address } = useWallet();
+  const { 
+    isConnected, 
+    isAdmin, 
+    transferTokens, 
+    guyBalance, 
+    membershipFee: currentFee, 
+    isMembershipEnabled: currentEnabled, 
+    postingFeeGuy: currentPostingFee, 
+    avatarSet: currentAvatarSet, 
+    isMaintenanceMode: currentMaintenance, // Added
+    maintenanceMessage: currentMessage, // Added
+    fetchSettings, 
+    address 
+  } = useWallet();
+  
   const { requests, deleteRequest, batchDeleteRequests, loading: requestsLoading } = useRequests();
   const [bannedUsers, setBannedUsers] = useState<{ address: string, created_at: string }[]>([]);
   const [newBanAddress, setNewBanAddress] = useState('');
@@ -60,6 +76,8 @@ const Admin = () => {
   const [membershipFee, setMembershipFee] = useState(currentFee.toString());
   const [postingFeeGuy, setPostingFeeGuy] = useState(currentPostingFee.toString());
   const [avatarSet, setAvatarSet] = useState(currentAvatarSet);
+  const [maintenanceMode, setMaintenanceMode] = useState(currentMaintenance); // Added
+  const [maintenanceMessage, setMaintenanceMessage] = useState(currentMessage); // Added
 
   // Individual rewards state
   const [individualRewards, setIndividualRewards] = useState<Record<string, string>>({});
@@ -69,7 +87,9 @@ const Admin = () => {
     setMembershipFee(currentFee.toString());
     setPostingFeeGuy(currentPostingFee.toString());
     setAvatarSet(currentAvatarSet);
-  }, [currentEnabled, currentFee, currentPostingFee, currentAvatarSet]);
+    setMaintenanceMode(currentMaintenance); // Added
+    setMaintenanceMessage(currentMessage); // Added
+  }, [currentEnabled, currentFee, currentPostingFee, currentAvatarSet, currentMaintenance, currentMessage]);
 
   const stats = useMemo(() => {
     const contributionMap: Record<string, number> = {};
@@ -164,13 +184,16 @@ const Admin = () => {
   const handleUpdateSettings = async () => {
     setProcessing(true);
     try {
+      // Note: These columns must be added via SQL first
       const { error } = await supabase
         .from('site_settings')
         .update({ 
           membership_active: membershipActive,
           membership_fee: parseFloat(membershipFee),
           posting_fee_guy: parseFloat(postingFeeGuy),
-          avatar_set: avatarSet
+          avatar_set: avatarSet,
+          maintenance_mode: maintenanceMode, // Added
+          maintenance_message: maintenanceMessage // Added
         })
         .eq('id', 'global');
 
@@ -180,7 +203,7 @@ const Admin = () => {
       showSuccess("Global settings updated.");
     } catch (err) {
       console.error("Settings update error:", err);
-      showError("Failed to update settings.");
+      showError("Failed to update settings. Verify DB columns exist.");
     } finally {
       setProcessing(false);
     }
@@ -634,6 +657,34 @@ const Admin = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="px-0 space-y-8">
+                  {/* Maintenance Mode Toggle - Added */}
+                  <div className="p-6 rounded-2xl bg-orange-500/5 border border-orange-500/10 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <Hammer size={16} className="text-orange-400" />
+                          <p className="font-black text-white">System Maintenance Mode</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground font-medium">Restricts visitor access. Admins can still bypass.</p>
+                      </div>
+                      <Switch 
+                        checked={maintenanceMode} 
+                        onCheckedChange={setMaintenanceMode}
+                      />
+                    </div>
+                    {maintenanceMode && (
+                      <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-orange-400/70">Maintenance Message</label>
+                        <Textarea 
+                          value={maintenanceMessage}
+                          onChange={(e) => setMaintenanceMessage(e.target.value)}
+                          placeholder="Announce the reason for maintenance..."
+                          className="bg-black/20 border-orange-500/20 h-24 font-medium"
+                        />
+                      </div>
+                    )}
+                  </div>
+
                   <div className="flex items-center justify-between p-6 rounded-2xl bg-white/5 border border-white/10">
                     <div className="space-y-1">
                       <p className="font-black text-white">Enable Membership System</p>
@@ -685,9 +736,6 @@ const Admin = () => {
                            </div>
                          ))}
                        </div>
-                       <p className="text-[9px] text-muted-foreground/50 italic text-center pt-2">
-                         Switching styles will update the appearance of every user on the platform.
-                       </p>
                     </div>
                   </div>
 

@@ -82,7 +82,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const guyTotal = useMemo(() => {
-    return contributions
+    return (contributions || [])
       .filter(c => c.token === 'GUY')
       .reduce((acc, c) => acc + c.amount, 0);
   }, [contributions]);
@@ -175,13 +175,21 @@ const RequestCard: React.FC<RequestCardProps> = ({
               </div>
 
               <div className={variant === 'list' ? "md:col-span-4" : "space-y-3"}>
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   <div className="flex items-center justify-between text-[10px] font-black uppercase">
-                    <div className="flex items-center gap-1.5 text-primary">
-                      <Zap size={12} className="fill-primary" />
-                      {raised} {token}
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-1.5 text-primary">
+                        <Zap size={12} className="fill-primary" />
+                        {raised.toLocaleString()} {token}
+                      </div>
+                      {guyTotal > 0 && (
+                        <div className="flex items-center gap-1.5 text-rose-400">
+                          <Heart size={10} className="fill-current" />
+                          {guyTotal.toLocaleString()} GUY Gifted
+                        </div>
+                      )}
                     </div>
-                    <span className="text-muted-foreground opacity-50">/ {amount} {token}</span>
+                    <span className="text-muted-foreground opacity-50 self-start">/ {amount.toLocaleString()} {token}</span>
                   </div>
                   <div className="w-full bg-white/5 rounded-full h-2.5 border border-white/5 p-[1px]">
                     <div 
@@ -269,7 +277,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
                     </h4>
                     {guyTotal > 0 && (
                       <Badge className="bg-primary/10 text-primary border-primary/20 text-[9px] font-black uppercase tracking-widest">
-                        {guyTotal} GUY Included
+                        {guyTotal.toLocaleString()} GUY Included
                       </Badge>
                     )}
                   </div>
@@ -284,7 +292,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
                           <div className="flex-1 min-w-0">
                             <div className="flex justify-between items-center mb-1">
                               <p className="text-sm font-black text-white">@{c.user}</p>
-                              <p className="text-[10px] font-black text-emerald-400">+{c.amount} {c.token}</p>
+                              <p className="text-[10px] font-black text-emerald-400">+{c.amount.toLocaleString()} {c.token}</p>
                             </div>
                             {c.message && (
                               <p className="text-xs text-muted-foreground italic font-medium">"{c.message}"</p>

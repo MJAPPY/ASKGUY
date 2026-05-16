@@ -224,16 +224,6 @@ const Profile = () => {
                       </h1>
                       {isOwnProfile && <Badge className="bg-[#1565C0]/20 text-[#1565C0] border-[#1565C0]/30 text-[10px] uppercase font-black px-3 h-6 tracking-widest">You</Badge>}
                     </div>
-                    {isVerified ? (
-                      <p className="text-[10px] text-emerald-400 font-black uppercase tracking-[0.4em] flex items-center gap-2">
-                        <Activity size={12} className="text-emerald-400" />
-                        XPR Network User
-                      </p>
-                    ) : (
-                      <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.4em] flex items-center gap-2">
-                        XPR Network Explorer
-                      </p>
-                    )}
                   </div>
                   
                   <div className="flex flex-wrap gap-3">

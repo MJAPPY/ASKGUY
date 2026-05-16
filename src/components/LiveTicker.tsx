@@ -17,13 +17,16 @@ const LiveTicker = () => {
   if (recentDonations.length === 0) return null;
 
   return (
-    <div className="w-full bg-[#0a0a0c] border-y border-white/5 py-3 overflow-hidden whitespace-nowrap relative shadow-[0_4px_20px_rgba(0,0,0,0.4)]">
+    <div className="w-full bg-[#0a0a0c] border-y border-white/5 py-3.5 overflow-hidden whitespace-nowrap relative shadow-[0_4px_30px_rgba(0,0,0,0.6)] carbon-texture">
+      {/* Gloss overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none" />
+      
       {/* Edge Fades */}
       <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-[#0a0a0c] to-transparent z-10" />
       <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-[#0a0a0c] to-transparent z-10" />
       
       {/* Ticker Content */}
-      <div className="flex animate-marquee">
+      <div className="flex animate-marquee relative z-20">
         {[...Array(2)].map((_, i) => (
           <div key={i} className="flex items-center">
             {recentDonations.map((donation, idx) => (
@@ -33,11 +36,11 @@ const LiveTicker = () => {
                   <div className="absolute inset-0 bg-primary/40 blur-md rounded-full -z-10" />
                 </div>
                 
-                <span className="text-primary drop-shadow-[0_0_8px_rgba(251,212,81,0.5)]">@{donation.user}</span>
+                <span className="text-primary drop-shadow-[0_0_8px_rgba(251,212,81,0.6)]">@{donation.user}</span>
                 <span className="text-white/40 font-bold not-italic">SENT</span>
-                <span className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">{donation.amount.toLocaleString()} {donation.token}</span>
+                <span className="text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]">{donation.amount.toLocaleString()} {donation.token}</span>
                 <span className="text-white/40 font-bold not-italic">TO</span>
-                <span className="text-[#1565C0] drop-shadow-[0_0_8px_rgba(21,101,192,0.5)]">@{donation.target}</span>
+                <span className="text-[#1565C0] drop-shadow-[0_0_10px_rgba(21,101,192,0.6)]">@{donation.target}</span>
               </span>
             ))}
           </div>
@@ -56,6 +59,16 @@ const LiveTicker = () => {
         }
         .animate-marquee:hover {
           animation-play-state: paused;
+        }
+        .carbon-texture {
+          background-color: #0a0a0c;
+          background-image: 
+            linear-gradient(45deg, #111 25%, transparent 25%), 
+            linear-gradient(-45deg, #111 25%, transparent 25%), 
+            linear-gradient(45deg, transparent 75%, #111 75%), 
+            linear-gradient(-45deg, transparent 75%, #111 75%);
+          background-size: 4px 4px;
+          box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
         }
       `}</style>
     </div>

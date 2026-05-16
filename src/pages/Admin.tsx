@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   ShieldAlert, 
   UserX, 
@@ -34,14 +35,15 @@ import {
   Trophy,
   Filter,
   Settings,
-  User
+  User,
+  Eye
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
 import { cn } from '@/lib/utils';
 
 const Admin = () => {
-  const { isConnected, isAdmin, transferTokens, guyBalance, membershipFee: currentFee, isMembershipEnabled: currentEnabled, postingFeeGuy: currentPostingFee, avatarSet: currentAvatarSet, fetchSettings } = useWallet();
+  const { isConnected, isAdmin, transferTokens, guyBalance, membershipFee: currentFee, isMembershipEnabled: currentEnabled, postingFeeGuy: currentPostingFee, avatarSet: currentAvatarSet, fetchSettings, address } = useWallet();
   const { requests, deleteRequest, batchDeleteRequests, loading: requestsLoading } = useRequests();
   const [bannedUsers, setBannedUsers] = useState<{ address: string, created_at: string }[]>([]);
   const [newBanAddress, setNewBanAddress] = useState('');
@@ -296,7 +298,7 @@ const Admin = () => {
 
   const toggleSelect = (id: string) => {
     setSelectedIds(prev => 
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter(id => id !== id) : [...prev, id]
     );
   };
 
@@ -313,13 +315,14 @@ const Admin = () => {
 
   const avatarStyles = [
     { value: 'pixel-art', label: 'Pixel Art' },
-    { value: 'avataaars', label: 'Avatars (Realistic)' },
+    { value: 'avataaars', label: 'Realistic' },
     { value: 'bottts', label: 'Robots' },
-    { value: 'identicon', label: 'Geometric (Identicon)' },
-    { value: 'lorelei', label: 'Lorelei (Modern)' },
+    { value: 'identicon', label: 'Geometric' },
+    { value: 'lorelei', label: 'Modern' },
     { value: 'miniavs', label: 'Mini Avatars' },
-    { value: 'open-peeps', label: 'Hand-drawn Peeps' },
-    { value: 'personas', label: 'Personas' }
+    { value: 'open-peeps', label: 'Hand-drawn' },
+    { value: 'personas', label: 'Personas' },
+    { value: 'shapes', label: 'Abstract Shapes' }
   ];
 
   if (!isConnected || !isAdmin) {
@@ -392,20 +395,50 @@ const Admin = () => {
                     />
                   </div>
 
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Global Avatar Set</label>
-                    <Select value={avatarSet} onValueChange={setAvatarSet}>
-                      <SelectTrigger className="h-14 bg-black/20 border-white/10 font-black rounded-xl text-lg">
-                        <SelectValue placeholder="Select avatar style" />
-                      </SelectTrigger>
-                      <SelectContent className="glass-card border-white/10">
-                        {avatarStyles.map(style => (
-                          <SelectItem key={style.value} value={style.value} className="font-black">
-                            {style.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <div className="space-y-6">
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                        Global Avatar Set
+                        <span className="text-primary/50 text-[8px] italic">(Live Preview)</span>
+                      </label>
+                      <Select value={avatarSet} onValueChange={setAvatarSet}>
+                        <SelectTrigger className="h-16 bg-black/20 border-white/10 font-black rounded-xl text-lg hover:border-primary/30 transition-all">
+                          <SelectValue placeholder="Select avatar style" />
+                        </SelectTrigger>
+                        <SelectContent className="glass-card border-white/10 max-h-[400px]">
+                          {avatarStyles.map(style => (
+                            <SelectItem key={style.value} value={style.value} className="font-black py-3 focus:bg-primary/10 transition-colors">
+                              <div className="flex items-center gap-4">
+                                <Avatar className="w-10 h-10 border border-white/10 p-1 bg-black/40 rounded-lg">
+                                  <AvatarImage src={`https://api.dicebear.com/7.x/${style.value}/svg?seed=example-user`} />
+                                </Avatar>
+                                <span>{style.label}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/5 space-y-4">
+                       <div className="flex items-center justify-between">
+                         <p className="text-[10px] font-black uppercase tracking-widest text-primary/70">Set Style Preview</p>
+                         <Eye size={12} className="text-primary/40" />
+                       </div>
+                       <div className="flex flex-wrap gap-4">
+                         {['alice', 'bob', 'charlie', 'delta', 'echo'].map((seed, i) => (
+                           <div key={seed} className="flex flex-col items-center gap-2 animate-in fade-in zoom-in duration-500" style={{ animationDelay: `${i * 100}ms` }}>
+                             <Avatar className="w-12 h-12 border-2 border-primary/20 p-1 bg-black/40 rounded-xl shadow-lg">
+                               <AvatarImage src={`https://api.dicebear.com/7.x/${avatarSet}/svg?seed=${seed}`} />
+                             </Avatar>
+                             <span className="text-[8px] font-black uppercase tracking-tighter text-muted-foreground/60">User {i + 1}</span>
+                           </div>
+                         ))}
+                       </div>
+                       <p className="text-[9px] text-muted-foreground/50 italic text-center pt-2">
+                         Switching styles will update the appearance of every user on the platform.
+                       </p>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -435,9 +468,9 @@ const Admin = () => {
                   <Button 
                     onClick={handleUpdateSettings}
                     disabled={processing}
-                    className="w-full h-14 bg-primary hover:bg-primary/90 text-black font-black rounded-xl px-8 uppercase tracking-widest text-[10px]"
+                    className="w-full h-14 bg-primary hover:bg-primary/90 text-black font-black rounded-xl px-8 uppercase tracking-widest text-[10px] gold-glow"
                   >
-                    {processing ? <Loader2 className="animate-spin" size={18} /> : "Update Global Settings"}
+                    {processing ? <Loader2 className="animate-spin" size={18} /> : <><Sparkles size={14} className="mr-2" /> Update Global Settings</>}
                   </Button>
                 </CardContent>
               </Card>

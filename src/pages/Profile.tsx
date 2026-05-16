@@ -450,7 +450,7 @@ const Profile = () => {
           </div>
 
           <div className="lg:col-span-4 space-y-8">
-            <TransactionHistory />
+            <TransactionHistory userAddress={targetAddress} />
             
             <Card className="glass-card border-white/5 bg-white/[0.01] rounded-[32px] overflow-hidden">
               <CardContent className="p-8 space-y-6">

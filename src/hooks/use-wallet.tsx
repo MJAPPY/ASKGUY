@@ -241,11 +241,15 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const payMembership = useCallback(async () => {
     const success = await transferTokens(MEMBERSHIP_RECIPIENT, membershipFee, 'XPR', 'AskGuy Membership Fee');
     if (success) {
-      const nextYear = Date.now() + (365 * 24 * 60 * 60 * 1000);
-      setMembershipExpiry(nextYear);
-      await supabase.from('profiles').upsert({ address, membership_expiry: nextYear }, { onConflict: 'address' });
+      const ONE_YEAR = 365 * 24 * 60 * 60 * 1000;
+      // If user has active membership, add 1 year to current expiry. Otherwise start from now.
+      const baseDate = membershipExpiry > Date.now() ? membershipExpiry : Date.now();
+      const nextExpiry = baseDate + ONE_YEAR;
+      
+      setMembershipExpiry(nextExpiry);
+      await supabase.from('profiles').upsert({ address, membership_expiry: nextExpiry }, { onConflict: 'address' });
     }
-  }, [transferTokens, address, membershipFee]);
+  }, [transferTokens, address, membershipFee, membershipExpiry]);
 
   return (
     <WalletContext.Provider value={{

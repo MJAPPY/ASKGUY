@@ -180,24 +180,24 @@ const RequestCard: React.FC<RequestCardProps> = ({
 
   return (
     <Card className={cn(
-      "glass-card overflow-hidden group hover:border-primary/40 transition-all duration-500 relative flex flex-col",
-      variant === 'list' ? "h-auto" : "h-full",
+      "glass-card overflow-hidden group hover:border-primary/40 transition-all duration-500 relative",
+      variant === 'list' ? "h-auto" : "h-full flex flex-col",
       isUrgent && !isCompleted ? 'border-red-500/40 shadow-[0_0_30px_rgba(239,68,68,0.1)]' : '',
       isFunded && !isCompleted ? 'border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.1)]' : ''
     )}>
       <Dialog>
         <DialogTrigger asChild>
-          <div className={cn("p-0 cursor-pointer hover:bg-white/[0.02] transition-colors flex h-full", variant === 'list' ? "flex-col md:flex-row" : "flex-col")}>
+          <div className={cn("p-0 cursor-pointer hover:bg-white/[0.02] transition-colors flex", variant === 'list' ? "flex-col lg:flex-row" : "flex-col h-full")}>
             {proofUrl && (
-              <div className={cn("overflow-hidden relative border-white/5 shrink-0", variant === 'grid' ? "w-full aspect-[21/9] border-b" : "w-full md:w-56 aspect-video md:aspect-auto border-b md:border-b-0 md:border-r")}>
+              <div className={cn("overflow-hidden relative border-white/5 shrink-0", variant === 'grid' ? "w-full aspect-[21/9] border-b" : "w-full lg:w-56 aspect-video lg:aspect-auto border-b lg:border-b-0 lg:border-r")}>
                 <img src={proofUrl} alt="Proof" className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all duration-500" />
                 <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
             )}
             
-            <div className={cn("p-6 flex-1", variant === 'list' ? "grid grid-cols-1 md:grid-cols-12 gap-8 items-center" : "flex flex-col space-y-7")}>
+            <div className={cn("p-6 flex-1 flex flex-col", variant === 'list' ? "lg:flex-row lg:items-center gap-8" : "space-y-7")}>
               {/* Left Section: Request Details */}
-              <div className={cn("space-y-4", variant === 'list' ? "md:col-span-6 lg:col-span-5" : "")}>
+              <div className="space-y-4 flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-3">
                   <span className={cn("text-[10px] font-black px-3 py-1.5 rounded-xl uppercase tracking-[0.1em] border shadow-sm", getCategoryColor())}>
                     {category}
@@ -207,7 +207,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
                   </span>
                 </div>
                 
-                <h3 className={cn("font-black group-hover:text-primary transition-colors tracking-tight leading-tight uppercase italic", variant === 'list' ? "text-xl line-clamp-2 md:line-clamp-1" : "text-2xl line-clamp-2")}>
+                <h3 className={cn("font-black group-hover:text-primary transition-colors tracking-tight leading-tight uppercase italic", variant === 'list' ? "text-xl line-clamp-2" : "text-2xl line-clamp-2")}>
                   {title}
                 </h3>
                 
@@ -223,46 +223,51 @@ const RequestCard: React.FC<RequestCardProps> = ({
                 </div>
               </div>
 
-              {/* Middle Section: Funding Progress */}
-              <div className={cn(variant === 'list' ? "md:col-span-3 lg:col-span-4" : "")}>
-                <StatusDisplay />
-              </div>
-
-              {/* Right Section: Action Button */}
+              {/* Controls Section: Stats and Action Button */}
               {variant === 'list' && (
-                <div className="md:col-span-3 lg:col-span-3 flex justify-end">
-                  {!isCompleted && !isOwner && (
-                    <Button 
-                      onClick={(e) => { e.stopPropagation(); setIsHelpModalOpen(true); }}
-                      className="w-full md:w-auto h-12 px-8 bg-primary hover:bg-primary/90 text-black font-black text-[11px] uppercase tracking-[0.15em] rounded-2xl gold-glow flex gap-3 items-center justify-center shadow-lg"
-                    >
-                      <Heart size={16} className="fill-current" />
-                      Help Now
-                    </Button>
-                  )}
-                  {isOwner && !isCompleted && (
-                    <Button 
-                      onClick={(e) => { e.stopPropagation(); setIsEditModalOpen(true); }}
-                      variant="outline"
-                      className="w-full md:w-auto h-12 px-8 border-white/10 hover:bg-white/5 font-black text-[11px] uppercase tracking-[0.15em] rounded-2xl flex items-center justify-center gap-2"
-                    >
-                      <Edit3 size={16} />
-                      Manage
-                    </Button>
-                  )}
-                  {isCompleted && (
-                    <div className="w-full md:w-auto h-12 px-8 border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 font-black text-[11px] uppercase tracking-[0.15em] rounded-2xl flex items-center gap-3 justify-center">
-                      <CheckCircle2 size={16} />
-                      Completed
-                    </div>
-                  )}
+                <div className="flex flex-col sm:flex-row lg:flex-col gap-6 lg:w-72 lg:pl-8 lg:border-l lg:border-white/5">
+                  <div className="flex-1">
+                    <StatusDisplay />
+                  </div>
+                  
+                  <div className="shrink-0 flex items-center">
+                    {!isCompleted && !isOwner && (
+                      <Button 
+                        onClick={(e) => { e.stopPropagation(); setIsHelpModalOpen(true); }}
+                        className="w-full h-12 px-8 bg-primary hover:bg-primary/90 text-black font-black text-[11px] uppercase tracking-[0.15em] rounded-2xl gold-glow flex gap-3 items-center justify-center shadow-lg"
+                      >
+                        <Heart size={16} className="fill-current" />
+                        Help Now
+                      </Button>
+                    )}
+                    {isOwner && !isCompleted && (
+                      <Button 
+                        onClick={(e) => { e.stopPropagation(); setIsEditModalOpen(true); }}
+                        variant="outline"
+                        className="w-full h-12 px-8 border-white/10 hover:bg-white/5 font-black text-[11px] uppercase tracking-[0.15em] rounded-2xl flex items-center justify-center gap-2"
+                      >
+                        <Edit3 size={16} />
+                        Manage
+                      </Button>
+                    )}
+                    {isCompleted && (
+                      <div className="w-full h-12 px-8 border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 font-black text-[11px] uppercase tracking-[0.15em] rounded-2xl flex items-center gap-3 justify-center">
+                        <CheckCircle2 size={16} />
+                        Completed
+                      </div>
+                    )}
+                  </div>
                 </div>
+              )}
+
+              {variant === 'grid' && (
+                <StatusDisplay />
               )}
             </div>
           </div>
         </DialogTrigger>
 
-        {/* Detailed Modal Content (Same as before) */}
+        {/* Detailed Modal Content */}
         <DialogContent className="glass-card border-white/10 max-w-3xl h-[90vh] overflow-hidden flex flex-col p-0 rounded-[32px] shadow-2xl">
           <div className="p-8 border-b border-white/5 bg-white/[0.015] shrink-0 relative">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
@@ -415,7 +420,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
         </DialogContent>
       </Dialog>
 
-      {/* Global Modals */}
+      {/* Helper Modals */}
       <Dialog open={isHelpModalOpen} onOpenChange={setIsHelpModalOpen}>
         <DialogContent className="glass-card border-white/10 max-w-md p-8 rounded-[32px] shadow-2xl">
           <DialogHeader>

@@ -23,6 +23,8 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
+// Correcting the extension from .png to .jpg to match the assets
+import heroGuy from '@/assets/hero-guy.jpg';
 
 type FilterType = 'all' | 'active' | 'funded' | 'my-requests';
 type SortType = 'newest' | 'oldest';
@@ -36,9 +38,6 @@ const Index = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
-
-  // New high-quality hero image URL
-  const heroImage = "https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&q=80&w=1200";
 
   const filteredRequests = useMemo(() => {
     let result = [...requests];
@@ -106,17 +105,14 @@ const Index = () => {
                   </Button>
                 </div>
               </div>
-              <div className="relative animate-in fade-in slide-in-from-right-8 duration-1000">
-                <div className="relative z-10 w-full max-w-[540px] mx-auto group">
-                   <div className="absolute -inset-4 bg-gradient-to-tr from-[#1565C0]/40 to-primary/40 rounded-[48px] blur-2xl opacity-30 group-hover:opacity-50 transition-opacity duration-1000" />
-                   <div className="relative rounded-[40px] overflow-hidden border border-white/10 shadow-2xl">
-                     <img 
-                      src={heroImage} 
-                      alt="Community Aid" 
-                      className="w-full h-auto transition-transform duration-700 group-hover:scale-105" 
-                     />
-                     <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
-                   </div>
+              <div className="relative animate-in fade-in slide-in-from-right-8 duration-1000 lg:-translate-y-6 lg:-translate-x-12">
+                <div className="relative z-10 w-full max-w-[480px] mx-auto lg:mr-auto lg:ml-0 group">
+                   <div className="absolute -inset-10 bg-[#1565C0]/10 rounded-full blur-[100px] opacity-50 group-hover:opacity-80 transition-opacity duration-1000" />
+                   <img 
+                    src={heroGuy} 
+                    alt="AskGuy Hero" 
+                    className="w-full h-auto drop-shadow-[0_0_60px_rgba(21,101,192,0.2)] transition-transform duration-700 group-hover:scale-105" 
+                   />
                 </div>
               </div>
             </div>

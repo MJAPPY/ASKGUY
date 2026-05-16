@@ -82,24 +82,24 @@ const Navbar = () => {
           {isConnected ? (
             <>
               <div className="flex items-center gap-1.5 md:gap-2">
-                <div className="flex items-center gap-1.5 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-white/[0.03] border border-white/10 text-[10px] md:text-[11px] font-bold hover:bg-white/[0.06] transition-all cursor-default shadow-inner">
+                <div className="flex items-center gap-1.5 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-purple-500/10 border border-purple-500/30 text-[10px] md:text-[11px] font-bold hover:bg-purple-500/20 transition-all cursor-default shadow-[0_0_15px_rgba(168,85,247,0.15)]">
                   {isFetchingBalances ? (
-                    <Loader2 size={12} className="animate-spin text-muted-foreground" />
+                    <Loader2 size={12} className="animate-spin text-purple-400" />
                   ) : (
                     <>
-                      <span className="text-white/90 font-black tracking-tight">{xprBalance.toLocaleString(undefined, { minimumFractionDigits: 1 })}</span>
-                      <span className="text-white/40 font-black uppercase text-[8px] md:text-[9px]">XPR</span>
+                      <span className="text-purple-400 font-black tracking-tight">{xprBalance.toLocaleString(undefined, { minimumFractionDigits: 1 })}</span>
+                      <span className="text-purple-400/50 font-black uppercase text-[8px] md:text-[9px]">XPR</span>
                     </>
                   )}
                 </div>
 
-                <div className="flex items-center gap-1.5 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-primary/10 border border-primary/20 text-[10px] md:text-[11px] font-bold hover:bg-primary/20 transition-all cursor-default shadow-[0_0_15px_rgba(244,201,93,0.05)]">
+                <div className="flex items-center gap-1.5 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-primary/10 border border-primary/30 text-[10px] md:text-[11px] font-bold hover:bg-primary/20 transition-all cursor-default shadow-[0_0_15px_rgba(244,201,93,0.15)]">
                   {isFetchingBalances ? (
                     <Loader2 size={12} className="animate-spin text-primary" />
                   ) : (
                     <>
                       <span className="text-primary font-black tracking-tight">{guyBalance.toLocaleString()}</span>
-                      <span className="text-primary/40 font-black uppercase text-[8px] md:text-[9px]">GUY</span>
+                      <span className="text-primary/60 font-black uppercase text-[8px] md:text-[9px]">GUY</span>
                     </>
                   )}
                 </div>
@@ -130,9 +130,9 @@ const Navbar = () => {
                       </div>
                       
                       <div className="space-y-2.5">
-                        <div className="flex justify-between items-center bg-white/[0.02] p-2 rounded-lg border border-white/5">
-                          <span className="text-[10px] text-muted-foreground font-black uppercase">XPR</span>
-                          <span className="text-sm font-black text-white tabular-nums">{xprBalance.toLocaleString()}</span>
+                        <div className="flex justify-between items-center bg-purple-500/5 p-2 rounded-lg border border-purple-500/10">
+                          <span className="text-[10px] text-purple-400/70 font-black uppercase">XPR</span>
+                          <span className="text-sm font-black text-purple-400 tabular-nums">{xprBalance.toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between items-center bg-primary/5 p-2 rounded-lg border border-primary/10">
                           <span className="text-[10px] text-primary/70 font-black uppercase">GUY</span>

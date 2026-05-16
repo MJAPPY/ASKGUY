@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Activity, Heart, PlusCircle, CheckCircle2, Zap, Circle } from 'lucide-react';
+import { Activity, Heart, PlusCircle, CheckCircle2, Zap, Circle, MessageSquareQuote } from 'lucide-react';
 import { useRequests } from '@/hooks/use-requests';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -25,13 +25,17 @@ const ActivityFeed = () => {
       });
 
       req.contributions.forEach(c => {
+        // Distinguish between a gift and a thank you message (0 amount)
+        const isThankYou = c.amount === 0;
+        
         list.push({
           id: `contrib-${c.id}`,
-          type: 'contribution',
+          type: isThankYou ? 'thanks' : 'contribution',
           user: c.user,
           target: req.requestor,
           amount: `${c.amount.toLocaleString()} ${c.token}`,
           time: c.timestamp,
+          message: c.message
         });
       });
 
@@ -84,24 +88,27 @@ const ActivityFeed = () => {
                   icon: <Heart size={14} className="fill-current" />,
                   color: "text-rose-400",
                   bg: "bg-rose-500/10",
-                  border: "border-rose-500/20",
-                  glow: "bg-rose-400/5"
+                  border: "border-rose-500/20"
+                },
+                thanks: {
+                  icon: <MessageSquareQuote size={14} />,
+                  color: "text-blue-400",
+                  bg: "bg-blue-500/10",
+                  border: "border-blue-500/20"
                 },
                 request: {
                   icon: <PlusCircle size={14} />,
-                  color: "text-blue-400",
-                  bg: "bg-blue-500/10",
-                  border: "border-blue-500/20",
-                  glow: "bg-blue-400/5"
+                  color: "text-amber-400",
+                  bg: "bg-amber-500/10",
+                  border: "border-amber-500/20"
                 },
                 completed: {
                   icon: <CheckCircle2 size={14} />,
                   color: "text-emerald-400",
                   bg: "bg-emerald-500/10",
-                  border: "border-emerald-500/20",
-                  glow: "bg-emerald-400/5"
+                  border: "border-emerald-500/20"
                 }
-              }[activity.type as 'contribution' | 'request' | 'completed'];
+              }[activity.type as 'contribution' | 'thanks' | 'request' | 'completed'];
 
               return (
                 <div 
@@ -129,10 +136,17 @@ const ActivityFeed = () => {
                           <span className="text-blue-400 font-black">@{activity.target}</span>
                         </>
                       )}
+                      {activity.type === 'thanks' && (
+                        <>
+                          <span className="text-white/70"> sent a </span>
+                          <span className="text-blue-400 font-black tracking-widest uppercase text-[10px]">Thank You</span>
+                          <span className="text-white/70"> message to their supporters!</span>
+                        </>
+                      )}
                       {activity.type === 'request' && (
                         <>
                           <span className="text-white/70"> posted a </span>
-                          <span className="text-blue-400 font-black">{activity.amount}</span>
+                          <span className="text-amber-400 font-black">{activity.amount}</span>
                           <span className="text-white/70"> request for </span>
                           <span className="text-white font-black">"{activity.title}"</span>
                         </>

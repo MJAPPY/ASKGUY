@@ -21,7 +21,7 @@ import {
   AlertDialogTrigger 
 } from "@/components/ui/alert-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Heart, X, Loader2, CheckCircle2, Zap, Share2, Trash2, Calendar, Edit3, Gift, ShieldCheck } from 'lucide-react';
+import { Heart, X, Loader2, CheckCircle2, Zap, Share2, Trash2, Calendar, Edit3, Gift, ShieldCheck, MessageSquareQuote } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useRequests, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
@@ -339,25 +339,43 @@ const RequestCard: React.FC<RequestCardProps> = ({
 
                   {sortedContributions.length > 0 ? (
                     <div className="grid grid-cols-1 gap-4">
-                      {sortedContributions.map((c, i) => (
-                        <div key={i} className="glass-card bg-white/[0.02] border-white/5 p-6 rounded-2xl flex items-start gap-4 hover:bg-white/[0.04] transition-all group">
-                          <Avatar className="w-12 h-12 border border-white/10 p-1 bg-black/20 rounded-xl group-hover:scale-110 transition-transform">
-                            <AvatarImage src={`https://api.dicebear.com/7.x/${avatarSet}/svg?seed=${c.user}`} />
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex justify-between items-center mb-1">
-                              <p className="text-base font-black text-white">@{c.user}</p>
-                              <p className="text-[12px] font-black text-emerald-400">+{c.amount.toLocaleString()} {c.token}</p>
+                      {sortedContributions.map((c, i) => {
+                        const isThanks = c.amount === 0;
+                        return (
+                          <div key={i} className={cn(
+                            "glass-card border-white/5 p-6 rounded-2xl flex items-start gap-4 transition-all group",
+                            isThanks ? "bg-blue-500/5 border-blue-500/20" : "bg-white/[0.02] hover:bg-white/[0.04]"
+                          )}>
+                            <Avatar className="w-12 h-12 border border-white/10 p-1 bg-black/20 rounded-xl group-hover:scale-110 transition-transform">
+                              <AvatarImage src={`https://api.dicebear.com/7.x/${avatarSet}/svg?seed=${c.user}`} />
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex justify-between items-center mb-1">
+                                <div className="flex items-center gap-2">
+                                  <p className="text-base font-black text-white">@{c.user}</p>
+                                  {isThanks && (
+                                    <Badge className="bg-blue-500/20 text-blue-400 border-none text-[9px] uppercase font-black px-2 py-0">THANK YOU</Badge>
+                                  )}
+                                </div>
+                                {!isThanks && (
+                                  <p className="text-[12px] font-black text-emerald-400">+{c.amount.toLocaleString()} {c.token}</p>
+                                )}
+                              </div>
+                              {c.message && (
+                                <p className={cn(
+                                  "text-sm italic font-medium leading-relaxed",
+                                  isThanks ? "text-blue-200" : "text-muted-foreground"
+                                )}>
+                                  "{c.message}"
+                                </p>
+                              )}
+                              <p className="text-[10px] text-muted-foreground/50 font-black uppercase tracking-widest mt-2">
+                                {formatDistanceToNow(c.timestamp, { addSuffix: true })}
+                              </p>
                             </div>
-                            {c.message && (
-                              <p className="text-sm text-muted-foreground italic font-medium leading-relaxed">"{c.message}"</p>
-                            )}
-                            <p className="text-[10px] text-muted-foreground/50 font-black uppercase tracking-widest mt-2">
-                              {formatDistanceToNow(c.timestamp, { addSuffix: true })}
-                            </p>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className="py-24 text-center border-2 border-dashed border-white/5 rounded-[40px] flex flex-col items-center gap-4">

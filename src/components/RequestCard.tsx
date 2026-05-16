@@ -145,36 +145,34 @@ const RequestCard: React.FC<RequestCardProps> = ({
 
   const sortedContributions = [...contributions].sort((a, b) => b.timestamp - a.timestamp);
 
-  const StatusDisplay = ({ isList = false }) => (
-    <div className={cn("space-y-4", isList ? "w-full min-w-[200px] lg:min-w-[240px]" : "w-full")}>
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between font-black uppercase tracking-tight">
+  const StatusDisplay = () => (
+    <div className="space-y-4">
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-center justify-between text-[13px] font-black uppercase tracking-tight">
           <div className="flex items-center gap-2 text-primary">
-            <Zap size={isList ? 18 : 16} className="fill-primary" />
-            <span className={cn("leading-none", isList ? "text-2xl" : "text-xl")}>{raised.toLocaleString()}</span>
-            <span className="opacity-50 text-[10px] mt-1">{token}</span>
+            <Zap size={16} className="fill-primary" />
+            <span className="text-lg md:text-xl leading-none">{raised.toLocaleString()}</span>
+            <span className="opacity-70 text-[10px] mt-0.5">{token}</span>
           </div>
-          <div className="flex flex-col items-end opacity-40">
-            <span className="text-[10px] leading-none mb-1">Target</span>
-            <span className="text-[12px]">{amount.toLocaleString()} {token}</span>
+          <div className="flex items-center gap-1 opacity-50 text-[11px]">
+            <span>/</span>
+            <span>{amount.toLocaleString()}</span>
+            <span className="text-[9px] mt-0.5">{token}</span>
           </div>
         </div>
         
-        <div className="w-full bg-white/5 rounded-full h-2.5 border border-white/10 p-[1.5px] overflow-hidden">
+        <div className="w-full bg-white/5 rounded-full h-2.5 border border-white/5 p-[1px] overflow-hidden">
           <div 
-            className={cn(
-              "h-full rounded-full transition-all duration-1000 ease-out shadow-lg", 
-              isFunded ? "bg-emerald-500 shadow-emerald-500/20" : "bg-primary shadow-primary/20"
-            )} 
+            className={cn("h-full rounded-full transition-all duration-1000", isFunded ? "bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]" : "bg-primary shadow-[0_0_15px_rgba(251,212,81,0.2)]")} 
             style={{ width: `${progress}%` }} 
           />
         </div>
       </div>
 
       {guyTotal > 0 && (
-        <div className="flex items-center gap-2 text-rose-400 font-black uppercase text-[10px] tracking-widest pl-0.5 animate-in fade-in duration-700">
+        <div className="flex items-center gap-2 text-rose-400 font-black uppercase text-[11px] tracking-widest pl-0.5 animate-in fade-in duration-700">
           <Heart size={12} className="fill-current" />
-          {guyTotal.toLocaleString()} GUY Support
+          {guyTotal.toLocaleString()} GUY Gifted
         </div>
       )}
     </div>
@@ -182,92 +180,89 @@ const RequestCard: React.FC<RequestCardProps> = ({
 
   return (
     <Card className={cn(
-      "glass-card overflow-hidden group hover:border-primary/40 transition-all duration-500 relative flex",
-      variant === 'list' ? "flex-col md:flex-row h-auto min-h-[160px]" : "flex-col h-full",
+      "glass-card overflow-hidden group hover:border-primary/40 transition-all duration-500 relative flex flex-col",
+      variant === 'list' ? "h-auto" : "h-full",
       isUrgent && !isCompleted ? 'border-red-500/40 shadow-[0_0_30px_rgba(239,68,68,0.1)]' : '',
       isFunded && !isCompleted ? 'border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.1)]' : ''
     )}>
       <Dialog>
         <DialogTrigger asChild>
-          <div className={cn("p-0 cursor-pointer hover:bg-white/[0.02] transition-colors flex-1 flex", variant === 'list' ? "flex-col md:flex-row" : "flex-col")}>
+          <div className={cn("p-0 cursor-pointer hover:bg-white/[0.02] transition-colors flex h-full", variant === 'list' ? "flex-col md:flex-row" : "flex-col")}>
             {proofUrl && (
-              <div className={cn("overflow-hidden relative border-white/5 shrink-0", variant === 'grid' ? "w-full aspect-[21/9] border-b" : "w-full md:w-64 h-auto md:h-full border-b md:border-b-0 md:border-r")}>
+              <div className={cn("overflow-hidden relative border-white/5 shrink-0", variant === 'grid' ? "w-full aspect-[21/9] border-b" : "w-full md:w-56 aspect-video md:aspect-auto border-b md:border-b-0 md:border-r")}>
                 <img src={proofUrl} alt="Proof" className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all duration-500" />
-                <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-60 group-hover:opacity-20 transition-opacity" />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
             )}
             
-            <div className={cn("p-6 flex-1 flex", variant === 'list' ? "flex-col lg:flex-row items-start lg:items-center gap-8 lg:gap-12" : "flex-col space-y-8")}>
-              <div className={cn("space-y-4 flex-1 min-w-0", variant === 'list' ? "w-full" : "")}>
+            <div className={cn("p-6 flex-1", variant === 'list' ? "grid grid-cols-1 md:grid-cols-12 gap-8 items-center" : "flex flex-col space-y-7")}>
+              {/* Left Section: Request Details */}
+              <div className={cn("space-y-4", variant === 'list' ? "md:col-span-6 lg:col-span-5" : "")}>
                 <div className="flex flex-wrap items-center gap-3">
-                  <span className={cn("text-[9px] font-black px-3 py-1.5 rounded-xl uppercase tracking-[0.15em] border shadow-sm", getCategoryColor())}>
+                  <span className={cn("text-[10px] font-black px-3 py-1.5 rounded-xl uppercase tracking-[0.1em] border shadow-sm", getCategoryColor())}>
                     {category}
                   </span>
-                  <span className="text-[10px] text-muted-foreground font-black uppercase tracking-widest opacity-40">
+                  <span className="text-[10px] text-muted-foreground font-black uppercase tracking-widest opacity-60">
                     {formatDistanceToNow(timestamp, { addSuffix: true })}
                   </span>
                 </div>
                 
-                <h3 className={cn("font-black group-hover:text-primary transition-colors tracking-tight leading-tight uppercase italic", variant === 'list' ? "text-2xl line-clamp-2" : "text-3xl line-clamp-2")}>
+                <h3 className={cn("font-black group-hover:text-primary transition-colors tracking-tight leading-tight uppercase italic", variant === 'list' ? "text-xl line-clamp-2 md:line-clamp-1" : "text-2xl line-clamp-2")}>
                   {title}
                 </h3>
                 
                 <div className="flex items-center gap-3 pt-1">
                   <div className="relative">
                     <div className="absolute -inset-1 bg-primary/20 rounded-full blur-sm opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <Avatar className="w-8 h-8 border border-white/20 p-0.5 bg-black/20 rounded-xl relative z-10">
+                    <Avatar className="w-7 h-7 border border-white/20 p-0.5 bg-black/20 rounded-xl relative z-10">
                       <AvatarImage src={`https://api.dicebear.com/7.x/${avatarSet}/svg?seed=${requestor}`} />
                       <AvatarFallback>{requestor.substring(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
                   </div>
-                  <span className="text-[13px] font-black text-muted-foreground uppercase tracking-[0.2em] hover:text-white transition-colors">@{requestor}</span>
+                  <span className="text-[12px] font-black text-muted-foreground uppercase tracking-[0.2em] hover:text-white transition-colors">@{requestor}</span>
                 </div>
               </div>
 
-              {variant === 'list' && (
-                <div className="w-full lg:w-auto flex flex-col md:flex-row items-start md:items-center gap-8 lg:gap-12 lg:border-l lg:border-white/5 lg:pl-12">
-                  <StatusDisplay isList />
-                  
-                  <div className="shrink-0 w-full md:w-auto">
-                    {!isCompleted && !isOwner && (
-                      <Button 
-                        onClick={(e) => { e.stopPropagation(); setIsHelpModalOpen(true); }}
-                        className="w-full md:w-auto h-14 px-10 bg-primary hover:bg-primary/90 text-black font-black text-[11px] uppercase tracking-[0.2em] rounded-2xl gold-glow flex gap-3 shadow-[0_10px_40px_rgba(251,212,81,0.2)]"
-                      >
-                        <Heart size={18} className="fill-current" />
-                        Help Now
-                      </Button>
-                    )}
-                    {isOwner && !isCompleted && (
-                      <Button 
-                        onClick={(e) => { e.stopPropagation(); setIsEditModalOpen(true); }}
-                        variant="outline"
-                        className="w-full md:w-auto h-14 px-10 border-white/10 hover:bg-white/5 font-black text-[11px] uppercase tracking-[0.2em] rounded-2xl flex items-center justify-center gap-2"
-                      >
-                        <Edit3 size={18} />
-                        Manage
-                      </Button>
-                    )}
-                    {isCompleted && (
-                      <div className="w-full md:w-auto h-14 px-10 border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 font-black text-[11px] uppercase tracking-[0.2em] rounded-2xl flex items-center gap-3 justify-center">
-                        <CheckCircle2 size={18} />
-                        Completed
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+              {/* Middle Section: Funding Progress */}
+              <div className={cn(variant === 'list' ? "md:col-span-3 lg:col-span-4" : "")}>
+                <StatusDisplay />
+              </div>
 
-              {variant === 'grid' && (
-                <div className="pt-2">
-                  <StatusDisplay />
+              {/* Right Section: Action Button */}
+              {variant === 'list' && (
+                <div className="md:col-span-3 lg:col-span-3 flex justify-end">
+                  {!isCompleted && !isOwner && (
+                    <Button 
+                      onClick={(e) => { e.stopPropagation(); setIsHelpModalOpen(true); }}
+                      className="w-full md:w-auto h-12 px-8 bg-primary hover:bg-primary/90 text-black font-black text-[11px] uppercase tracking-[0.15em] rounded-2xl gold-glow flex gap-3 items-center justify-center shadow-lg"
+                    >
+                      <Heart size={16} className="fill-current" />
+                      Help Now
+                    </Button>
+                  )}
+                  {isOwner && !isCompleted && (
+                    <Button 
+                      onClick={(e) => { e.stopPropagation(); setIsEditModalOpen(true); }}
+                      variant="outline"
+                      className="w-full md:w-auto h-12 px-8 border-white/10 hover:bg-white/5 font-black text-[11px] uppercase tracking-[0.15em] rounded-2xl flex items-center justify-center gap-2"
+                    >
+                      <Edit3 size={16} />
+                      Manage
+                    </Button>
+                  )}
+                  {isCompleted && (
+                    <div className="w-full md:w-auto h-12 px-8 border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 font-black text-[11px] uppercase tracking-[0.15em] rounded-2xl flex items-center gap-3 justify-center">
+                      <CheckCircle2 size={16} />
+                      Completed
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           </div>
         </DialogTrigger>
 
-        {/* Detailed Modal Content */}
+        {/* Detailed Modal Content (Same as before) */}
         <DialogContent className="glass-card border-white/10 max-w-3xl h-[90vh] overflow-hidden flex flex-col p-0 rounded-[32px] shadow-2xl">
           <div className="p-8 border-b border-white/5 bg-white/[0.015] shrink-0 relative">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
@@ -332,7 +327,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
                     </h4>
                     {guyTotal > 0 && (
                       <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-lg">
-                        {guyTotal.toLocaleString()} GUY Gifted
+                        {guyTotal.toLocaleString()} GUY Included
                       </Badge>
                     )}
                   </div>
@@ -400,7 +395,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
                       <AlertDialogContent className="glass-card border-white/10 p-8 rounded-[32px]">
                         <AlertDialogHeader>
                           <AlertDialogTitle className="text-2xl font-black uppercase tracking-tight italic">Ready to Archive?</AlertDialogTitle>
-                          <AlertDialogDescription className="text-muted-foreground font-medium">This will mark your request as completed. Leave a final thank you message.</AlertDialogDescription>
+                          <AlertDialogDescription className="text-muted-foreground font-medium">This will mark your request as completed. Leave a final thank you message for your supporters.</AlertDialogDescription>
                         </AlertDialogHeader>
                         <div className="py-6 space-y-3">
                           <label className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">Final Thank You</label>
@@ -420,7 +415,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
         </DialogContent>
       </Dialog>
 
-      {/* Helper Modals */}
+      {/* Global Modals */}
       <Dialog open={isHelpModalOpen} onOpenChange={setIsHelpModalOpen}>
         <DialogContent className="glass-card border-white/10 max-w-md p-8 rounded-[32px] shadow-2xl">
           <DialogHeader>
@@ -446,15 +441,15 @@ const RequestCard: React.FC<RequestCardProps> = ({
             </div>
             <div className="space-y-2">
               <label className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">Message (Optional)</label>
-              <Textarea placeholder="Send a kind word..." value={contributionMessage} onChange={(e) => setContributionMessage(e.target.value)} className="bg-white/5 border-white/10 rounded-2xl font-medium leading-relaxed h-24" />
+              <Textarea placeholder="Send a kind word..." value={contributionMessage} onChange={(e) => setContributionMessage(e.target.value)} className="bg-white/5 border-white/10 rounded-xl font-medium" />
             </div>
-            <div className="p-5 rounded-2xl bg-primary/5 border border-primary/10 flex justify-between items-center shadow-inner">
-              <span className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">Your Balance</span>
-              <span className="text-base font-black text-primary tabular-nums">{currentBalance.toLocaleString()} {contributionToken}</span>
+            <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 flex justify-between items-center">
+              <span className="text-[10px] font-black uppercase text-muted-foreground">Your Balance</span>
+              <span className="text-sm font-black text-primary">{currentBalance.toLocaleString()} {contributionToken}</span>
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleContribute} disabled={isProcessing} className="w-full h-16 bg-primary hover:bg-primary/90 text-black font-black rounded-2xl gold-glow text-[12px] uppercase tracking-[0.2em]">
+            <Button onClick={handleContribute} disabled={isProcessing} className="w-full h-14 bg-primary hover:bg-primary/90 text-black font-black rounded-xl gold-glow">
               {isProcessing ? <Loader2 className="animate-spin" /> : "Confirm & Send"}
             </Button>
           </DialogFooter>

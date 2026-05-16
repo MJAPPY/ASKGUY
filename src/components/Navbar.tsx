@@ -28,7 +28,7 @@ import logo from '@/assets/logo.jpg';
 import { cn } from '@/lib/utils';
 
 const Navbar = () => {
-  const { isConnected, isConnecting, isFetchingBalances, isAdmin, address, xprBalance, guyBalance, disconnect, refreshBalances, connect } = useWallet();
+  const { isConnected, isConnecting, isFetchingBalances, isAdmin, address, xprBalance, guyBalance, avatarUrl, disconnect, refreshBalances, connect } = useWallet();
   const location = useLocation();
 
   const navItems = [
@@ -43,6 +43,7 @@ const Navbar = () => {
 
   const visibleNavItems = navItems.filter(item => !item.private || isConnected);
   const displayAddress = typeof address === 'string' ? address : '';
+  const currentAvatarSeed = avatarUrl || displayAddress;
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-white/5 bg-[#0a0a0c]/80 backdrop-blur-md">
@@ -111,7 +112,7 @@ const Navbar = () => {
                     <div className="relative">
                       <div className="absolute -inset-1 bg-gradient-to-tr from-[#1565C0]/40 to-emerald-400/40 rounded-full blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                       <Avatar className="h-7 w-7 md:h-8 md:w-8 border border-white/20 group-hover:border-[#1565C0]/50 transition-all duration-300 relative z-10 shadow-lg p-1 bg-black/20">
-                        <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${displayAddress}`} />
+                        <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${currentAvatarSeed}`} />
                         <AvatarFallback className="bg-[#1565C0] text-white font-bold text-[10px]">
                           {displayAddress.substring(0, 2).toUpperCase() || '??'}
                         </AvatarFallback>

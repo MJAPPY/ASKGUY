@@ -15,6 +15,7 @@ export interface WalletState {
   isFetchingBalances: boolean;
   guyBalance: number;
   xprBalance: number;
+  avatarUrl: string; // Added avatarUrl
   membershipExpiry: number;
   membershipFee: number;
   postingFeeGuy: number;
@@ -48,6 +49,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [isConnecting, setIsConnecting] = useState(false);
   const [guyBalance, setGuyBalance] = useState(0);
   const [xprBalance, setXprBalance] = useState(0);
+  const [avatarUrl, setAvatarUrl] = useState(''); // State for avatar
   const [membershipExpiry, setMembershipExpiry] = useState(0);
   const [membershipFee, setMembershipFee] = useState(7777);
   const [postingFeeGuy, setPostingFeeGuy] = useState(25);
@@ -131,14 +133,19 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       const [banResult, profileResult] = await Promise.all([
         supabase.from('banned_users').select('address').eq('address', cleanAddress).maybeSingle(),
-        supabase.from('profiles').select('membership_expiry').eq('address', cleanAddress).maybeSingle()
+        supabase.from('profiles').select('membership_expiry, avatar_url').eq('address', cleanAddress).maybeSingle()
       ]);
 
       setXprBalance(xprVal);
       setGuyBalance(guyVal);
       setIsBanned(!!banResult.data);
-      if (profileResult.data?.membership_expiry) {
-        setMembershipExpiry(profileResult.data.membership_expiry);
+      if (profileResult.data) {
+        if (profileResult.data.membership_expiry) {
+          setMembershipExpiry(profileResult.data.membership_expiry);
+        }
+        if (profileResult.data.avatar_url) {
+          setAvatarUrl(profileResult.data.avatar_url);
+        }
       }
     } catch (err) {
       console.error('Error fetching balances:', err);
@@ -198,7 +205,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       try { await linkRef.current.removeSession(APP_NAME, session.auth); } catch {}
     }
     setAddress(''); setSession(null); setIsConnected(false);
-    setGuyBalance(0); setXprBalance(0); setIsBanned(false);
+    setGuyBalance(0); setXprBalance(0); setIsBanned(false); setAvatarUrl('');
   }, [session]);
 
   const refreshBalances = useCallback(async () => {
@@ -254,7 +261,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   return (
     <WalletContext.Provider value={{
       address, isConnected, isConnecting, isAdmin, isFetchingBalances,
-      guyBalance, xprBalance, membershipExpiry,
+      guyBalance, xprBalance, avatarUrl, membershipExpiry,
       membershipFee, postingFeeGuy, isMembershipEnabled,
       isMember, hasGuyThreshold: true, isBanned, 
       payMembership, connect, disconnect,

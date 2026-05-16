@@ -8,6 +8,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import RequestCard from '@/components/RequestCard';
 import TransactionHistory from '@/components/TransactionHistory';
+import AvatarPicker from '@/components/AvatarPicker';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -27,7 +28,8 @@ import {
   History,
   Medal,
   Activity,
-  AlertCircle
+  AlertCircle,
+  Camera
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -43,19 +45,22 @@ import {
   AlertDialogTitle, 
   AlertDialogTrigger 
 } from "@/components/ui/alert-dialog";
+import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import { cn } from "@/lib/utils";
 import { supabase } from '@/integrations/supabase/client';
 
 const Profile = () => {
   const { userAddress: routeAddress } = useParams();
-  const { address: myAddress, isConnected, isConnecting, membershipExpiry: myExpiry, xprBalance, guyBalance, payMembership, connect, membershipFee } = useWallet();
+  const { address: myAddress, isConnected, isConnecting, membershipExpiry: myExpiry, avatarUrl: myAvatarUrl, xprBalance, guyBalance, payMembership, connect, membershipFee } = useWallet();
   const { requests } = useRequests();
 
   const targetAddress = routeAddress || myAddress;
   const isOwnProfile = !routeAddress || routeAddress === myAddress;
   
   const [targetMembershipExpiry, setTargetMembershipExpiry] = useState<number | null>(null);
+  const [targetAvatarUrl, setTargetAvatarUrl] = useState<string | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
 
   useEffect(() => {
     const fetchTargetProfile = async () => {
@@ -63,6 +68,7 @@ const Profile = () => {
       
       if (isOwnProfile) {
         setTargetMembershipExpiry(myExpiry);
+        setTargetAvatarUrl(myAvatarUrl);
         setIsLoadingProfile(false);
         return;
       }
@@ -71,14 +77,16 @@ const Profile = () => {
       try {
         const { data } = await supabase
           .from('profiles')
-          .select('membership_expiry')
+          .select('membership_expiry, avatar_url')
           .eq('address', targetAddress.toLowerCase().trim())
           .maybeSingle();
         
         if (data) {
           setTargetMembershipExpiry(data.membership_expiry);
+          setTargetAvatarUrl(data.avatar_url);
         } else {
           setTargetMembershipExpiry(0);
+          setTargetAvatarUrl(null);
         }
       } catch (err) {
         console.error("Failed to fetch target profile:", err);
@@ -88,9 +96,10 @@ const Profile = () => {
     };
 
     fetchTargetProfile();
-  }, [targetAddress, isOwnProfile, myExpiry]);
+  }, [targetAddress, isOwnProfile, myExpiry, myAvatarUrl]);
 
   const isVerified = targetMembershipExpiry ? targetMembershipExpiry > Date.now() : false;
+  const currentAvatarSeed = targetAvatarUrl || targetAddress;
 
   const stats = useMemo(() => {
     if (!targetAddress) return { given: 0, received: 0, count: 0 };
@@ -182,7 +191,7 @@ const Profile = () => {
                     isVerified ? "bg-gradient-to-tr from-[#1565C0] to-emerald-400" : "bg-white/10"
                   )} />
                   <Avatar className="h-28 w-28 md:h-32 md:w-32 rounded-[32px] border-4 border-[#0A1428] shadow-2xl relative z-10 transition-all duration-500 group-hover:scale-105 group-hover:border-white/20 p-1.5 bg-[#0A1428]">
-                    <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${targetAddress}`} />
+                    <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${currentAvatarSeed}`} />
                     <AvatarFallback className="bg-[#1565C0] text-white font-black text-3xl rounded-[28px]">
                       {targetAddress?.substring(0, 2).toUpperCase()}
                     </AvatarFallback>
@@ -191,6 +200,19 @@ const Profile = () => {
                     <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-black p-2 rounded-2xl border-4 border-[#0A1428] shadow-xl z-20 shadow-emerald-500/20">
                       <ShieldCheck size={20} />
                     </div>
+                  )}
+                  {isOwnProfile && (
+                    <Dialog open={isAvatarPickerOpen} onOpenChange={setIsAvatarPickerOpen}>
+                      <DialogTrigger asChild>
+                        <Button 
+                          size="icon" 
+                          className="absolute top-0 right-0 w-10 h-10 rounded-2xl bg-primary text-black border-4 border-[#0A1428] shadow-xl z-20 hover:scale-110 transition-transform"
+                        >
+                          <Camera size={18} />
+                        </Button>
+                      </DialogTrigger>
+                      <AvatarPicker onSuccess={() => setIsAvatarPickerOpen(false)} />
+                    </Dialog>
                   )}
                 </div>
                 

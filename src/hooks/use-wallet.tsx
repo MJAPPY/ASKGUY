@@ -21,8 +21,8 @@ export interface WalletState {
   membershipFee: number;
   postingFeeGuy: number;
   isMembershipEnabled: boolean;
-  isMaintenanceMode: boolean; // Added
-  maintenanceMessage: string; // Added
+  isMaintenanceMode: boolean;
+  maintenanceMessage: string;
   isMember: boolean; 
   hasGuyThreshold: boolean; 
   isBanned: boolean;
@@ -58,8 +58,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [membershipFee, setMembershipFee] = useState(7777);
   const [postingFeeGuy, setPostingFeeGuy] = useState(25);
   const [isMembershipEnabled, setIsMembershipEnabled] = useState(true);
-  const [isMaintenanceMode, setIsMaintenanceMode] = useState(false); // Added
-  const [maintenanceMessage, setMaintenanceMessage] = useState(''); // Added
+  const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
+  const [maintenanceMessage, setMaintenanceMessage] = useState('');
   const [isFetchingBalances, setIsFetchingBalances] = useState(false);
   const [isBanned, setIsBanned] = useState(false);
   const [session, setSession] = useState<LinkSession | null>(null);
@@ -81,8 +81,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setIsMembershipEnabled(data.membership_active);
         setPostingFeeGuy(Number(data.posting_fee_guy ?? 25));
         setAvatarSet(data.avatar_set || 'pixel-art');
-        setIsMaintenanceMode(!!data.maintenance_mode); // Using optional columns
-        setMaintenanceMessage(data.maintenance_message || ''); // Using optional columns
+        setIsMaintenanceMode(Boolean(data.maintenance_mode));
+        setMaintenanceMessage(data.maintenance_message || 'We are currently fine-tuning the platform to better serve the community. Hang tight!');
       }
     } catch (err) {
       console.error('Error fetching settings:', err);
@@ -271,7 +271,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       address, isConnected, isConnecting, isAdmin, isFetchingBalances,
       guyBalance, xprBalance, avatarUrl, avatarSet, membershipExpiry,
       membershipFee, postingFeeGuy, isMembershipEnabled,
-      isMaintenanceMode, maintenanceMessage, // Added
+      isMaintenanceMode, maintenanceMessage,
       isMember, hasGuyThreshold: true, isBanned, 
       payMembership, connect, disconnect,
       refreshBalances, fetchSettings, transferTokens, requestor: address,

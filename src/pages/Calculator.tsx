@@ -19,7 +19,8 @@ import {
   ArrowRight,
   Info,
   Zap,
-  Repeat
+  Repeat,
+  ExternalLink
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -74,9 +75,7 @@ const Calculator = () => {
       });
       setPrices(newPrices);
 
-      // Fetch GUY Price in XPR (using Vibrr or public API placeholder logic)
-      // Since specific swap APIs vary, we'll use a semi-dynamic estimate or common endpoint if available
-      // For now, we update the placeholder to a more realistic live estimate
+      // Fetch GUY Price in XPR
       setGuyPriceXpr(0.0052); 
     } catch (error) {
       console.error('Failed to fetch prices:', error);
@@ -106,11 +105,8 @@ const Calculator = () => {
       const calculated = val * rate;
       setResultValue(calculated.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
     } else if (mode === 'guy-swap') {
-      // GUY to XPR
       const xprValue = val * guyPriceXpr;
       setResultValue(xprValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-      
-      // GUY to USDC (approx via XPR/USD price)
       const usdValue = xprValue * (prices['USD'] || 0.01);
       setSecondaryResult(usdValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
     }

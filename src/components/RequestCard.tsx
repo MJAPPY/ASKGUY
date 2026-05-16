@@ -467,7 +467,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
         </Dialog>
       )}
 
-      {!isCompleted && variant === 'grid' && (
+      {!isCompleted && !isOwner && variant === 'grid' && (
         <div className="p-5 pt-0 mt-auto">
           <Button 
             onClick={() => setIsHelpModalOpen(true)}

@@ -48,7 +48,7 @@ const Navbar = () => {
       <div className="container mx-auto px-4 h-20 flex items-center justify-between gap-4">
         <div className="flex items-center gap-6 md:gap-10">
           <Link to="/" className="flex items-center gap-3 group shrink-0">
-            <div className="w-11 h-11 md:w-14 md:h-14 transition-all duration-300 group-hover:scale-110 shrink-0">
+            <div className="w-10 h-10 md:w-12 md:h-12 transition-all duration-300 group-hover:scale-110 shrink-0">
               <img src={logo} alt="Logo" className="w-full h-full object-contain" />
             </div>
             <span className="font-black text-lg md:text-xl tracking-tight transition-colors">
@@ -182,7 +182,7 @@ const Navbar = () => {
             <Button 
               onClick={connect} 
               disabled={isConnecting}
-              className="bg-[#1565C0] hover:bg-[#1565C0]/90 text-white font-bold rounded-full px-4 md:px-6 h-10 md:h-11 shadow-[0_0_20px_rgba(21,101,192,0.3)] btn-premium text-xs md:text-sm"
+              className="bg-[#1565C0] hover:bg-[#1565C0]/90 text-white font-black rounded-xl px-4 md:px-6 h-10 md:h-11 shadow-[0_0_20px_rgba(21,101,192,0.3)] btn-premium text-xs md:text-sm"
             >
               {isConnecting ? <Loader2 className="animate-spin" size={18} /> : "Connect Wallet"}
             </Button>

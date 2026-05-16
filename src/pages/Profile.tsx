@@ -155,6 +155,8 @@ const Profile = () => {
     return messages.sort((a, b) => b.timestamp - a.timestamp);
   }, [profileRequests]);
 
+  const hasGenerousHeart = stats.given >= 1000;
+
   if (!targetAddress && !isConnected) {
     return (
       <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
@@ -241,6 +243,12 @@ const Profile = () => {
                       <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-black px-4 py-1.5 rounded-xl uppercase tracking-widest text-[9px]">
                         Verified Supporter
                       </Badge>
+                    )}
+                    {hasGenerousHeart && (
+                      <div className="flex items-center gap-2 bg-rose-500/10 border border-rose-500/20 text-rose-400 font-black px-4 py-1.5 rounded-xl uppercase tracking-widest text-[9px] animate-in zoom-in duration-500 shadow-[0_0_15px_rgba(244,63,94,0.15)]">
+                        <Heart size={12} className="fill-rose-400 animate-pulse" />
+                        Generous Heart
+                      </div>
                     )}
                   </div>
                 </div>
@@ -506,7 +514,7 @@ const Profile = () => {
                         style={{ width: `${Math.min((stats.given / 1000) * 100, 100)}%` }} 
                       />
                     </div>
-                    {stats.given >= 1000 ? (
+                    {hasGenerousHeart ? (
                       <div className="flex items-center gap-2 text-emerald-400 font-black animate-in fade-in slide-in-from-top-1 duration-500">
                         <CheckCircle2 size={12} />
                         <span className="text-[10px] uppercase tracking-widest">Generous Heart Earned!</span>

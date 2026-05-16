@@ -4,7 +4,7 @@ import React from 'react';
 import { useWallet } from '@/hooks/use-wallet';
 import { Button } from '@/components/ui/button';
 import { Settings, Hammer, Zap, Heart, Loader2, ShieldAlert, LogOut } from 'lucide-react';
-import logo from '@/assets/logo.jpg';
+import logo from '@/assets/hero-guy.jpg';
 
 const Maintenance = () => {
   const { maintenanceMessage, connect, disconnect, isConnecting, isConnected, address, isAdmin } = useWallet();
@@ -82,7 +82,7 @@ const Maintenance = () => {
                <div className="space-y-4 animate-in fade-in zoom-in duration-300">
                   <div className="flex flex-col items-center gap-2 text-red-400 bg-red-500/10 p-4 rounded-2xl border border-red-500/20">
                     <ShieldAlert size={20} />
-                    <p className="text-[10px] font-black uppercase tracking-widest">Access Denied: @{address}</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest Access Denied: @{address}</p>
                     <p className="text-[9px] font-bold text-muted-foreground">Only system administrators can bypass this screen.</p>
                   </div>
                   <Button 

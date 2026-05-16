@@ -6,7 +6,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, X, Loader2, Save, ImageIcon } from 'lucide-react';
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  AlertDialogTrigger 
+} from "@/components/ui/alert-dialog";
+import { Upload, X, Loader2, Save, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { useRequests } from '@/hooks/use-requests';
 import { showSuccess, showError } from '@/utils/toast';
 
@@ -16,15 +27,19 @@ interface EditRequestDialogProps {
     title: string;
     description: string;
     proofUrl?: string;
+    status?: string;
   };
   onSuccess: () => void;
 }
 
+const DEFAULT_THANKS = "Thanks very much to everyone who contributed to this request! Your support means the world to me.";
+
 const EditRequestDialog = ({ request, onSuccess }: EditRequestDialogProps) => {
-  const { updateRequest } = useRequests();
+  const { updateRequest, markCompleted } = useRequests();
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState(request.title);
   const [description, setDescription] = useState(request.description);
+  const [thanksMessage, setThanksMessage] = useState(DEFAULT_THANKS);
   const [preview, setPreview] = useState<string | null>(request.proofUrl || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -54,18 +69,31 @@ const EditRequestDialog = ({ request, onSuccess }: EditRequestDialogProps) => {
       });
       showSuccess("Request updated successfully");
       onSuccess();
-    } catch (err) {
-      showError("Failed to update request");
+    } catch (err: any) {
+      showError(err.message || "Failed to update request");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMarkDone = async () => {
+    setLoading(true);
+    try {
+      await markCompleted(request.id, thanksMessage);
+      showSuccess("Request marked as completed!");
+      onSuccess();
+    } catch (err: any) {
+      showError(err.message || "Failed to complete request");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <DialogContent className="glass-card border-white/10 max-w-lg p-8 rounded-[32px] shadow-2xl">
+    <DialogContent className="glass-card border-white/10 max-w-lg p-8 rounded-[32px] shadow-2xl overflow-y-auto max-h-[90vh]">
       <DialogHeader>
-        <DialogTitle className="text-2xl font-black tracking-tight">Edit Request</DialogTitle>
-        <DialogDescription className="text-muted-foreground font-medium">Update the details of your community request.</DialogDescription>
+        <DialogTitle className="text-2xl font-black tracking-tight">Manage Request</DialogTitle>
+        <DialogDescription className="text-muted-foreground font-medium">Update details or mark your request as finished.</DialogDescription>
       </DialogHeader>
 
       <div className="space-y-6 py-4">
@@ -133,9 +161,40 @@ const EditRequestDialog = ({ request, onSuccess }: EditRequestDialogProps) => {
         </div>
       </div>
 
-      <DialogFooter>
+      <DialogFooter className="flex flex-col sm:flex-row gap-3">
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button 
+              variant="outline"
+              className="flex-1 h-12 border-emerald-500/20 bg-emerald-500/5 text-emerald-400 font-black rounded-xl gap-2 hover:bg-emerald-500/10"
+              disabled={loading}
+            >
+              <CheckCircle2 size={18} />
+              Mark Completed
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent className="glass-card border-white/10 rounded-[32px] p-8">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-2xl font-black uppercase tracking-tight italic">Ready to archive?</AlertDialogTitle>
+              <AlertDialogDescription className="text-muted-foreground font-medium">This will hide the request from active browsing. You can leave a final thank you message for your supporters below.</AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="py-6 space-y-3">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Final Message</Label>
+              <Textarea 
+                value={thanksMessage} 
+                onChange={(e) => setThanksMessage(e.target.value)} 
+                className="bg-white/5 border-white/10 rounded-2xl h-32 leading-relaxed" 
+              />
+            </div>
+            <AlertDialogFooter className="gap-3">
+              <AlertDialogCancel className="bg-white/5 border-white/10 h-14 rounded-2xl font-black uppercase tracking-widest text-[11px] px-8">Back</AlertDialogCancel>
+              <AlertDialogAction onClick={handleMarkDone} className="bg-emerald-600 hover:bg-emerald-500 h-14 rounded-2xl font-black uppercase tracking-widest text-[11px] px-8">Complete & Archive</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         <Button 
-          className="w-full bg-primary hover:bg-primary/90 text-black font-black h-12 rounded-xl gold-glow"
+          className="flex-1 bg-primary hover:bg-primary/90 text-black font-black h-12 rounded-xl gold-glow"
           onClick={handleSave}
           disabled={loading}
         >

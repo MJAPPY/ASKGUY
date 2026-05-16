@@ -107,7 +107,7 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const updateRequest = async (id: string, updates: any) => {
     try {
       const dbUpdates = { ...updates };
-      if (updates.proofUrl) {
+      if (updates.hasOwnProperty('proofUrl')) {
         dbUpdates.proof_url = updates.proofUrl;
         delete dbUpdates.proofUrl;
       }
@@ -115,27 +115,19 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (error) throw error;
       await fetchRequests();
       return data;
-    } catch (err) {
-      return null;
+    } catch (err: any) {
+      console.error('[use-requests] Update error:', err);
+      throw err; // Re-throw to allow callers to catch and show UI errors
     }
   };
 
   const deleteRequest = async (id: string) => {
-    console.log(`[Moderation] Requesting deletion for ID: ${id}`);
     try {
-      // Step 1: Clean up contributions
       const { error: cError } = await supabase.from('contributions').delete().eq('request_id', id);
-      if (cError) {
-        console.error('[Moderation] Contribution cleanup failed:', cError);
-        throw new Error("Could not clean up contributions. Check RLS policies.");
-      }
+      if (cError) throw cError;
 
-      // Step 2: Delete the request
       const { error: rError } = await supabase.from('aid_requests').delete().eq('id', id);
-      if (rError) {
-        console.error('[Moderation] Request deletion failed:', rError);
-        throw new Error("Request deletion failed. Ensure your wallet address is authorized in Supabase RLS.");
-      }
+      if (rError) throw rError;
 
       await fetchRequests();
       showSuccess("Content removed successfully.");
@@ -146,15 +138,11 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const batchDeleteRequests = async (ids: string[]) => {
-    console.log(`[Moderation] Requesting batch deletion for: ${ids.length} items`);
     try {
       await supabase.from('contributions').delete().in('request_id', ids);
       const { error } = await supabase.from('aid_requests').delete().in('id', ids);
       
-      if (error) {
-        console.error('[Moderation] Batch delete failed:', error);
-        throw new Error("Batch delete failed. Check RLS permissions.");
-      }
+      if (error) throw error;
 
       await fetchRequests();
       showSuccess(`Successfully removed ${ids.length} items.`);
@@ -193,20 +181,25 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const markCompleted = async (id: string, thanksMessage?: string) => {
-    if (thanksMessage) {
-      const req = requests.find(r => r.id === id);
-      if (req) {
-        await supabase.from('contributions').insert({
-          request_id: id,
-          user: req.requestor,
-          amount: 0,
-          token: req.token,
-          message: thanksMessage,
-          timestamp: Date.now(),
-        });
+    try {
+      if (thanksMessage) {
+        const req = requests.find(r => r.id === id);
+        if (req) {
+          await supabase.from('contributions').insert({
+            request_id: id,
+            user: req.requestor,
+            amount: 0,
+            token: req.token,
+            message: thanksMessage,
+            timestamp: Date.now(),
+          });
+        }
       }
+      return await updateRequest(id, { status: 'Completed' });
+    } catch (err: any) {
+      console.error('[use-requests] Completion error:', err);
+      throw err;
     }
-    return updateRequest(id, { status: 'Completed' });
   };
 
   useEffect(() => {

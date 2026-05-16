@@ -3,7 +3,7 @@
 import React from 'react';
 import { Twitter } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import logo from '@/assets/hero-guy.jpg';
+import logo from '@/assets/logo.jpg';
 
 const Footer = () => {
   return (

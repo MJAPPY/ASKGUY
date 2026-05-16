@@ -29,7 +29,8 @@ import {
   Medal,
   Activity,
   AlertCircle,
-  Camera
+  Camera,
+  Gift
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -51,7 +52,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 const Profile = () => {
   const { userAddress: routeAddress } = useParams();
-  const { address: myAddress, isConnected, isConnecting, membershipExpiry: myExpiry, avatarUrl: myAvatarUrl, xprBalance, guyBalance, payMembership, connect, membershipFee } = useWallet();
+  const { address: myAddress, isConnected, isConnecting, membershipExpiry: myExpiry, avatarUrl: myAvatarUrl, xprBalance, guyBalance, payMembership, connect, membershipFee, avatarSet } = useWallet();
   const { requests } = useRequests();
 
   const targetAddress = routeAddress || myAddress;
@@ -102,9 +103,10 @@ const Profile = () => {
   const currentAvatarSeed = targetAvatarUrl || targetAddress;
 
   const stats = useMemo(() => {
-    if (!targetAddress) return { given: 0, received: 0, count: 0 };
+    if (!targetAddress) return { given: 0, guyGiven: 0, received: 0, count: 0 };
     
     let given = 0;
+    let guyGiven = 0;
     let received = 0;
     let count = 0;
 
@@ -114,13 +116,17 @@ const Profile = () => {
       }
       req.contributions.forEach(c => {
         if (c.user === targetAddress) {
-          given += c.amount;
+          if (c.token === 'XPR') {
+            given += c.amount;
+          } else if (c.token === 'GUY') {
+            guyGiven += c.amount;
+          }
           count++;
         }
       });
     });
 
-    return { given, received, count };
+    return { given, guyGiven, received, count };
   }, [requests, targetAddress]);
 
   const profileRequests = requests.filter(req => req.requestor === targetAddress);
@@ -191,7 +197,7 @@ const Profile = () => {
                     isVerified ? "bg-gradient-to-tr from-[#1565C0] to-emerald-400" : "bg-white/10"
                   )} />
                   <Avatar className="h-28 w-28 md:h-32 md:w-32 rounded-[32px] border-4 border-[#0A1428] shadow-2xl relative z-10 transition-all duration-500 group-hover:scale-105 group-hover:border-white/20 p-1.5 bg-[#0A1428]">
-                    <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${currentAvatarSeed}`} />
+                    <AvatarImage src={`https://api.dicebear.com/7.x/${avatarSet}/svg?seed=${currentAvatarSeed}`} />
                     <AvatarFallback className="bg-[#1565C0] text-white font-black text-3xl rounded-[28px]">
                       {targetAddress?.substring(0, 2).toUpperCase()}
                     </AvatarFallback>
@@ -312,7 +318,7 @@ const Profile = () => {
       <main className="flex-1 container mx-auto px-4 py-12 md:py-16">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12">
           <div className="lg:col-span-8 space-y-12">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
               {isOwnProfile && (
                 <Card className="glass-card border-[#1565C0]/20 bg-[#1565C0]/5 group rounded-[32px] transition-all duration-300 hover:translate-y-[-4px] will-change-transform transform-gpu">
                   <CardContent className="p-8 space-y-6">
@@ -326,7 +332,7 @@ const Profile = () => {
                     </div>
                     <div className="overflow-hidden">
                       <p className="text-[10px] text-[#1565C0] uppercase font-black tracking-widest mb-1.5 truncate">Your GUY Assets</p>
-                      <h3 className="text-2xl sm:text-3xl font-black text-white leading-none tabular-nums break-words">
+                      <h3 className="text-xl sm:text-2xl font-black text-white leading-none tabular-nums break-words">
                         {guyBalance.toLocaleString()}
                       </h3>
                     </div>
@@ -341,8 +347,22 @@ const Profile = () => {
                   </div>
                   <div className="overflow-hidden">
                     <p className="text-[10px] text-emerald-400 uppercase font-black tracking-widest mb-1.5 truncate">Total Contributions</p>
-                    <h3 className="text-2xl sm:text-3xl font-black text-white leading-none tabular-nums break-words">
+                    <h3 className="text-xl sm:text-2xl font-black text-white leading-none tabular-nums break-words">
                       {stats.given.toLocaleString()} <span className="text-xs text-muted-foreground font-medium uppercase">XPR</span>
+                    </h3>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="glass-card border-rose-500/10 bg-rose-500/[0.02] group rounded-[32px] transition-all duration-300 hover:translate-y-[-4px] will-change-transform transform-gpu">
+                <CardContent className="p-8 space-y-6">
+                  <div className="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center border border-rose-500/20 group-hover:scale-110 transition-transform">
+                    <Gift className="text-rose-400" size={24} />
+                  </div>
+                  <div className="overflow-hidden">
+                    <p className="text-[10px] text-rose-400 uppercase font-black tracking-widest mb-1.5 truncate">GUY Gifted</p>
+                    <h3 className="text-xl sm:text-2xl font-black text-white leading-none tabular-nums break-words">
+                      {stats.guyGiven.toLocaleString()} <span className="text-xs text-muted-foreground font-medium uppercase">GUY</span>
                     </h3>
                   </div>
                 </CardContent>
@@ -354,8 +374,8 @@ const Profile = () => {
                     <History className="text-blue-400" size={24} />
                   </div>
                   <div className="overflow-hidden">
-                    <p className="text-[10px] text-blue-400 uppercase font-black tracking-widest mb-1.5 truncate">Community Support Received</p>
-                    <h3 className="text-2xl sm:text-3xl font-black text-white leading-none tabular-nums break-words">
+                    <p className="text-[10px] text-blue-400 uppercase font-black tracking-widest mb-1.5 truncate">Community Received</p>
+                    <h3 className="text-xl sm:text-2xl font-black text-white leading-none tabular-nums break-words">
                       {stats.received.toLocaleString()} <span className="text-xs text-muted-foreground font-medium uppercase">XPR</span>
                     </h3>
                   </div>
@@ -435,7 +455,7 @@ const Profile = () => {
                               <div className="space-y-1">
                                 <Link to={`/profile/${m.user}`} className="text-lg font-black text-[#1565C0] hover:underline flex items-center gap-2 group/link">
                                   <Avatar className="w-5 h-5 border border-white/20 p-0.5 bg-black/20">
-                                    <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${m.user}`} />
+                                    <AvatarImage src={`https://api.dicebear.com/7.x/${avatarSet}/svg?seed=${m.user}`} />
                                   </Avatar>
                                   @{m.user}
                                 </Link>

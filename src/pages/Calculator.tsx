@@ -36,7 +36,7 @@ const Calculator = () => {
   const [secondaryResult, setSecondaryResult] = useState<string>('');
   const [currency, setCurrency] = useState('USD');
   const [prices, setPrices] = useState<Record<string, number>>({});
-  const [guyPriceXpr, setGuyPriceXpr] = useState<number>(0.005); // Default placeholder
+  const [guyPriceXpr, setGuyPriceXpr] = useState<number>(0.0052); // Default estimate
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
@@ -105,10 +105,13 @@ const Calculator = () => {
       const calculated = val * rate;
       setResultValue(calculated.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
     } else if (mode === 'guy-swap') {
+      // GUY to XPR
       const xprValue = val * guyPriceXpr;
-      setResultValue(xprValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+      setResultValue(xprValue.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 }));
+      
+      // GUY to USDC (approx via XPR/USD price)
       const usdValue = xprValue * (prices['USD'] || 0.01);
-      setSecondaryResult(usdValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+      setSecondaryResult(usdValue.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 }));
     }
   }, [inputValue, currency, prices, mode, guyPriceXpr]);
 

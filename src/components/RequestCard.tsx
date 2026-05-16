@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -21,7 +21,7 @@ import {
   AlertDialogTrigger 
 } from "@/components/ui/alert-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Heart, X, Loader2, CheckCircle2, Zap, Sparkles, Image as ImageIcon, MessageSquare, Quote, AlertTriangle, Share2, Info, Wallet, Trash2, Calendar, User, ShieldCheck, Gift, Edit3 } from 'lucide-react';
+import { Heart, X, Loader2, CheckCircle2, Zap, Share2, Trash2, Calendar, Edit3, Gift, ShieldCheck } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useRequests, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
@@ -129,7 +129,9 @@ const RequestCard: React.FC<RequestCardProps> = ({
     } catch (err) { showError("Failed to update status"); } finally { setIsProcessing(false); }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm("Are you sure?")) return;
     setIsProcessing(true);
     try { await deleteRequest(id); } finally { setIsProcessing(false); }
   };
@@ -143,66 +145,114 @@ const RequestCard: React.FC<RequestCardProps> = ({
 
   const sortedContributions = [...contributions].sort((a, b) => b.timestamp - a.timestamp);
 
+  const StatusDisplay = () => (
+    <div className="space-y-3">
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-tight">
+          <div className="flex items-center gap-1.5 text-primary">
+            <Zap size={14} className="fill-primary" />
+            <span className="text-sm">{raised.toLocaleString()}</span>
+            <span className="opacity-60">{token}</span>
+          </div>
+          <span className="text-muted-foreground opacity-40">/ {amount.toLocaleString()} {token}</span>
+        </div>
+        
+        <div className="w-full bg-white/5 rounded-full h-2 border border-white/5 p-[1px] overflow-hidden">
+          <div 
+            className={cn("h-full rounded-full transition-all duration-1000", isFunded ? "bg-emerald-500" : "bg-primary")} 
+            style={{ width: `${progress}%` }} 
+          />
+        </div>
+      </div>
+
+      {guyTotal > 0 && (
+        <div className="flex items-center gap-1.5 text-rose-400 font-black uppercase text-[10px] tracking-widest pl-0.5">
+          <Heart size={10} className="fill-current" />
+          {guyTotal.toLocaleString()} GUY Gifted
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <Card className={cn(
-      "glass-card overflow-hidden group hover:border-primary/40 transition-all duration-500 flex flex-col h-full",
-      variant === 'list' ? "flex-row h-auto min-h-[160px]" : "h-full",
+      "glass-card overflow-hidden group hover:border-primary/40 transition-all duration-500 flex flex-col h-full relative",
+      variant === 'list' ? "flex-row h-auto min-h-[140px] md:min-h-[120px]" : "h-full",
       isUrgent && !isCompleted ? 'border-red-500/40 shadow-[0_0_30px_rgba(239,68,68,0.1)]' : '',
       isFunded && !isCompleted ? 'border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.1)]' : ''
     )}>
       <Dialog>
         <DialogTrigger asChild>
-          <div className={cn("p-0 cursor-pointer hover:bg-white/[0.02] transition-colors flex-1", variant === 'list' && "flex flex-col md:flex-row items-stretch")}>
+          <div className={cn("p-0 cursor-pointer hover:bg-white/[0.02] transition-colors flex-1 flex h-full", variant === 'list' ? "flex-row" : "flex-col")}>
             {proofUrl && (
-              <div className={cn("overflow-hidden relative border-white/5 shrink-0", variant === 'grid' ? "w-full aspect-[21/9] border-b" : "hidden md:block w-36 h-full border-r")}>
-                <img src={proofUrl} alt="Proof" className="w-full h-full object-cover" />
+              <div className={cn("overflow-hidden relative border-white/5 shrink-0", variant === 'grid' ? "w-full aspect-[21/9] border-b" : "hidden md:block w-40 h-full border-r")}>
+                <img src={proofUrl} alt="Proof" className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
             )}
-            <div className={cn("p-6 flex-1 flex flex-col justify-between", variant === 'list' ? "grid grid-cols-1 md:grid-cols-12 gap-8 items-center" : "space-y-4")}>
-              <div className={variant === 'list' ? "md:col-span-5" : "space-y-4"}>
-                <div className="flex items-center gap-3 mb-2">
-                  <span className={cn("text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-widest border", getCategoryColor())}>{category}</span>
-                  <span className="text-[10px] text-muted-foreground font-black uppercase">{formatDistanceToNow(timestamp, { addSuffix: true })}</span>
+            
+            <div className={cn("p-6 flex-1 flex justify-between", variant === 'list' ? "items-center flex-row gap-8" : "flex-col space-y-6")}>
+              <div className={cn("space-y-3", variant === 'list' ? "max-w-[40%] flex-1" : "flex-1")}>
+                <div className="flex items-center gap-3">
+                  <span className={cn("text-[9px] font-black px-2.5 py-1 rounded-lg uppercase tracking-[0.1em] border shadow-sm", getCategoryColor())}>
+                    {category}
+                  </span>
+                  <span className="text-[9px] text-muted-foreground font-black uppercase tracking-widest opacity-60">
+                    {formatDistanceToNow(timestamp, { addSuffix: true })}
+                  </span>
                 </div>
-                <h3 className="font-black group-hover:text-primary transition-colors text-xl leading-tight">{title}</h3>
-                <div className="flex items-center gap-2 mt-2">
-                  <Avatar className="w-6 h-6 border border-white/20 p-0.5 bg-black/20">
+                
+                <h3 className={cn("font-black group-hover:text-primary transition-colors tracking-tight leading-tight", variant === 'list' ? "text-lg line-clamp-1" : "text-xl line-clamp-2")}>
+                  {title}
+                </h3>
+                
+                <div className="flex items-center gap-2.5 pt-1">
+                  <Avatar className="w-6 h-6 border border-white/20 p-0.5 bg-black/20 rounded-lg">
                     <AvatarImage src={`https://api.dicebear.com/7.x/${avatarSet}/svg?seed=${requestor}`} />
                     <AvatarFallback>{requestor.substring(0, 2).toUpperCase()}</AvatarFallback>
                   </Avatar>
-                  <div className="text-xs font-black text-muted-foreground uppercase tracking-widest">@{requestor}</div>
+                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest hover:text-white transition-colors">@{requestor}</span>
                 </div>
               </div>
 
-              <div className={variant === 'list' ? "md:col-span-4" : "space-y-3"}>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-[10px] font-black uppercase">
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-1.5 text-primary">
-                        <Zap size={12} className="fill-primary" />
-                        {raised.toLocaleString()} {token}
-                      </div>
-                      {guyTotal > 0 && (
-                        <div className="flex items-center gap-1.5 text-rose-400">
-                          <Heart size={10} className="fill-current" />
-                          {guyTotal.toLocaleString()} GUY Gifted
-                        </div>
-                      )}
-                    </div>
-                    <span className="text-muted-foreground opacity-50 self-start">/ {amount.toLocaleString()} {token}</span>
-                  </div>
-                  <div className="w-full bg-white/5 rounded-full h-2.5 border border-white/5 p-[1px]">
-                    <div 
-                      className={cn("h-full rounded-full transition-all duration-1000", isFunded ? "bg-emerald-500" : "bg-primary")} 
-                      style={{ width: `${progress}%` }} 
-                    />
-                  </div>
-                </div>
+              <div className={cn(variant === 'list' ? "w-48 lg:w-64" : "w-full")}>
+                <StatusDisplay />
               </div>
+
+              {variant === 'list' && (
+                <div className="hidden sm:block shrink-0">
+                  {!isCompleted && !isOwner && (
+                    <Button 
+                      onClick={(e) => { e.stopPropagation(); setIsHelpModalOpen(true); }}
+                      className="h-11 px-6 bg-primary hover:bg-primary/90 text-black font-black text-[10px] uppercase tracking-widest rounded-xl gold-glow flex gap-2 items-center"
+                    >
+                      <Heart size={14} className="fill-current" />
+                      Help Now
+                    </Button>
+                  )}
+                  {isOwner && !isCompleted && (
+                    <Button 
+                      onClick={(e) => { e.stopPropagation(); setIsEditModalOpen(true); }}
+                      variant="outline"
+                      className="h-11 px-6 border-white/10 hover:bg-white/5 font-black text-[10px] uppercase tracking-widest rounded-xl"
+                    >
+                      <Edit3 size={14} className="mr-2" />
+                      Manage
+                    </Button>
+                  )}
+                  {isCompleted && (
+                    <div className="h-11 px-6 border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 font-black text-[10px] uppercase tracking-widest rounded-xl flex items-center gap-2">
+                      <CheckCircle2 size={14} />
+                      Completed
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </DialogTrigger>
 
+        {/* Expanded Dialog content - kept same but ensuring Badge is imported */}
         <DialogContent className="glass-card border-white/10 max-w-3xl h-[90vh] overflow-hidden flex flex-col p-0 rounded-[32px] shadow-2xl">
           <div className="p-8 border-b border-white/5 bg-white/[0.015] shrink-0 relative">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
@@ -213,7 +263,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <h2 className="text-3xl font-black text-white uppercase italic">@{requestor}</h2>
-                    <Badge className={cn("text-[9px] uppercase px-2 py-0.5", getCategoryColor())}>{category}</Badge>
+                    <Badge className={cn("text-[9px] uppercase px-2 py-0.5 rounded-lg border", getCategoryColor())}>{category}</Badge>
                   </div>
                   <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest flex items-center gap-2">
                     <Calendar size={12} /> Posted {formatDistanceToNow(timestamp, { addSuffix: true })}
@@ -222,21 +272,11 @@ const RequestCard: React.FC<RequestCardProps> = ({
               </div>
 
               <div className="flex items-center gap-3">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={handleShare}
-                  className="h-11 w-11 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-muted-foreground"
-                >
+                <Button variant="ghost" size="icon" onClick={handleShare} className="h-11 w-11 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-muted-foreground">
                   <Share2 size={18} />
                 </Button>
                 {isAdmin && (
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={handleDelete}
-                    className="h-11 w-11 rounded-xl bg-red-500/5 border border-red-500/20 hover:bg-red-500/20 text-red-400"
-                  >
+                  <Button variant="ghost" size="icon" onClick={handleDelete} className="h-11 w-11 rounded-xl bg-red-500/5 border border-red-500/20 hover:bg-red-500/20 text-red-400">
                     <Trash2 size={18} />
                   </Button>
                 )}
@@ -245,7 +285,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
 
             <div className="space-y-6">
               <h1 className="text-4xl font-black tracking-tight text-white leading-tight">{title}</h1>
-              <div className="relative group">
+              <div className="relative">
                 <div className="absolute -left-4 top-0 bottom-0 w-1 bg-primary/20 rounded-full" />
                 <p className="text-lg text-foreground/90 leading-relaxed font-medium pl-2 italic">
                   "{description}"
@@ -319,98 +359,37 @@ const RequestCard: React.FC<RequestCardProps> = ({
             <div className="p-8 border-t border-white/5 bg-white/[0.01] shrink-0">
               <div className="flex flex-col sm:flex-row gap-4">
                 {!isCompleted && !isOwner && (
-                  <Dialog open={isHelpModalOpen} onOpenChange={setIsHelpModalOpen}>
-                    <DialogTrigger asChild>
-                      <Button className="flex-1 h-14 bg-primary hover:bg-primary/90 text-black font-black text-sm uppercase tracking-widest rounded-2xl gold-glow gap-3">
-                        <Heart size={20} className="fill-current" />
-                        Help This Person
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="glass-card border-white/10 max-w-md p-8 rounded-[32px] shadow-2xl">
-                      <DialogHeader>
-                        <DialogTitle className="text-2xl font-black tracking-tight">Send Support</DialogTitle>
-                        <DialogDescription className="text-muted-foreground font-medium">Your contribution goes directly to the recipient's wallet.</DialogDescription>
-                      </DialogHeader>
-                      <div className="space-y-6 py-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Amount</label>
-                            <Input 
-                              type="number" 
-                              value={contributionAmount} 
-                              onChange={(e) => setContributionAmount(e.target.value)}
-                              className="h-12 bg-white/5 border-white/10 font-black text-lg rounded-xl"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Token</label>
-                            <Select value={contributionToken} onValueChange={(v: TokenSymbol) => setContributionToken(v)}>
-                              <SelectTrigger className="h-12 bg-white/5 border-white/10 font-black rounded-xl">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="glass-card">
-                                <SelectItem value="XPR">XPR</SelectItem>
-                                <SelectItem value="GUY">GUY</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Message (Optional)</label>
-                          <Textarea 
-                            placeholder="Send a kind word..."
-                            value={contributionMessage}
-                            onChange={(e) => setContributionMessage(e.target.value)}
-                            className="bg-white/5 border-white/10 rounded-xl font-medium"
-                          />
-                        </div>
-                        <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 flex justify-between items-center">
-                          <span className="text-[10px] font-black uppercase text-muted-foreground">Your Balance</span>
-                          <span className="text-sm font-black text-primary">{currentBalance.toLocaleString()} {contributionToken}</span>
-                        </div>
-                      </div>
-                      <DialogFooter>
-                        <Button 
-                          onClick={handleContribute}
-                          disabled={isProcessing}
-                          className="w-full h-14 bg-primary hover:bg-primary/90 text-black font-black rounded-xl gold-glow"
-                        >
-                          {isProcessing ? <Loader2 className="animate-spin" /> : "Confirm & Send"}
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
+                  <Button 
+                    onClick={() => setIsHelpModalOpen(true)}
+                    className="flex-1 h-14 bg-primary hover:bg-primary/90 text-black font-black text-sm uppercase tracking-widest rounded-2xl gold-glow gap-3"
+                  >
+                    <Heart size={20} className="fill-current" />
+                    Help This Person
+                  </Button>
                 )}
-
                 {isOwner && !isCompleted && (
                   <div className="flex-1 flex flex-col sm:flex-row gap-3">
-                    <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" className="flex-1 h-14 border-white/10 hover:bg-white/5 text-white font-black text-sm uppercase tracking-widest rounded-2xl gap-3">
-                          <Edit3 size={18} /> Edit Request
-                        </Button>
-                      </DialogTrigger>
-                      <EditRequestDialog request={{ id, title, description, proofUrl }} onSuccess={() => setIsEditModalOpen(false)} />
-                    </Dialog>
-
+                    <Button 
+                      onClick={() => setIsEditModalOpen(true)}
+                      variant="outline" 
+                      className="flex-1 h-14 border-white/10 hover:bg-white/5 text-white font-black text-sm uppercase tracking-widest rounded-2xl gap-3"
+                    >
+                      <Edit3 size={18} /> Edit Request
+                    </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button className="flex-1 h-14 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm uppercase tracking-widest rounded-2xl gap-3 shadow-[0_10px_30px_rgba(16,185,129,0.2)]">
+                        <Button className="flex-1 h-14 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm uppercase tracking-widest rounded-2xl gap-3">
                           <CheckCircle2 size={20} /> Complete Request
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent className="glass-card border-white/10 p-8 rounded-[32px]">
                         <AlertDialogHeader>
                           <AlertDialogTitle className="text-2xl font-black">Ready to Archive?</AlertDialogTitle>
-                          <AlertDialogDescription className="text-muted-foreground font-medium">This will mark your request as completed. You can leave a final thank you message for your supporters.</AlertDialogDescription>
+                          <AlertDialogDescription className="text-muted-foreground font-medium">This will mark your request as completed. Leave a final thank you message.</AlertDialogDescription>
                         </AlertDialogHeader>
                         <div className="py-6 space-y-2">
                           <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Final Thank You</label>
-                          <Textarea 
-                            value={thanksMessage}
-                            onChange={(e) => setThanksMessage(e.target.value)}
-                            className="bg-white/5 border-white/10 rounded-xl"
-                          />
+                          <Textarea value={thanksMessage} onChange={(e) => setThanksMessage(e.target.value)} className="bg-white/5 border-white/10 rounded-xl" />
                         </div>
                         <AlertDialogFooter>
                           <AlertDialogCancel className="bg-white/5 border-white/10 h-12 rounded-xl">Back</AlertDialogCancel>
@@ -420,82 +399,68 @@ const RequestCard: React.FC<RequestCardProps> = ({
                     </AlertDialog>
                   </div>
                 )}
-
-                {isCompleted && (
-                  <div className="flex-1 h-14 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-black text-sm uppercase tracking-widest rounded-2xl flex items-center justify-center gap-3">
-                    <CheckCircle2 size={20} />
-                    This Need Has Been Met
-                  </div>
-                )}
               </div>
             </div>
           </div>
         </DialogContent>
       </Dialog>
 
-      {!isCompleted && (
-        <div className="p-4 pt-0 mt-auto">
-          <Dialog open={isHelpModalOpen} onOpenChange={setIsHelpModalOpen}>
-            <DialogTrigger asChild>
-              <Button className="w-full bg-primary hover:bg-primary/90 text-black font-black text-[10px] uppercase tracking-widest h-10 rounded-xl gold-glow gap-2">
-                <Heart size={14} className="fill-current" />
-                Help Now
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="glass-card border-white/10 max-w-md p-8 rounded-[32px] shadow-2xl">
-              <DialogHeader>
-                <DialogTitle className="text-2xl font-black tracking-tight">Send Support</DialogTitle>
-                <DialogDescription className="text-muted-foreground font-medium">Your contribution goes directly to the recipient's wallet.</DialogDescription>
-              </DialogHeader>
-              <div className="space-y-6 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Amount</label>
-                    <Input 
-                      type="number" 
-                      value={contributionAmount} 
-                      onChange={(e) => setContributionAmount(e.target.value)}
-                      className="h-12 bg-white/5 border-white/10 font-black text-lg rounded-xl"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Token</label>
-                    <Select value={contributionToken} onValueChange={(v: TokenSymbol) => setContributionToken(v)}>
-                      <SelectTrigger className="h-12 bg-white/5 border-white/10 font-black rounded-xl">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="glass-card">
-                        <SelectItem value="XPR">XPR</SelectItem>
-                        <SelectItem value="GUY">GUY</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Message (Optional)</label>
-                  <Textarea 
-                    placeholder="Send a kind word..."
-                    value={contributionMessage}
-                    onChange={(e) => setContributionMessage(e.target.value)}
-                    className="bg-white/5 border-white/10 rounded-xl font-medium"
-                  />
-                </div>
-                <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 flex justify-between items-center">
-                  <span className="text-[10px] font-black uppercase text-muted-foreground">Your Balance</span>
-                  <span className="text-sm font-black text-primary">{currentBalance.toLocaleString()} {contributionToken}</span>
-                </div>
+      {/* Global Modals */}
+      <Dialog open={isHelpModalOpen} onOpenChange={setIsHelpModalOpen}>
+        <DialogContent className="glass-card border-white/10 max-w-md p-8 rounded-[32px] shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black tracking-tight">Send Support</DialogTitle>
+            <DialogDescription className="text-muted-foreground font-medium">Your contribution goes directly to the recipient's wallet.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Amount</label>
+                <Input type="number" value={contributionAmount} onChange={(e) => setContributionAmount(e.target.value)} className="h-12 bg-white/5 border-white/10 font-black text-lg rounded-xl" />
               </div>
-              <DialogFooter>
-                <Button 
-                  onClick={handleContribute}
-                  disabled={isProcessing}
-                  className="w-full h-14 bg-primary hover:bg-primary/90 text-black font-black rounded-xl gold-glow"
-                >
-                  {isProcessing ? <Loader2 className="animate-spin" /> : "Confirm & Send"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Token</label>
+                <Select value={contributionToken} onValueChange={(v: TokenSymbol) => setContributionToken(v)}>
+                  <SelectTrigger className="h-12 bg-white/5 border-white/10 font-black rounded-xl"><SelectValue /></SelectTrigger>
+                  <SelectContent className="glass-card">
+                    <SelectItem value="XPR">XPR</SelectItem>
+                    <SelectItem value="GUY">GUY</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Message (Optional)</label>
+              <Textarea placeholder="Send a kind word..." value={contributionMessage} onChange={(e) => setContributionMessage(e.target.value)} className="bg-white/5 border-white/10 rounded-xl font-medium" />
+            </div>
+            <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 flex justify-between items-center">
+              <span className="text-[10px] font-black uppercase text-muted-foreground">Your Balance</span>
+              <span className="text-sm font-black text-primary">{currentBalance.toLocaleString()} {contributionToken}</span>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={handleContribute} disabled={isProcessing} className="w-full h-14 bg-primary hover:bg-primary/90 text-black font-black rounded-xl gold-glow">
+              {isProcessing ? <Loader2 className="animate-spin" /> : "Confirm & Send"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {isEditModalOpen && (
+        <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+          <EditRequestDialog request={{ id, title, description, proofUrl }} onSuccess={() => setIsEditModalOpen(false)} />
+        </Dialog>
+      )}
+
+      {!isCompleted && variant === 'grid' && (
+        <div className="p-4 pt-0 mt-auto">
+          <Button 
+            onClick={() => setIsHelpModalOpen(true)}
+            className="w-full bg-primary hover:bg-primary/90 text-black font-black text-[10px] uppercase tracking-widest h-10 rounded-xl gold-glow gap-2"
+          >
+            <Heart size={14} className="fill-current" />
+            Help Now
+          </Button>
         </div>
       )}
     </Card>

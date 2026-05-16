@@ -180,24 +180,24 @@ const RequestCard: React.FC<RequestCardProps> = ({
 
   return (
     <Card className={cn(
-      "glass-card overflow-hidden group hover:border-primary/40 transition-all duration-500 flex flex-col h-full relative",
-      variant === 'list' ? "flex-row h-auto min-h-[140px] md:min-h-[120px]" : "h-full",
+      "glass-card overflow-hidden group hover:border-primary/40 transition-all duration-500 relative",
+      variant === 'list' ? "h-auto" : "h-full flex flex-col",
       isUrgent && !isCompleted ? 'border-red-500/40 shadow-[0_0_30px_rgba(239,68,68,0.1)]' : '',
       isFunded && !isCompleted ? 'border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.1)]' : ''
     )}>
       <Dialog>
         <DialogTrigger asChild>
-          <div className={cn("p-0 cursor-pointer hover:bg-white/[0.02] transition-colors flex-1 flex h-full", variant === 'list' ? "flex-row" : "flex-col")}>
+          <div className={cn("p-0 cursor-pointer hover:bg-white/[0.02] transition-colors flex h-full", variant === 'list' ? "flex-col md:flex-row" : "flex-col")}>
             {proofUrl && (
-              <div className={cn("overflow-hidden relative border-white/5 shrink-0", variant === 'grid' ? "w-full aspect-[21/9] border-b" : "hidden md:block w-44 h-full border-r")}>
+              <div className={cn("overflow-hidden relative border-white/5 shrink-0", variant === 'grid' ? "w-full aspect-[21/9] border-b" : "w-full md:w-56 aspect-video md:aspect-auto border-b md:border-b-0 md:border-r")}>
                 <img src={proofUrl} alt="Proof" className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all duration-500" />
                 <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
             )}
             
-            <div className={cn("p-6 flex-1 flex justify-between", variant === 'list' ? "items-center flex-row gap-10" : "flex-col space-y-7")}>
-              <div className={cn("space-y-4", variant === 'list' ? "max-w-[45%] flex-1" : "flex-1")}>
-                <div className="flex items-center gap-3">
+            <div className={cn("p-6 flex-1", variant === 'list' ? "grid grid-cols-1 lg:grid-cols-12 gap-8 items-center" : "flex flex-col space-y-7")}>
+              <div className={cn("space-y-4", variant === 'list' ? "lg:col-span-5" : "")}>
+                <div className="flex flex-wrap items-center gap-3">
                   <span className={cn("text-[10px] font-black px-3 py-1.5 rounded-xl uppercase tracking-[0.1em] border shadow-sm", getCategoryColor())}>
                     {category}
                   </span>
@@ -206,7 +206,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
                   </span>
                 </div>
                 
-                <h3 className={cn("font-black group-hover:text-primary transition-colors tracking-tight leading-tight uppercase italic", variant === 'list' ? "text-xl line-clamp-1" : "text-2xl line-clamp-2")}>
+                <h3 className={cn("font-black group-hover:text-primary transition-colors tracking-tight leading-tight uppercase italic", variant === 'list' ? "text-xl line-clamp-2 lg:line-clamp-1" : "text-2xl line-clamp-2")}>
                   {title}
                 </h3>
                 
@@ -222,16 +222,16 @@ const RequestCard: React.FC<RequestCardProps> = ({
                 </div>
               </div>
 
-              <div className={cn(variant === 'list' ? "w-56 lg:w-72" : "w-full")}>
+              <div className={cn(variant === 'list' ? "lg:col-span-4" : "")}>
                 <StatusDisplay />
               </div>
 
               {variant === 'list' && (
-                <div className="hidden sm:block shrink-0">
+                <div className="lg:col-span-3 flex justify-end">
                   {!isCompleted && !isOwner && (
                     <Button 
                       onClick={(e) => { e.stopPropagation(); setIsHelpModalOpen(true); }}
-                      className="h-12 px-8 bg-primary hover:bg-primary/90 text-black font-black text-[12px] uppercase tracking-[0.15em] rounded-2xl gold-glow flex gap-3 items-center"
+                      className="w-full lg:w-auto h-12 px-8 bg-primary hover:bg-primary/90 text-black font-black text-[12px] uppercase tracking-[0.15em] rounded-2xl gold-glow flex gap-3 items-center justify-center"
                     >
                       <Heart size={16} className="fill-current" />
                       Help Now
@@ -241,14 +241,14 @@ const RequestCard: React.FC<RequestCardProps> = ({
                     <Button 
                       onClick={(e) => { e.stopPropagation(); setIsEditModalOpen(true); }}
                       variant="outline"
-                      className="h-12 px-8 border-white/10 hover:bg-white/5 font-black text-[12px] uppercase tracking-[0.15em] rounded-2xl"
+                      className="w-full lg:w-auto h-12 px-8 border-white/10 hover:bg-white/5 font-black text-[12px] uppercase tracking-[0.15em] rounded-2xl flex items-center justify-center"
                     >
                       <Edit3 size={16} className="mr-2" />
                       Manage
                     </Button>
                   )}
                   {isCompleted && (
-                    <div className="h-12 px-8 border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 font-black text-[12px] uppercase tracking-[0.15em] rounded-2xl flex items-center gap-3">
+                    <div className="w-full lg:w-auto h-12 px-8 border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 font-black text-[12px] uppercase tracking-[0.15em] rounded-2xl flex items-center gap-3 justify-center">
                       <CheckCircle2 size={16} />
                       Completed
                     </div>
@@ -259,6 +259,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
           </div>
         </DialogTrigger>
 
+        {/* Dialog Content remains same for detailed view */}
         <DialogContent className="glass-card border-white/10 max-w-3xl h-[90vh] overflow-hidden flex flex-col p-0 rounded-[32px] shadow-2xl">
           <div className="p-8 border-b border-white/5 bg-white/[0.015] shrink-0 relative">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
@@ -411,7 +412,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
         </DialogContent>
       </Dialog>
 
-      {/* Global Modals */}
+      {/* Help Modal */}
       <Dialog open={isHelpModalOpen} onOpenChange={setIsHelpModalOpen}>
         <DialogContent className="glass-card border-white/10 max-w-md p-8 rounded-[32px] shadow-2xl">
           <DialogHeader>
@@ -437,15 +438,15 @@ const RequestCard: React.FC<RequestCardProps> = ({
             </div>
             <div className="space-y-2">
               <label className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">Message (Optional)</label>
-              <Textarea placeholder="Send a kind word..." value={contributionMessage} onChange={(e) => setContributionMessage(e.target.value)} className="bg-white/5 border-white/10 rounded-2xl font-medium leading-relaxed h-24" />
+              <Textarea placeholder="Send a kind word..." value={contributionMessage} onChange={(e) => setContributionMessage(e.target.value)} className="bg-white/5 border-white/10 rounded-xl font-medium" />
             </div>
-            <div className="p-5 rounded-2xl bg-primary/5 border border-primary/10 flex justify-between items-center shadow-inner">
-              <span className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">Your Balance</span>
-              <span className="text-base font-black text-primary tabular-nums">{currentBalance.toLocaleString()} {contributionToken}</span>
+            <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 flex justify-between items-center">
+              <span className="text-[10px] font-black uppercase text-muted-foreground">Your Balance</span>
+              <span className="text-sm font-black text-primary">{currentBalance.toLocaleString()} {contributionToken}</span>
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleContribute} disabled={isProcessing} className="w-full h-16 bg-primary hover:bg-primary/90 text-black font-black rounded-2xl gold-glow text-[12px] uppercase tracking-[0.2em]">
+            <Button onClick={handleContribute} disabled={isProcessing} className="w-full h-14 bg-primary hover:bg-primary/90 text-black font-black rounded-xl gold-glow">
               {isProcessing ? <Loader2 className="animate-spin" /> : "Confirm & Send"}
             </Button>
           </DialogFooter>

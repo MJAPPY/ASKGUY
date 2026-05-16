@@ -15,7 +15,8 @@ export interface WalletState {
   isFetchingBalances: boolean;
   guyBalance: number;
   xprBalance: number;
-  avatarUrl: string; // Added avatarUrl
+  avatarUrl: string;
+  avatarSet: string; // Added avatarSet
   membershipExpiry: number;
   membershipFee: number;
   postingFeeGuy: number;
@@ -49,7 +50,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [isConnecting, setIsConnecting] = useState(false);
   const [guyBalance, setGuyBalance] = useState(0);
   const [xprBalance, setXprBalance] = useState(0);
-  const [avatarUrl, setAvatarUrl] = useState(''); // State for avatar
+  const [avatarUrl, setAvatarUrl] = useState('');
+  const [avatarSet, setAvatarSet] = useState('pixel-art'); // Default avatar set
   const [membershipExpiry, setMembershipExpiry] = useState(0);
   const [membershipFee, setMembershipFee] = useState(7777);
   const [postingFeeGuy, setPostingFeeGuy] = useState(25);
@@ -74,6 +76,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setMembershipFee(Number(data.membership_fee));
         setIsMembershipEnabled(data.membership_active);
         setPostingFeeGuy(Number(data.posting_fee_guy ?? 25));
+        setAvatarSet(data.avatar_set || 'pixel-art');
       }
     } catch (err) {
       console.error('Error fetching settings:', err);
@@ -249,7 +252,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const success = await transferTokens(MEMBERSHIP_RECIPIENT, membershipFee, 'XPR', 'AskGuy Membership Fee');
     if (success) {
       const ONE_YEAR = 365 * 24 * 60 * 60 * 1000;
-      // If user has active membership, add 1 year to current expiry. Otherwise start from now.
       const baseDate = membershipExpiry > Date.now() ? membershipExpiry : Date.now();
       const nextExpiry = baseDate + ONE_YEAR;
       
@@ -261,7 +263,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   return (
     <WalletContext.Provider value={{
       address, isConnected, isConnecting, isAdmin, isFetchingBalances,
-      guyBalance, xprBalance, avatarUrl, membershipExpiry,
+      guyBalance, xprBalance, avatarUrl, avatarSet, membershipExpiry,
       membershipFee, postingFeeGuy, isMembershipEnabled,
       isMember, hasGuyThreshold: true, isBanned, 
       payMembership, connect, disconnect,

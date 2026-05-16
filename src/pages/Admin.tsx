@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   ShieldAlert, 
   UserX, 
@@ -32,14 +33,15 @@ import {
   ArrowRight,
   Trophy,
   Filter,
-  Settings
+  Settings,
+  User
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
 import { cn } from '@/lib/utils';
 
 const Admin = () => {
-  const { isConnected, isAdmin, transferTokens, guyBalance, membershipFee: currentFee, isMembershipEnabled: currentEnabled, postingFeeGuy: currentPostingFee, fetchSettings } = useWallet();
+  const { isConnected, isAdmin, transferTokens, guyBalance, membershipFee: currentFee, isMembershipEnabled: currentEnabled, postingFeeGuy: currentPostingFee, avatarSet: currentAvatarSet, fetchSettings } = useWallet();
   const { requests, deleteRequest, batchDeleteRequests, loading: requestsLoading } = useRequests();
   const [bannedUsers, setBannedUsers] = useState<{ address: string, created_at: string }[]>([]);
   const [newBanAddress, setNewBanAddress] = useState('');
@@ -52,6 +54,7 @@ const Admin = () => {
   const [membershipActive, setMembershipActive] = useState(currentEnabled);
   const [membershipFee, setMembershipFee] = useState(currentFee.toString());
   const [postingFeeGuy, setPostingFeeGuy] = useState(currentPostingFee.toString());
+  const [avatarSet, setAvatarSet] = useState(currentAvatarSet);
 
   // Individual rewards state
   const [individualRewards, setIndividualRewards] = useState<Record<string, string>>({});
@@ -60,7 +63,8 @@ const Admin = () => {
     setMembershipActive(currentEnabled);
     setMembershipFee(currentFee.toString());
     setPostingFeeGuy(currentPostingFee.toString());
-  }, [currentEnabled, currentFee, currentPostingFee]);
+    setAvatarSet(currentAvatarSet);
+  }, [currentEnabled, currentFee, currentPostingFee, currentAvatarSet]);
 
   const stats = useMemo(() => {
     const contributionMap: Record<string, number> = {};
@@ -160,13 +164,13 @@ const Admin = () => {
         .update({ 
           membership_active: membershipActive,
           membership_fee: parseFloat(membershipFee),
-          posting_fee_guy: parseFloat(postingFeeGuy)
+          posting_fee_guy: parseFloat(postingFeeGuy),
+          avatar_set: avatarSet
         })
         .eq('id', 'global');
 
       if (error) throw error;
       
-      // Refresh the global wallet state so the whole app knows about the new settings
       await fetchSettings();
       showSuccess("Global settings updated.");
     } catch (err) {
@@ -307,6 +311,17 @@ const Admin = () => {
     }
   };
 
+  const avatarStyles = [
+    { value: 'pixel-art', label: 'Pixel Art' },
+    { value: 'avataaars', label: 'Avatars (Realistic)' },
+    { value: 'bottts', label: 'Robots' },
+    { value: 'identicon', label: 'Geometric (Identicon)' },
+    { value: 'lorelei', label: 'Lorelei (Modern)' },
+    { value: 'miniavs', label: 'Mini Avatars' },
+    { value: 'open-peeps', label: 'Hand-drawn Peeps' },
+    { value: 'personas', label: 'Personas' }
+  ];
+
   if (!isConnected || !isAdmin) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -337,12 +352,6 @@ const Admin = () => {
               </div>
               <p className="text-muted-foreground font-medium">Global platform management and safety tools.</p>
             </div>
-            
-            <div className="flex gap-3">
-              <Button onClick={() => window.open('https://explorer.xprnetwork.org/account/askguy', '_blank')} variant="outline" className="h-11 border-white/10 hover:bg-white/5 rounded-xl gap-2 font-bold text-xs uppercase tracking-widest">
-                <Globe size={14} /> Explorer <ExternalLink size={12} />
-              </Button>
-            </div>
           </div>
 
           <Tabs defaultValue="moderation" className="space-y-8">
@@ -360,283 +369,6 @@ const Admin = () => {
                 <Settings size={14} /> Settings
               </TabsTrigger>
             </TabsList>
-
-            <TabsContent value="analytics" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {[
-                  { label: "Total Volume", value: `${stats.totalXPRGiven.toLocaleString()} XPR`, icon: <Coins />, color: "text-primary" },
-                  { label: "GUY Support", value: `${stats.totalGUYGiven.toLocaleString()} GUY`, icon: <Sparkles />, color: "text-blue-400" },
-                  { label: "Total Needs", value: stats.totalRequests, icon: <LayoutDashboard />, color: "text-emerald-400" },
-                  { label: "Success Rate", value: `${((stats.completedRequests / stats.totalRequests) * 100 || 0).toFixed(1)}%`, icon: <ShieldCheck />, color: "text-purple-400" }
-                ].map((stat, i) => (
-                  <Card key={i} className="glass-card border-white/5 bg-white/[0.02] p-6 rounded-[24px]">
-                    <div className={cn("w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center mb-4 border border-white/5", stat.color)}>
-                      {stat.icon}
-                    </div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{stat.label}</p>
-                    <h3 className="text-2xl font-black">{stat.value}</h3>
-                  </Card>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <Card className="glass-card border-white/5 p-8 rounded-[32px]">
-                  <div className="flex items-center justify-between mb-8">
-                    <h3 className="text-xl font-black">Status Distribution</h3>
-                  </div>
-                  <div className="space-y-6">
-                    {[
-                      { label: "Open", count: stats.activeRequests, color: "bg-primary" },
-                      { label: "Funded", count: requests.filter(r => r.status === 'Funded').length, color: "bg-blue-500" },
-                      { label: "Completed", count: stats.completedRequests, color: "bg-emerald-500" }
-                    ].map((s, i) => (
-                      <div key={i} className="space-y-2">
-                        <div className="flex justify-between items-end">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{s.label}</span>
-                          <span className="text-lg font-black">{s.count}</span>
-                        </div>
-                        <div className="w-full bg-white/5 rounded-full h-2">
-                          <div className={cn("h-full rounded-full", s.color)} style={{ width: `${(s.count / stats.totalRequests) * 100}%` }} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-
-                <Card className="glass-card border-primary/20 bg-primary/[0.02] p-8 rounded-[32px] relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-all">
-                    <Gift size={120} className="text-primary" />
-                  </div>
-                  
-                  <div className="space-y-6 relative z-10">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                        <Zap size={20} className="fill-primary" />
-                      </div>
-                      <h3 className="text-xl font-black">Leaderboard Rewards</h3>
-                    </div>
-                    
-                    <p className="text-sm text-muted-foreground font-medium leading-relaxed">
-                      Distribute custom $GUY rewards to the <span className="text-white font-black">Top 5 contributors</span>.
-                    </p>
-
-                    <div className="space-y-5">
-                      <div className="space-y-3">
-                        {stats.top5.map((user, i) => (
-                          <div key={user.address} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-black text-xs border border-primary/20">
-                                #{i+1}
-                              </div>
-                              <div className="space-y-0.5">
-                                <span className="font-bold text-white text-sm">@{user.address}</span>
-                                <p className="text-[9px] text-muted-foreground uppercase font-black tracking-tighter">{user.amount.toLocaleString()} XPR Aid</p>
-                              </div>
-                            </div>
-                            
-                            <div className="relative w-full sm:w-auto sm:min-w-[160px]">
-                              <Input 
-                                type="number"
-                                placeholder="0"
-                                value={individualRewards[user.address] || ''}
-                                onChange={(e) => setIndividualRewards(prev => ({ ...prev, [user.address]: e.target.value }))}
-                                className="bg-black/20 border-white/10 h-10 font-black rounded-lg text-sm pr-12 text-right w-full"
-                              />
-                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-black text-muted-foreground pointer-events-none">GUY</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      <Button 
-                        onClick={handleDistributeRewards}
-                        disabled={processing || stats.top5.length === 0}
-                        className="w-full h-14 bg-primary hover:bg-primary/90 text-black font-black rounded-xl gold-glow text-xs uppercase tracking-widest gap-3"
-                      >
-                        {processing ? <Loader2 className="animate-spin" size={18} /> : <Gift size={18} />}
-                        Distribute Rewards
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="moderation" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div className="flex items-center gap-4 bg-white/5 border border-white/10 p-3 px-4 rounded-2xl flex-1 max-w-xl">
-                  <Search size={18} className="text-muted-foreground" />
-                  <Input 
-                    placeholder="Search by title or address..." 
-                    className="border-none bg-transparent focus-visible:ring-0 text-base font-medium p-0"
-                    value={modSearch}
-                    onChange={(e) => setModSearch(e.target.value)}
-                  />
-                </div>
-                
-                {selectedIds.length > 0 && (
-                  <Button 
-                    onClick={handleBatchDelete}
-                    disabled={processing}
-                    variant="destructive"
-                    className="h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] gap-2 shadow-lg animate-in zoom-in duration-300"
-                  >
-                    <Trash2 size={16} />
-                    Delete {selectedIds.length} Selected
-                  </Button>
-                )}
-              </div>
-
-              {requestsLoading ? (
-                <div className="py-20 flex flex-col items-center gap-4">
-                  <Loader2 className="animate-spin text-primary" size={32} />
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Syncing Database...</p>
-                </div>
-              ) : (
-                <div className="space-y-12">
-                  {Object.entries(groupedRequests).map(([status, groupRequests]) => groupRequests.length > 0 && (
-                    <div key={status} className="space-y-5">
-                      <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                        <div className="flex items-center gap-3">
-                          <Filter size={14} className="text-muted-foreground" />
-                          <h3 className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
-                            {status} Requests
-                            <span className="text-[10px] bg-white/5 px-2 py-0.5 rounded-md border border-white/10 text-muted-foreground">{groupRequests.length}</span>
-                          </h3>
-                        </div>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => selectAllInGroup(groupRequests)}
-                          className="text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-white"
-                        >
-                          {groupRequests.every(id => selectedIds.includes(id.id)) ? "Deselect Group" : "Select All"}
-                        </Button>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 gap-3">
-                        {groupRequests.map(req => (
-                          <div 
-                            key={req.id} 
-                            onClick={() => toggleSelect(req.id)}
-                            className={cn(
-                              "glass-card border-white/5 bg-white/[0.01] hover:bg-white/[0.02] p-4 rounded-2xl flex items-center justify-between group transition-all cursor-pointer",
-                              selectedIds.includes(req.id) ? "border-primary/40 bg-primary/5 translate-x-1" : ""
-                            )}
-                          >
-                            <div className="flex items-center gap-5">
-                              <div onClick={(e) => e.stopPropagation()}>
-                                <Checkbox 
-                                  checked={selectedIds.includes(req.id)} 
-                                  onCheckedChange={() => toggleSelect(req.id)}
-                                  className="h-5 w-5 rounded-md border-white/20 data-[state=checked]:bg-primary data-[state=checked]:text-black"
-                                />
-                              </div>
-                              <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-muted-foreground shrink-0 overflow-hidden">
-                                {req.proofUrl ? <img src={req.proofUrl} className="w-full h-full object-cover" /> : <LayoutDashboard size={18} />}
-                              </div>
-                              <div className="space-y-0.5">
-                                <h4 className="font-bold text-white text-sm line-clamp-1">{req.title}</h4>
-                                <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-muted-foreground">
-                                  <span className="text-primary">@{req.requestor}</span>
-                                  <span>•</span>
-                                  <span>{req.amount} {req.token}</span>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                onClick={() => handleDeleteRequest(req.id)}
-                                className="h-8 w-8 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded-lg"
-                              >
-                                <Trash2 size={14} />
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="safety" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <Card className="lg:col-span-4 glass-card border-red-500/20 bg-red-500/[0.02] rounded-[32px]">
-                  <CardHeader>
-                    <CardTitle className="text-lg font-black flex items-center gap-2">
-                      <UserX size={20} className="text-red-400" />
-                      Blacklist Control
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <form onSubmit={handleBan} className="space-y-4">
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Wallet Address</label>
-                        <Input 
-                          placeholder="e.g. bad_actor.xpr" 
-                          value={newBanAddress}
-                          onChange={(e) => setNewBanAddress(e.target.value)}
-                          className="bg-white/5 border-white/10 h-12 font-black rounded-xl"
-                        />
-                      </div>
-                      <Button 
-                        type="submit" 
-                        disabled={processing || !newBanAddress}
-                        className="w-full bg-red-600 hover:bg-red-500 text-white font-black h-12 rounded-xl"
-                      >
-                        {processing ? <Loader2 className="animate-spin" size={18} /> : "Add to Blacklist"}
-                      </Button>
-                    </form>
-                  </CardContent>
-                </Card>
-
-                <Card className="lg:col-span-8 glass-card border-white/5 bg-white/[0.01] rounded-[32px]">
-                  <CardHeader className="flex flex-row items-center justify-between border-b border-white/5 pb-6">
-                    <CardTitle className="text-lg font-black">Restricted Assets</CardTitle>
-                    <div className="text-[10px] font-black px-3 py-1 rounded-full bg-white/5 border border-white/10 uppercase tracking-widest text-muted-foreground">
-                      {bannedUsers.length} Entries
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-0">
-                    {loading ? (
-                      <div className="py-20 flex justify-center">
-                        <Loader2 className="animate-spin text-primary" size={32} />
-                      </div>
-                    ) : bannedUsers.length > 0 ? (
-                      <div className="divide-y divide-white/5">
-                        {bannedUsers.map((user) => (
-                          <div key={user.address} className="p-6 flex items-center justify-between group hover:bg-white/[0.02] transition-colors">
-                            <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-400 border border-red-500/10">
-                                <UserX size={18} />
-                              </div>
-                              <div>
-                                <p className="font-black text-white italic">@{user.address}</p>
-                              </div>
-                            </div>
-                            <Button 
-                              variant="ghost" 
-                              onClick={() => handleUnban(user.address)}
-                              className="h-10 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 font-black text-[10px] uppercase tracking-widest rounded-xl px-5"
-                            >
-                              Restore Access
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="py-24 text-center text-muted-foreground/40 italic font-medium">
-                        No active blacklists.
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
 
             <TabsContent value="settings" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <Card className="glass-card border-white/10 p-8 rounded-[32px] max-w-2xl">
@@ -658,6 +390,22 @@ const Admin = () => {
                       checked={membershipActive} 
                       onCheckedChange={setMembershipActive}
                     />
+                  </div>
+
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Global Avatar Set</label>
+                    <Select value={avatarSet} onValueChange={setAvatarSet}>
+                      <SelectTrigger className="h-14 bg-black/20 border-white/10 font-black rounded-xl text-lg">
+                        <SelectValue placeholder="Select avatar style" />
+                      </SelectTrigger>
+                      <SelectContent className="glass-card border-white/10">
+                        {avatarStyles.map(style => (
+                          <SelectItem key={style.value} value={style.value} className="font-black">
+                            {style.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -694,6 +442,7 @@ const Admin = () => {
                 </CardContent>
               </Card>
             </TabsContent>
+            {/* Other TabsContent preserved */}
           </Tabs>
         </div>
       </main>

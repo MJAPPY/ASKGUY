@@ -14,13 +14,12 @@ interface AvatarPickerProps {
 }
 
 const AvatarPicker = ({ onSuccess }: AvatarPickerProps) => {
-  const { address, avatarUrl, fetchSettings, refreshBalances } = useWallet();
+  const { address, avatarUrl, avatarSet, refreshBalances } = useWallet();
   const [loading, setLoading] = React.useState(false);
   const [selectedSeed, setSelectedSeed] = React.useState(avatarUrl || address);
 
-  // Different pixel art styles or seeds
   const options = [
-    address, // Default
+    address,
     `${address}-alt1`,
     `${address}-alt2`,
     `${address}-alt3`,
@@ -58,7 +57,7 @@ const AvatarPicker = ({ onSuccess }: AvatarPickerProps) => {
       <DialogHeader>
         <DialogTitle className="text-2xl font-black tracking-tight">Choose Avatar</DialogTitle>
         <DialogDescription className="text-muted-foreground font-medium">
-          Select a pixel art style that represents you in the community.
+          Select a style that represents you in the community.
         </DialogDescription>
       </DialogHeader>
 
@@ -74,7 +73,7 @@ const AvatarPicker = ({ onSuccess }: AvatarPickerProps) => {
             }`}
           >
             <Avatar className="w-full h-auto aspect-square rounded-xl border border-white/10 p-1 bg-black/20">
-              <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${option}`} />
+              <AvatarImage src={`https://api.dicebear.com/7.x/${avatarSet}/svg?seed=${option}`} />
             </Avatar>
             {selectedSeed === option && (
               <div className="absolute -top-2 -right-2 bg-primary text-black rounded-full p-1 shadow-lg">

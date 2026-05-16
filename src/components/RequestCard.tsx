@@ -20,12 +20,13 @@ import {
   AlertDialogTrigger 
 } from "@/components/ui/alert-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Heart, X, Loader2, CheckCircle2, Zap, Sparkles, Image as ImageIcon, MessageSquare, Quote, AlertTriangle, Share2, Info, Wallet, Trash2, Calendar, User, ShieldCheck, Gift } from 'lucide-react';
+import { Heart, X, Loader2, CheckCircle2, Zap, Sparkles, Image as ImageIcon, MessageSquare, Quote, AlertTriangle, Share2, Info, Wallet, Trash2, Calendar, User, ShieldCheck, Gift, Edit3 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useRequests, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
+import EditRequestDialog from './EditRequestDialog';
 
 export interface RequestCardProps {
   id: string;
@@ -77,6 +78,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
   const [thanksMessage, setThanksMessage] = useState(DEFAULT_THANKS);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Calculate total GUY gifts
   const guyTotal = useMemo(() => {
@@ -548,26 +550,37 @@ const RequestCard: React.FC<RequestCardProps> = ({
         )}
 
         {isOwner && !isCompleted && (
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="outline" className={cn("w-full border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 font-black rounded-xl gap-2 uppercase tracking-widest", variant === 'list' ? "h-12 text-[10px]" : "h-14 text-xs")} disabled={isProcessing}>
-                {isProcessing ? <Loader2 className="animate-spin" size={14} /> : <><CheckCircle2 size={14} /> Mark as Done</>}
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent className="glass-card border-white/10 p-8 rounded-[32px]">
-              <AlertDialogHeader>
-                <AlertDialogTitle className="text-2xl font-black tracking-tight">Mark as Done</AlertDialogTitle>
-                <AlertDialogDescription className="text-muted-foreground font-medium">Complete your request and send a thanks to your supporters.</AlertDialogDescription>
-              </AlertDialogHeader>
-              <div className="py-4 space-y-4">
-                <Textarea value={thanksMessage} onChange={(e) => setThanksMessage(e.target.value)} className="min-h-[100px] bg-white/5 border-white/10 rounded-2xl italic font-medium" />
-              </div>
-              <AlertDialogFooter className="gap-3">
-                <AlertDialogCancel className="rounded-xl font-bold h-12">Not Yet</AlertDialogCancel>
-                <AlertDialogAction onClick={handleComplete} className="bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl h-12 shadow-[0_0_20px_rgba(16,185,129,0.25)]">Confirm & Send Thanks</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <div className="flex gap-2">
+            <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className={cn("flex-1 border-white/10 text-white hover:bg-white/5 font-black rounded-xl gap-2 uppercase tracking-widest", variant === 'list' ? "h-12 text-[10px]" : "h-14 text-xs")}>
+                  <Edit3 size={14} /> Edit
+                </Button>
+              </DialogTrigger>
+              <EditRequestDialog request={{ id, title, description, proofUrl }} onSuccess={() => setIsEditModalOpen(false)} />
+            </Dialog>
+
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" className={cn("flex-1 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 font-black rounded-xl gap-2 uppercase tracking-widest", variant === 'list' ? "h-12 text-[10px]" : "h-14 text-xs")} disabled={isProcessing}>
+                  {isProcessing ? <Loader2 className="animate-spin" size={14} /> : <><CheckCircle2 size={14} /> Done</>}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="glass-card border-white/10 p-8 rounded-[32px]">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="text-2xl font-black tracking-tight">Mark as Done</AlertDialogTitle>
+                  <AlertDialogDescription className="text-muted-foreground font-medium">Complete your request and send a thanks to your supporters.</AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="py-4 space-y-4">
+                  <Textarea value={thanksMessage} onChange={(e) => setThanksMessage(e.target.value)} className="min-h-[100px] bg-white/5 border-white/10 rounded-2xl italic font-medium" />
+                </div>
+                <AlertDialogFooter className="gap-3">
+                  <AlertDialogCancel className="rounded-xl font-bold h-12">Not Yet</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleComplete} className="bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl h-12 shadow-[0_0_20px_rgba(16,185,129,0.25)]">Confirm & Send Thanks</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         )}
 
         {isAdmin && !isOwner && (

@@ -3,11 +3,11 @@
 import React from 'react';
 import { useWallet } from '@/hooks/use-wallet';
 import { Button } from '@/components/ui/button';
-import { Settings, Hammer, Zap, Heart, Loader2, ArrowRight } from 'lucide-react';
+import { Settings, Hammer, Zap, Heart, Loader2, ShieldAlert, LogOut } from 'lucide-react';
 import logo from '@/assets/logo.jpg';
 
 const Maintenance = () => {
-  const { maintenanceMessage, connect, isConnecting } = useWallet();
+  const { maintenanceMessage, connect, disconnect, isConnecting, isConnected, address, isAdmin } = useWallet();
 
   return (
     <div className="min-h-screen bg-[#060912] text-foreground flex flex-col items-center justify-center p-4 relative overflow-hidden">
@@ -66,15 +66,39 @@ const Maintenance = () => {
           <div className="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
           
           <div className="space-y-4 w-full max-w-xs">
-             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Admin Access</p>
-             <Button 
-              onClick={connect} 
-              disabled={isConnecting}
-              variant="outline" 
-              className="w-full h-12 border-white/10 hover:bg-white/5 font-black text-[11px] uppercase tracking-widest rounded-xl gap-3 transition-all"
-            >
-              {isConnecting ? <Loader2 size={16} className="animate-spin" /> : <><Settings size={16} /> Bypass to Settings</>}
-            </Button>
+             {!isConnected ? (
+               <>
+                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Authorized Access Only</p>
+                 <Button 
+                  onClick={connect} 
+                  disabled={isConnecting}
+                  variant="outline" 
+                  className="w-full h-12 border-white/10 hover:bg-white/5 font-black text-[11px] uppercase tracking-widest rounded-xl gap-3 transition-all"
+                >
+                  {isConnecting ? <Loader2 size={16} className="animate-spin" /> : <><Settings size={16} /> Staff Authentication</>}
+                </Button>
+               </>
+             ) : !isAdmin ? (
+               <div className="space-y-4 animate-in fade-in zoom-in duration-300">
+                  <div className="flex flex-col items-center gap-2 text-red-400 bg-red-500/10 p-4 rounded-2xl border border-red-500/20">
+                    <ShieldAlert size={20} />
+                    <p className="text-[10px] font-black uppercase tracking-widest">Access Denied: @{address}</p>
+                    <p className="text-[9px] font-bold text-muted-foreground">Only system administrators can bypass this screen.</p>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    onClick={disconnect}
+                    className="text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-white"
+                  >
+                    <LogOut size={14} className="mr-2" /> Use different wallet
+                  </Button>
+               </div>
+             ) : (
+               <div className="flex flex-col items-center gap-3">
+                  <Loader2 className="animate-spin text-primary" size={24} />
+                  <p className="text-[10px] font-black uppercase tracking-widest text-primary">Redirecting to Dashboard...</p>
+               </div>
+             )}
           </div>
         </div>
       </div>

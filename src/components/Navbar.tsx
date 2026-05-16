@@ -81,24 +81,24 @@ const Navbar = () => {
           {isConnected ? (
             <>
               <div className="flex items-center gap-1.5 md:gap-2">
-                <div className="flex items-center gap-1.5 px-2.5 md:px-4 py-1.5 md:py-2 rounded-full bg-white/5 border border-white/10 text-[10px] md:text-[11px] font-bold hover:bg-white/10 transition-colors cursor-default">
+                <div className="flex items-center gap-1.5 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-white/[0.03] border border-white/10 text-[10px] md:text-[11px] font-bold hover:bg-white/[0.06] transition-all cursor-default shadow-inner">
                   {isFetchingBalances ? (
                     <Loader2 size={12} className="animate-spin text-muted-foreground" />
                   ) : (
                     <>
-                      <span className="text-muted-foreground font-black">{xprBalance.toLocaleString(undefined, { minimumFractionDigits: 1 })}</span>
-                      <span className="text-white/40">XPR</span>
+                      <span className="text-white/90 font-black tracking-tight">{xprBalance.toLocaleString(undefined, { minimumFractionDigits: 1 })}</span>
+                      <span className="text-white/40 font-black uppercase text-[8px] md:text-[9px]">XPR</span>
                     </>
                   )}
                 </div>
 
-                <div className="flex items-center gap-1.5 px-2.5 md:px-4 py-1.5 md:py-2 rounded-full bg-primary/10 border border-primary/20 text-[10px] md:text-[11px] font-bold hover:bg-primary/20 transition-colors cursor-default">
+                <div className="flex items-center gap-1.5 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-primary/10 border border-primary/20 text-[10px] md:text-[11px] font-bold hover:bg-primary/20 transition-all cursor-default shadow-[0_0_15px_rgba(244,201,93,0.05)]">
                   {isFetchingBalances ? (
                     <Loader2 size={12} className="animate-spin text-primary" />
                   ) : (
                     <>
-                      <span className="text-primary font-black">{guyBalance.toLocaleString()}</span>
-                      <span className="text-primary/40">GUY</span>
+                      <span className="text-primary font-black tracking-tight">{guyBalance.toLocaleString()}</span>
+                      <span className="text-primary/40 font-black uppercase text-[8px] md:text-[9px]">GUY</span>
                     </>
                   )}
                 </div>
@@ -116,65 +116,71 @@ const Navbar = () => {
                         </AvatarFallback>
                       </Avatar>
                     </div>
-                    <span className="text-sm font-bold hidden sm:inline-block group-hover:text-[#1565C0] transition-colors">{displayAddress}</span>
+                    <span className="text-sm font-black hidden sm:inline-block group-hover:text-[#1565C0] transition-colors">@{displayAddress}</span>
                     <ChevronDown size={14} className="text-muted-foreground group-data-[state=open]:rotate-180 transition-transform hidden sm:block" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64 glass-card border-white/10 p-2 mt-2 animate-in fade-in zoom-in-95 duration-200">
-                  <div className="p-3 space-y-3">
-                    <div className="space-y-1">
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Live Balances</p>
-                      <div className="flex flex-col gap-1">
-                        <div className="flex justify-between items-center">
-                          <span className="text-[10px] text-muted-foreground">XPR</span>
-                          <span className="text-sm font-black">{xprBalance.toLocaleString()} XPR</span>
+                <DropdownMenuContent align="end" className="w-64 glass-card border-white/10 p-2 mt-2 animate-in fade-in zoom-in-95 duration-200 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
+                  <div className="p-4 space-y-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Live Balances</p>
+                      </div>
+                      
+                      <div className="space-y-2.5">
+                        <div className="flex justify-between items-center bg-white/[0.02] p-2 rounded-lg border border-white/5">
+                          <span className="text-[10px] text-muted-foreground font-black uppercase">XPR</span>
+                          <span className="text-sm font-black text-white tabular-nums">{xprBalance.toLocaleString()}</span>
                         </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-[10px] text-primary/70">GUY</span>
-                          <span className="text-sm font-black text-primary">{guyBalance.toLocaleString()} GUY</span>
+                        <div className="flex justify-between items-center bg-primary/5 p-2 rounded-lg border border-primary/10">
+                          <span className="text-[10px] text-primary/70 font-black uppercase">GUY</span>
+                          <span className="text-sm font-black text-primary tabular-nums">{guyBalance.toLocaleString()}</span>
                         </div>
                       </div>
                     </div>
 
-                    <Button variant="outline" size="sm" className="w-full h-8 text-[10px] font-bold gap-2 border-white/10 hover:bg-white/10 hover:border-[#1565C0]/30 transition-all" asChild>
+                    <Button variant="outline" size="sm" className="w-full h-10 text-[10px] font-black uppercase tracking-widest gap-2 border-white/10 hover:bg-white/10 hover:border-primary/30 transition-all rounded-xl shadow-lg" asChild>
                       <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer">
-                        Buy $GUY on DEX <ExternalLink size={10} />
+                        Buy $GUY on DEX <ExternalLink size={12} className="text-primary" />
                       </a>
                     </Button>
                   </div>
 
                   <DropdownMenuSeparator className="bg-white/5" />
                   
-                  {isAdmin && (
-                    <DropdownMenuItem asChild className="cursor-pointer focus:bg-primary/10 rounded-lg transition-colors">
-                      <Link to="/admin" className="flex items-center gap-2 py-2 text-primary font-bold">
-                        <ShieldCheck size={16} />
-                        <span className="text-sm">Admin Panel</span>
+                  <div className="p-1 space-y-0.5">
+                    {isAdmin && (
+                      <DropdownMenuItem asChild className="cursor-pointer focus:bg-primary/10 rounded-lg transition-colors group/item">
+                        <Link to="/admin" className="flex items-center gap-3 py-2.5 px-3 text-primary font-black">
+                          <ShieldCheck size={18} className="transition-transform group-hover/item:scale-110" />
+                          <span className="text-xs uppercase tracking-wider">Admin Panel</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+
+                    <DropdownMenuItem asChild className="cursor-pointer focus:bg-white/10 rounded-lg transition-colors group/item">
+                      <Link to="/profile" className="flex items-center gap-3 py-2.5 px-3">
+                        <User size={18} className="text-muted-foreground transition-transform group-hover/item:scale-110" />
+                        <span className="text-xs font-bold uppercase tracking-wider">My Profile</span>
                       </Link>
                     </DropdownMenuItem>
-                  )}
+                    
+                    <DropdownMenuItem onClick={refreshBalances} className="cursor-pointer focus:bg-white/10 rounded-lg flex items-center gap-3 py-2.5 px-3 transition-colors group/item">
+                      <RefreshCw size={18} className={cn("text-muted-foreground transition-all group-hover/item:scale-110", isFetchingBalances ? 'animate-spin' : '')} />
+                      <span className="text-xs font-bold uppercase tracking-wider">Refresh Balance</span>
+                    </DropdownMenuItem>
 
-                  <DropdownMenuItem asChild className="cursor-pointer focus:bg-white/10 rounded-lg transition-colors">
-                    <Link to="/profile" className="flex items-center gap-2 py-2">
-                      <User size={16} className="text-muted-foreground" />
-                      <span className="text-sm font-medium">My Profile</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  
-                  <DropdownMenuItem onClick={refreshBalances} className="cursor-pointer focus:bg-white/10 rounded-lg flex items-center gap-2 py-2 transition-colors">
-                    <RefreshCw size={16} className={`text-muted-foreground ${isFetchingBalances ? 'animate-spin' : ''}`} />
-                    <span className="text-sm font-medium">Refresh Balance</span>
-                  </DropdownMenuItem>
+                    <DropdownMenuSeparator className="bg-white/5 my-1" />
 
-                  <DropdownMenuSeparator className="bg-white/5" />
-
-                  <DropdownMenuItem 
-                    onClick={disconnect}
-                    className="cursor-pointer focus:bg-red-500/10 text-red-400 rounded-lg flex items-center gap-2 py-2 transition-colors"
-                  >
-                    <LogOut size={16} />
-                    <span className="text-sm font-medium">Disconnect</span>
-                  </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={disconnect}
+                      className="cursor-pointer focus:bg-red-500/10 text-red-400 rounded-lg flex items-center gap-3 py-2.5 px-3 transition-colors group/item"
+                    >
+                      <LogOut size={18} className="transition-transform group-hover/item:scale-110" />
+                      <span className="text-xs font-bold uppercase tracking-wider">Disconnect</span>
+                    </DropdownMenuItem>
+                  </div>
                 </DropdownMenuContent>
               </DropdownMenu>
             </>

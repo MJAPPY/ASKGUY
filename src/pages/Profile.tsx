@@ -205,7 +205,7 @@ const Profile = () => {
                     {isVerified ? (
                       <p className="text-[10px] text-emerald-400 font-black uppercase tracking-[0.4em] flex items-center gap-2">
                         <Activity size={12} className="text-emerald-400" />
-                        XPR Network Verified User
+                        XPR Network User
                       </p>
                     ) : (
                       <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.4em] flex items-center gap-2">

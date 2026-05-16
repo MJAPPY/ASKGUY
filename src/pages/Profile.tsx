@@ -30,7 +30,8 @@ import {
   Activity,
   AlertCircle,
   Camera,
-  Gift
+  Gift,
+  CheckCircle2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -111,11 +112,14 @@ const Profile = () => {
     let count = 0;
 
     requests.forEach(req => {
-      if (req.requestor === targetAddress) {
+      const actor = req.requestor.toLowerCase().trim();
+      const target = targetAddress.toLowerCase().trim();
+
+      if (actor === target) {
         received += req.raised;
       }
       req.contributions.forEach(c => {
-        if (c.user === targetAddress) {
+        if (c.user.toLowerCase().trim() === target) {
           if (c.token === 'XPR') {
             given += c.amount;
           } else if (c.token === 'GUY') {
@@ -129,12 +133,9 @@ const Profile = () => {
     return { given, guyGiven, received, count };
   }, [requests, targetAddress]);
 
-  const profileRequests = requests.filter(req => req.requestor === targetAddress);
+  const profileRequests = requests.filter(req => req.requestor.toLowerCase().trim() === targetAddress?.toLowerCase().trim());
   const profileContributions = requests.filter(req => 
-    req.contributions.some(c => {
-      const actor = typeof c.user === 'string' ? c.user : '';
-      return actor.toLowerCase() === targetAddress.toLowerCase();
-    })
+    req.contributions.some(c => c.user.toLowerCase().trim() === targetAddress?.toLowerCase().trim())
   );
 
   const receivedMessages = useMemo(() => {
@@ -330,9 +331,9 @@ const Profile = () => {
                         <ExternalLink size={14} />
                       </Link>
                     </div>
-                    <div className="overflow-hidden">
+                    <div className="overflow-hidden min-h-[60px]">
                       <p className="text-[10px] text-[#1565C0] uppercase font-black tracking-widest mb-1.5 truncate">Your GUY Assets</p>
-                      <h3 className="text-xl sm:text-2xl font-black text-white leading-none tabular-nums break-words">
+                      <h3 className="text-lg md:text-xl font-black text-white leading-tight tabular-nums break-all">
                         {guyBalance.toLocaleString()}
                       </h3>
                     </div>
@@ -345,10 +346,10 @@ const Profile = () => {
                   <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:scale-110 transition-transform">
                     <Heart className="text-emerald-400" size={24} />
                   </div>
-                  <div className="overflow-hidden">
+                  <div className="overflow-hidden min-h-[60px]">
                     <p className="text-[10px] text-emerald-400 uppercase font-black tracking-widest mb-1.5 truncate">Total Contributions</p>
-                    <h3 className="text-xl sm:text-2xl font-black text-white leading-none tabular-nums break-words">
-                      {stats.given.toLocaleString()} <span className="text-xs text-muted-foreground font-medium uppercase">XPR</span>
+                    <h3 className="text-lg md:text-xl font-black text-white leading-tight tabular-nums break-all">
+                      {stats.given.toLocaleString()} <span className="text-[10px] text-muted-foreground font-medium uppercase ml-1">XPR</span>
                     </h3>
                   </div>
                 </CardContent>
@@ -359,10 +360,10 @@ const Profile = () => {
                   <div className="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center border border-rose-500/20 group-hover:scale-110 transition-transform">
                     <Gift className="text-rose-400" size={24} />
                   </div>
-                  <div className="overflow-hidden">
+                  <div className="overflow-hidden min-h-[60px]">
                     <p className="text-[10px] text-rose-400 uppercase font-black tracking-widest mb-1.5 truncate">GUY Gifted</p>
-                    <h3 className="text-xl sm:text-2xl font-black text-white leading-none tabular-nums break-words">
-                      {stats.guyGiven.toLocaleString()} <span className="text-xs text-muted-foreground font-medium uppercase">GUY</span>
+                    <h3 className="text-lg md:text-xl font-black text-white leading-tight tabular-nums break-all">
+                      {stats.guyGiven.toLocaleString()} <span className="text-[10px] text-muted-foreground font-medium uppercase ml-1">GUY</span>
                     </h3>
                   </div>
                 </CardContent>
@@ -373,10 +374,10 @@ const Profile = () => {
                   <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:scale-110 transition-transform">
                     <History className="text-blue-400" size={24} />
                   </div>
-                  <div className="overflow-hidden">
+                  <div className="overflow-hidden min-h-[60px]">
                     <p className="text-[10px] text-blue-400 uppercase font-black tracking-widest mb-1.5 truncate">Community Received</p>
-                    <h3 className="text-xl sm:text-2xl font-black text-white leading-none tabular-nums break-words">
-                      {stats.received.toLocaleString()} <span className="text-xs text-muted-foreground font-medium uppercase">XPR</span>
+                    <h3 className="text-lg md:text-xl font-black text-white leading-tight tabular-nums break-all">
+                      {stats.received.toLocaleString()} <span className="text-[10px] text-muted-foreground font-medium uppercase ml-1">XPR</span>
                     </h3>
                   </div>
                 </CardContent>
@@ -494,15 +495,27 @@ const Profile = () => {
                 </div>
                 
                 <div className="space-y-4">
-                  <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+                  <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
                     <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                       <span>Total Given</span>
-                      <span className="text-primary">{stats.given.toLocaleString()} XPR</span>
+                      <span className="text-primary font-black">{stats.given.toLocaleString()} XPR</span>
                     </div>
-                    <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
-                      <div className="bg-primary h-full transition-all duration-1000" style={{ width: `${Math.min((stats.given / 1000) * 100, 100)}%` }} />
+                    <div className="w-full bg-white/5 rounded-full h-2 overflow-hidden border border-white/5">
+                      <div 
+                        className="bg-primary h-full transition-all duration-1000 shadow-[0_0_10px_rgba(251,212,81,0.3)]" 
+                        style={{ width: `${Math.min((stats.given / 1000) * 100, 100)}%` }} 
+                      />
                     </div>
-                    <p className="text-[9px] text-muted-foreground/60 italic font-medium">Reach 1,000 XPR to earn the 'Generous Heart' badge.</p>
+                    {stats.given >= 1000 ? (
+                      <div className="flex items-center gap-2 text-emerald-400 font-black animate-in fade-in slide-in-from-top-1 duration-500">
+                        <CheckCircle2 size={12} />
+                        <span className="text-[10px] uppercase tracking-widest">Generous Heart Earned!</span>
+                      </div>
+                    ) : (
+                      <p className="text-[9px] text-muted-foreground/60 italic font-medium leading-tight">
+                        Reach 1,000 XPR to earn the 'Generous Heart' badge.
+                      </p>
+                    )}
                   </div>
 
                   <Button variant="ghost" asChild className="w-full h-12 border border-white/10 hover:bg-white/5 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all gap-2">

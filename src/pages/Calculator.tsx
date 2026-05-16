@@ -26,6 +26,7 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { showSuccess } from '@/utils/toast';
+import guyLogo from '@/assets/guy-logo.jpg';
 
 type CalculationMode = 'fiat-to-xpr' | 'xpr-to-fiat' | 'guy-swap';
 
@@ -185,7 +186,13 @@ const Calculator = () => {
                     </label>
                     <div className="relative group">
                       <div className="absolute left-0 top-0 bottom-0 w-16 flex items-center justify-center text-2xl font-black text-primary/50 group-focus-within:text-primary transition-colors pointer-events-none">
-                        {mode === 'fiat-to-xpr' ? currentSymbol : mode === 'guy-swap' ? '💎' : '⚡'}
+                        {mode === 'guy-swap' ? (
+                          <div className="w-10 h-10 rounded-full overflow-hidden border border-primary/20 bg-black/40">
+                            <img src={guyLogo} alt="GUY" className="w-full h-full object-cover" />
+                          </div>
+                        ) : (
+                          <span>{mode === 'fiat-to-xpr' ? currentSymbol : '⚡'}</span>
+                        )}
                       </div>
                       <Input 
                         type="text"

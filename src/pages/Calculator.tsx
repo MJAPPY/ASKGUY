@@ -270,9 +270,10 @@ const Calculator = () => {
                         </a>
                       </Button>
                     )}
-                    <Button asChild className="h-10 bg-primary hover:bg-primary/90 text-black font-black text-[9px] uppercase tracking-widest px-6 rounded-xl shadow-lg gold-glow gap-2">
-                      <a href="https://alcor.exchange/v/xpr/swap?input=xusdc-xtokens&output=xpr-eosio.token" target="_blank" rel="noopener noreferrer">
-                        Swap XPR <ArrowRight size={12} />
+                    <Button asChild className="h-11 bg-primary hover:bg-primary/90 text-black font-black text-[10px] uppercase tracking-wider px-8 rounded-xl shadow-[0_0_25px_rgba(244,201,93,0.3)] gold-glow gap-3 border-none group">
+                      <a href="https://alcor.exchange/v/xpr/swap?input=xpr-eosio.token&output=guy-vtoken" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                        Swap XPR for GUY 
+                        <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                       </a>
                     </Button>
                   </div>

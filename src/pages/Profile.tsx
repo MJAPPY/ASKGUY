@@ -327,21 +327,21 @@ const Profile = () => {
       <main className="flex-1 container mx-auto px-4 py-12 md:py-16">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12">
           <div className="lg:col-span-8 space-y-12">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
               {isOwnProfile && (
-                <Card className="glass-card border-[#1565C0]/20 bg-[#1565C0]/5 group rounded-[32px] transition-all duration-300 hover:translate-y-[-4px] will-change-transform transform-gpu">
-                  <CardContent className="p-8 space-y-6">
+                <Card className="glass-card border-[#1565C0]/20 bg-[#1565C0]/5 group rounded-[24px] md:rounded-[32px] transition-all duration-300 hover:translate-y-[-4px] will-change-transform transform-gpu">
+                  <CardContent className="p-4 md:p-8 space-y-4 md:space-y-6">
                     <div className="flex items-center justify-between">
-                      <div className="w-12 h-12 rounded-2xl bg-[#1565C0]/10 flex items-center justify-center border border-[#1565C0]/20 group-hover:scale-110 transition-transform">
-                        <Coins className="text-[#1565C0]" size={24} />
+                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-[#1565C0]/10 flex items-center justify-center border border-[#1565C0]/20 group-hover:scale-110 transition-transform">
+                        <Coins className="text-[#1565C0]" size={20} />
                       </div>
                       <Link to="https://vibrr.ai/dex/token/20" target="_blank" className="text-muted-foreground hover:text-white transition-colors">
-                        <ExternalLink size={14} />
+                        <ExternalLink size={12} />
                       </Link>
                     </div>
-                    <div className="overflow-hidden min-h-[60px]">
-                      <p className="text-[10px] text-[#1565C0] uppercase font-black tracking-widest mb-1.5 truncate">Your GUY Assets</p>
-                      <h3 className="text-lg md:text-xl font-black text-white leading-tight tabular-nums break-all">
+                    <div className="overflow-hidden min-h-[50px] md:min-h-[60px]">
+                      <p className="text-[8px] md:text-[10px] text-[#1565C0] uppercase font-black tracking-widest mb-1 truncate">GUY Assets</p>
+                      <h3 className="text-base md:text-xl font-black text-white leading-tight tabular-nums break-all">
                         {guyBalance.toLocaleString()}
                       </h3>
                     </div>
@@ -349,43 +349,43 @@ const Profile = () => {
                 </Card>
               )}
               
-              <Card className="glass-card border-emerald-500/10 bg-emerald-500/[0.02] group rounded-[32px] transition-all duration-300 hover:translate-y-[-4px] will-change-transform transform-gpu">
-                <CardContent className="p-8 space-y-6">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:scale-110 transition-transform">
-                    <Heart className="text-emerald-400" size={24} />
+              <Card className="glass-card border-emerald-500/10 bg-emerald-500/[0.02] group rounded-[24px] md:rounded-[32px] transition-all duration-300 hover:translate-y-[-4px] will-change-transform transform-gpu">
+                <CardContent className="p-4 md:p-8 space-y-4 md:space-y-6">
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:scale-110 transition-transform">
+                    <Heart className="text-emerald-400" size={20} />
                   </div>
-                  <div className="overflow-hidden min-h-[60px]">
-                    <p className="text-[10px] text-emerald-400 uppercase font-black tracking-widest mb-1.5 truncate">Total Contributions</p>
-                    <h3 className="text-lg md:text-xl font-black text-white leading-tight tabular-nums break-all">
-                      {stats.given.toLocaleString()} <span className="text-[10px] text-muted-foreground font-medium uppercase ml-1">XPR</span>
+                  <div className="overflow-hidden min-h-[50px] md:min-h-[60px]">
+                    <p className="text-[8px] md:text-[10px] text-emerald-400 uppercase font-black tracking-widest mb-1 truncate">Total Given</p>
+                    <h3 className="text-base md:text-xl font-black text-white leading-tight tabular-nums break-all">
+                      {stats.given.toLocaleString()} <span className="text-[8px] md:text-[10px] text-muted-foreground font-medium uppercase">XPR</span>
                     </h3>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="glass-card border-rose-500/10 bg-rose-500/[0.02] group rounded-[32px] transition-all duration-300 hover:translate-y-[-4px] will-change-transform transform-gpu">
-                <CardContent className="p-8 space-y-6">
-                  <div className="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center border border-rose-500/20 group-hover:scale-110 transition-transform">
-                    <Gift className="text-rose-400" size={24} />
+              <Card className="glass-card border-rose-500/10 bg-rose-500/[0.02] group rounded-[24px] md:rounded-[32px] transition-all duration-300 hover:translate-y-[-4px] will-change-transform transform-gpu">
+                <CardContent className="p-4 md:p-8 space-y-4 md:space-y-6">
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-rose-500/10 flex items-center justify-center border border-rose-500/20 group-hover:scale-110 transition-transform">
+                    <Gift className="text-rose-400" size={20} />
                   </div>
-                  <div className="overflow-hidden min-h-[60px]">
-                    <p className="text-[10px] text-rose-400 uppercase font-black tracking-widest mb-1.5 truncate">GUY Gifted</p>
-                    <h3 className="text-lg md:text-xl font-black text-white leading-tight tabular-nums break-all">
-                      {stats.guyGiven.toLocaleString()} <span className="text-[10px] text-muted-foreground font-medium uppercase ml-1">GUY</span>
+                  <div className="overflow-hidden min-h-[50px] md:min-h-[60px]">
+                    <p className="text-[8px] md:text-[10px] text-rose-400 uppercase font-black tracking-widest mb-1 truncate">GUY Gifted</p>
+                    <h3 className="text-base md:text-xl font-black text-white leading-tight tabular-nums break-all">
+                      {stats.guyGiven.toLocaleString()} <span className="text-[8px] md:text-[10px] text-muted-foreground font-medium uppercase">GUY</span>
                     </h3>
                   </div>
                 </CardContent>
               </Card>
               
-              <Card className="glass-card border-blue-500/10 bg-blue-500/[0.02] group rounded-[32px] transition-all duration-300 hover:translate-y-[-4px] will-change-transform transform-gpu">
-                <CardContent className="p-8 space-y-6">
-                  <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:scale-110 transition-transform">
-                    <History className="text-blue-400" size={24} />
+              <Card className="glass-card border-blue-500/10 bg-blue-500/[0.02] group rounded-[24px] md:rounded-[32px] transition-all duration-300 hover:translate-y-[-4px] will-change-transform transform-gpu">
+                <CardContent className="p-4 md:p-8 space-y-4 md:space-y-6">
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:scale-110 transition-transform">
+                    <History className="text-blue-400" size={20} />
                   </div>
-                  <div className="overflow-hidden min-h-[60px]">
-                    <p className="text-[10px] text-blue-400 uppercase font-black tracking-widest mb-1.5 truncate">Community Received</p>
-                    <h3 className="text-lg md:text-xl font-black text-white leading-tight tabular-nums break-all">
-                      {stats.received.toLocaleString()} <span className="text-[10px] text-muted-foreground font-medium uppercase ml-1">XPR</span>
+                  <div className="overflow-hidden min-h-[50px] md:min-h-[60px]">
+                    <p className="text-[8px] md:text-[10px] text-blue-400 uppercase font-black tracking-widest mb-1 truncate">Received</p>
+                    <h3 className="text-base md:text-xl font-black text-white leading-tight tabular-nums break-all">
+                      {stats.received.toLocaleString()} <span className="text-[8px] md:text-[10px] text-muted-foreground font-medium uppercase">XPR</span>
                     </h3>
                   </div>
                 </CardContent>
@@ -393,22 +393,22 @@ const Profile = () => {
             </div>
 
             <Tabs defaultValue="requests" className="w-full">
-              <div className="flex items-center justify-between mb-8 border-b border-white/5 pb-4">
-                <TabsList className="bg-white/5 border border-white/10 p-1.5 h-12 rounded-2xl">
-                  <TabsTrigger value="requests" className="rounded-xl px-6 font-black text-[10px] uppercase tracking-widest h-full data-[state=active]:bg-[#1565C0] data-[state=active]:text-white">
+              <div className="flex items-center justify-between mb-8 border-b border-white/5 pb-4 overflow-hidden">
+                <TabsList className="bg-white/5 border border-white/10 p-1 h-12 rounded-2xl flex-1 overflow-x-auto no-scrollbar justify-start">
+                  <TabsTrigger value="requests" className="rounded-xl px-4 md:px-6 font-black text-[9px] md:text-[10px] uppercase tracking-widest h-full data-[state=active]:bg-[#1565C0] data-[state=active]:text-white whitespace-nowrap">
                     Requests ({profileRequests.length})
                   </TabsTrigger>
-                  <TabsTrigger value="contributions" className="rounded-xl px-6 font-black text-[10px] uppercase tracking-widest h-full data-[state=active]:bg-[#1565C0] data-[state=active]:text-white">
+                  <TabsTrigger value="contributions" className="rounded-xl px-4 md:px-6 font-black text-[9px] md:text-[10px] uppercase tracking-widest h-full data-[state=active]:bg-[#1565C0] data-[state=active]:text-white whitespace-nowrap">
                     Impact ({profileContributions.length})
                   </TabsTrigger>
                   {isOwnProfile && (
-                    <TabsTrigger value="messages" className="rounded-xl px-6 font-black text-[10px] uppercase tracking-widest h-full data-[state=active]:bg-[#1565C0] data-[state=active]:text-white flex gap-2">
-                      <MessageSquare size={14} /> Messages
+                    <TabsTrigger value="messages" className="rounded-xl px-4 md:px-6 font-black text-[9px] md:text-[10px] uppercase tracking-widest h-full data-[state=active]:bg-[#1565C0] data-[state=active]:text-white flex gap-2 whitespace-nowrap">
+                      <MessageSquare size={14} className="hidden sm:inline" /> Messages
                     </TabsTrigger>
                   )}
                 </TabsList>
                 
-                <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                <div className="hidden lg:flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-4">
                   <Activity size={12} className="text-emerald-400" />
                   Active Profile
                 </div>
@@ -454,25 +454,25 @@ const Profile = () => {
                 <TabsContent value="messages" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                   {receivedMessages.length > 0 ? (
                     receivedMessages.map((m, i) => (
-                      <Card key={i} className="glass-card border-[#1565C0]/10 bg-[#1565C0]/5 p-8 rounded-[32px] transition-all hover:border-[#1565C0]/30 group">
-                        <div className="flex gap-8">
-                          <div className="w-14 h-14 rounded-2xl bg-[#1565C0]/20 flex items-center justify-center shrink-0 border border-[#1565C0]/20 group-hover:scale-110 transition-transform">
-                            <Quote className="text-[#1565C0]" size={24} />
+                      <Card key={i} className="glass-card border-[#1565C0]/10 bg-[#1565C0]/5 p-6 md:p-8 rounded-[32px] transition-all hover:border-[#1565C0]/30 group">
+                        <div className="flex gap-4 md:gap-8">
+                          <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-[#1565C0]/20 flex items-center justify-center shrink-0 border border-[#1565C0]/20 group-hover:scale-110 transition-transform">
+                            <Quote className="text-[#1565C0]" size={20} />
                           </div>
-                          <div className="space-y-4 flex-1">
+                          <div className="space-y-3 md:space-y-4 flex-1">
                             <div className="flex justify-between items-start">
                               <div className="space-y-1">
-                                <Link to={`/profile/${m.user}`} className="text-lg font-black text-[#1565C0] hover:underline flex items-center gap-2 group/link">
+                                <Link to={`/profile/${m.user}`} className="text-base md:text-lg font-black text-[#1565C0] hover:underline flex items-center gap-2 group/link">
                                   <Avatar className="w-5 h-5 border border-white/20 p-0.5 bg-black/20">
                                     <AvatarImage src={`https://api.dicebear.com/7.x/${avatarSet}/svg?seed=${m.user}`} />
                                   </Avatar>
                                   @{m.user}
                                 </Link>
-                                <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">on: <span className="text-white">"{m.requestTitle}"</span></p>
+                                <p className="text-[9px] md:text-[10px] text-muted-foreground font-black uppercase tracking-widest">on: <span className="text-white">"{m.requestTitle}"</span></p>
                               </div>
-                              <p className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">{new Date(m.timestamp).toLocaleDateString()}</p>
+                              <p className="text-[8px] md:text-[9px] text-muted-foreground uppercase font-black tracking-widest">{new Date(m.timestamp).toLocaleDateString()}</p>
                             </div>
-                            <p className="text-base italic text-white/90 leading-relaxed font-medium pl-6 border-l-2 border-[#1565C0]/30">"{m.message}"</p>
+                            <p className="text-sm md:text-base italic text-white/90 leading-relaxed font-medium pl-4 md:pl-6 border-l-2 border-[#1565C0]/30">"{m.message}"</p>
                           </div>
                         </div>
                       </Card>

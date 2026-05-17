@@ -380,7 +380,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
                   ) : (
                     <div className="py-16 sm:py-24 text-center border-2 border-dashed border-white/5 rounded-[28px] sm:rounded-[40px] flex flex-col items-center gap-3 sm:gap-4">
                       <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-white/5 flex items-center justify-center text-muted-foreground/20">
-                        <Gift size={24} sm:size={32} />
+                        <Gift className="w-6 h-6 sm:w-8 sm:h-8" />
                       </div>
                       <p className="text-[10px] sm:text-[11px] text-muted-foreground font-black uppercase tracking-[0.2em]">No contributions yet. Be the first!</p>
                     </div>
@@ -396,7 +396,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
                     onClick={() => setIsHelpModalOpen(true)}
                     className="flex-1 h-14 sm:h-16 bg-primary hover:bg-primary/90 text-black font-black text-[11px] sm:text-[12px] uppercase tracking-[0.2em] rounded-2xl gold-glow gap-3"
                   >
-                    <Heart size={18} sm:size={20} className="fill-current" />
+                    <Heart className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
                     Help This Person
                   </Button>
                 )}
@@ -407,12 +407,12 @@ const RequestCard: React.FC<RequestCardProps> = ({
                       variant="outline" 
                       className="flex-1 h-14 sm:h-16 border-white/10 hover:bg-white/5 text-white font-black text-[11px] sm:text-[12px] uppercase tracking-[0.2em] rounded-2xl gap-2.5 sm:gap-3"
                     >
-                      <Edit3 size={16} sm:size={18} /> Edit Request
+                      <Edit3 className="w-4 h-4 sm:w-5 sm:h-5" /> Edit Request
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button className="flex-1 h-14 sm:h-16 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[11px] sm:text-[12px] uppercase tracking-[0.2em] rounded-2xl gap-2.5 sm:gap-3 shadow-[0_10px_30px_rgba(16,185,129,0.2)]">
-                          <CheckCircle2 size={18} sm:size={22} /> Complete Request
+                          <CheckCircle2 className="w-4 h-4 sm:w-6 sm:h-6" /> Complete Request
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent className="glass-card border-white/10 p-6 sm:p-8 rounded-[28px] sm:rounded-[32px] w-[95vw] sm:max-w-md">

@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Upload, X, AlertCircle, ShieldCheck, Sparkles, AlertTriangle, Coins, Loader2, Zap } from 'lucide-react';
+import { Upload, X, AlertCircle, ShieldCheck, Sparkles, AlertTriangle, Coins, Loader2, Zap, Camera } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useRequests, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
@@ -267,7 +267,7 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
                 <div className="flex gap-3">
                   <ShieldCheck className="text-emerald-400 shrink-0 mt-0.5" size={16} />
                   <p className="text-[11px] leading-relaxed text-emerald-100/70 font-medium">
-                    Highly recommended: Upload a photo of the bill/invoice with your handle <span className="text-emerald-400 font-black">@{address}</span> written next to it.
+                    Highly recommended: Take a photo of the bill with your handle <span className="text-emerald-400 font-black">@{address}</span> written next to it.
                   </p>
                 </div>
 
@@ -276,7 +276,7 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
                   className="hidden" 
                   ref={fileInputRef} 
                   onChange={handleFileChange}
-                  accept="image/jpeg,image/png"
+                  accept="image/*"
                 />
                 
                 {!preview ? (
@@ -284,11 +284,11 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
                     onClick={() => fileInputRef.current?.click()}
                     className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all duration-300 cursor-pointer group ${skipProof ? 'opacity-40 border-white/10 pointer-events-none' : 'border-emerald-500/20 hover:border-emerald-500/50 hover:bg-emerald-500/5'}`}
                   >
-                    <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-                      <Upload size={20} className="text-muted-foreground" />
+                    <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform shadow-lg border border-white/10">
+                      <Camera size={24} className="text-emerald-400" />
                     </div>
-                    <p className="text-sm font-black tracking-tight">Select Verification Photo</p>
-                    <p className="text-[10px] text-muted-foreground mt-1 font-bold uppercase tracking-widest">Supports JPG & PNG</p>
+                    <p className="text-sm font-black tracking-tight">Take or Select Photo</p>
+                    <p className="text-[10px] text-muted-foreground mt-1 font-bold uppercase tracking-widest">Camera or Gallery</p>
                   </div>
                 ) : (
                   <div className="relative rounded-2xl overflow-hidden border border-emerald-500/30 aspect-video bg-black/40 group">
@@ -301,7 +301,7 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
                         className="h-10 gap-2 font-black text-[10px] uppercase tracking-widest rounded-xl"
                         onClick={removePreview}
                       >
-                        <X size={14} /> Remove and Change
+                        <X size={14} /> Remove and Retake
                       </Button>
                     </div>
                   </div>

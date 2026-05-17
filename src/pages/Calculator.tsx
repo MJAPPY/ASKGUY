@@ -31,13 +31,13 @@ import guyLogo from '@/assets/guy-logo.jpg';
 type CalculationMode = 'fiat-to-xpr' | 'xpr-to-fiat' | 'guy-swap';
 
 const Calculator = () => {
-  const [mode, setMode] = useState<CalculationMode>('fiat-to-xpr');
-  const [inputValue, setInputValue] = useState<string>('1000');
+  const [mode, setMode] = useState<CalculationMode>('guy-swap'); // Default to GUY swap as it's the primary use case
+  const [inputValue, setInputValue] = useState<string>('1,000,000');
   const [resultValue, setResultValue] = useState<string>('');
   const [secondaryResult, setSecondaryResult] = useState<string>('');
   const [currency, setCurrency] = useState('USD');
   const [prices, setPrices] = useState<Record<string, number>>({});
-  const [guyPriceXpr, setGuyPriceXpr] = useState<number>(0.0055); // Default fallback
+  const [guyPriceXpr, setGuyPriceXpr] = useState<number>(0.0000305); // Updated fallback to match current Alcor/Vibrr rates
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
@@ -77,20 +77,18 @@ const Calculator = () => {
       setPrices(newPrices);
 
       // 2. Fetch GUY Price in XPR from Alcor API
-      // Specifically looking for the GUY (vtoken) / XPR (eosio.token) pair
       const alcorRes = await fetch('https://proton.alcor.exchange/api/v2/tickers');
       const tickers = await alcorRes.json();
       
-      // Find the specific GUY ticker on Proton. GUY is usually on vtoken contract.
+      // Specifically look for GUY on vtoken contract vs XPR on eosio.token
       const guyTicker = tickers.find((t: any) => 
         (t.base_currency === 'GUY' && t.quote_currency === 'XPR') ||
-        (t.ticker_id?.includes('GUY') && t.ticker_id?.includes('XPR'))
+        (t.ticker_id === 'GUY_XPR')
       );
       
       if (guyTicker && guyTicker.last_price) {
         const price = parseFloat(guyTicker.last_price);
-        // Sanity check: ensure the price isn't 0 and is reasonable
-        if (price > 0) {
+        if (price > 0 && price < 0.1) { // Basic sanity check to ensure we aren't getting a weird XPR/GUY inverse
           setGuyPriceXpr(price);
         }
       }
@@ -103,7 +101,6 @@ const Calculator = () => {
 
   useEffect(() => {
     fetchPrices();
-    // Auto-refresh every 60 seconds
     const interval = setInterval(fetchPrices, 60000);
     return () => clearInterval(interval);
   }, [fetchPrices]);
@@ -111,27 +108,28 @@ const Calculator = () => {
   useEffect(() => {
     const rate = prices[currency];
     const rawInput = inputValue.replace(/,/g, '');
-    if (!rate || !rawInput || isNaN(parseFloat(rawInput))) {
+    if (!rawInput || isNaN(parseFloat(rawInput))) {
       setResultValue('0');
       setSecondaryResult('0');
       return;
     }
 
     const val = parseFloat(rawInput);
-    if (mode === 'fiat-to-xpr') {
+    if (mode === 'fiat-to-xpr' && rate) {
       const calculated = val / rate;
       setResultValue(Math.round(calculated).toLocaleString());
-    } else if (mode === 'xpr-to-fiat') {
+    } else if (mode === 'xpr-to-fiat' && rate) {
       const calculated = val * rate;
       setResultValue(calculated.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
     } else if (mode === 'guy-swap') {
       // GUY to XPR calculation
       const xprValue = val * guyPriceXpr;
-      setResultValue(xprValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }));
+      setResultValue(xprValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 }));
       
-      // GUY to USDC calculation (approx via XPR/USD price)
-      const usdValue = xprValue * (prices['USD'] || 0.01);
-      setSecondaryResult(usdValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+      // GUY to FIAT calculation
+      const usdRate = prices[currency] || 0.003;
+      const fiatValue = xprValue * usdRate;
+      setSecondaryResult(fiatValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
     }
   }, [inputValue, currency, prices, mode, guyPriceXpr]);
 
@@ -262,14 +260,14 @@ const Calculator = () => {
                        <div className="relative p-6 rounded-[28px] bg-white/[0.03] border border-white/10 space-y-2">
                          <p className="text-[9px] font-black uppercase tracking-widest text-blue-400">Estimated XPR</p>
                          <div className="flex items-end justify-between">
-                            <span className="text-3xl font-black text-white">{resultValue}</span>
+                            <span className="text-2xl md:text-3xl font-black text-white tabular-nums">{resultValue}</span>
                             <span className="text-[10px] font-black text-blue-400 mb-1">XPR</span>
                          </div>
                        </div>
                        <div className="relative p-6 rounded-[28px] bg-white/[0.03] border border-white/10 space-y-2">
                          <p className="text-[9px] font-black uppercase tracking-widest text-emerald-400">Estimated Value</p>
                          <div className="flex items-end justify-between">
-                            <span className="text-3xl font-black text-white">{currentSymbol}{secondaryResult}</span>
+                            <span className="text-2xl md:text-3xl font-black text-white tabular-nums">{currentSymbol}{secondaryResult}</span>
                             <span className="text-[10px] font-black text-emerald-400 mb-1">{currency}</span>
                          </div>
                        </div>
@@ -283,7 +281,7 @@ const Calculator = () => {
                     <div className="space-y-0">
                       <p className="text-[8px] font-black uppercase tracking-widest text-muted-foreground leading-none">Live DEX Data</p>
                       <p className="text-[11px] font-black">
-                        {mode === 'guy-swap' ? `1 GUY ≈ ${guyPriceXpr.toFixed(4)} XPR` : `1 XPR = ${prices[currency]?.toFixed(6)} ${currency}`}
+                        {mode === 'guy-swap' ? `1 GUY ≈ ${guyPriceXpr.toFixed(6)} XPR` : `1 XPR = ${prices[currency]?.toFixed(6)} ${currency}`}
                       </p>
                     </div>
                   </div>

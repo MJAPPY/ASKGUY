@@ -148,7 +148,7 @@ const Navbar = () => {
                 ) : (
                   <Button 
                     onClick={connect} 
-                    className="w-full h-12 bg-[#1565C0] hover:bg-[#1565C0]/90 text-white font-black rounded-full uppercase tracking-wider text-[10px] gap-3 flex items-center justify-center shadow-[0_0_20px_rgba(21,101,192,0.3)] transition-all active:scale-[0.98]"
+                    className="w-full h-12 bg-[#1565C0] hover:bg-[#1565C0]/90 text-white font-black rounded-xl uppercase tracking-wider text-[10px] gap-3 flex items-center justify-center shadow-[0_0_20px_rgba(21,101,192,0.3)] transition-all active:scale-[0.98]"
                   >
                     <Wallet size={18} />
                     Connect WebAuth
@@ -290,7 +290,7 @@ const Navbar = () => {
             <Button 
               onClick={connect} 
               disabled={isConnecting}
-              className="bg-[#1565C0] hover:bg-[#1565C0]/90 text-white font-black rounded-full px-4 sm:px-6 h-9 sm:h-12 shadow-[0_0_20px_rgba(21,101,192,0.3)] transition-all active:scale-[0.98] text-[10px] sm:text-xs uppercase tracking-wider flex items-center gap-2 sm:gap-3"
+              className="bg-[#1565C0] hover:bg-[#1565C0]/90 text-white font-black rounded-xl px-4 sm:px-6 h-9 sm:h-12 shadow-[0_0_20px_rgba(21,101,192,0.3)] transition-all active:scale-[0.98] text-[10px] sm:text-xs uppercase tracking-wider flex items-center gap-2 sm:gap-3"
             >
               {isConnecting ? (
                 <Loader2 className="animate-spin" size={16} />

@@ -159,6 +159,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } catch (err) {
       console.error('Error fetching balances:', err);
     } finally {
+      setLoading(false); // Fix potential loading state issue
       setIsFetchingBalances(false);
     }
   }, [getTokenBalance]);
@@ -175,7 +176,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     try {
       const result = await Connect({
         linkOptions: { endpoints: PROTON_ENDPOINTS, restoreSession: restore },
-        transportOptions: { requestAccount: 'askguy', backButton: true },
+        transportOptions: { requestAccount: 'askguy', backButton: true } as any,
         selectorOptions: {
           appName: APP_NAME,
           customStyleOptions: { 
@@ -184,7 +185,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             isDark: true,
             accentColor: '#1565C0'
           }
-        }
+        } as any
       });
       
       linkRef.current = result.link;

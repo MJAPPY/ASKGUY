@@ -24,7 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import logo from '@/assets/hero-guy.jpg';
+import logo from '@/assets/hero-guylogo.jpg';
 import { cn } from '@/lib/utils';
 
 const Navbar = () => {
@@ -50,8 +50,8 @@ const Navbar = () => {
       <div className="container mx-auto px-4 h-20 flex items-center justify-between gap-4">
         <div className="flex items-center gap-6 md:gap-10">
           <Link to="/" className="flex items-center gap-3 group shrink-0">
-            <div className="w-10 h-10 md:w-12 md:h-12 transition-all duration-300 group-hover:scale-110 shrink-0">
-              <img src={logo} alt="Logo" className="w-full h-full object-contain" />
+            <div className="w-10 h-10 md:w-12 md:h-12 transition-all duration-300 group-hover:scale-110 shrink-0 rounded-full overflow-hidden border border-[#1565C0]/30 shadow-[0_0_15px_rgba(21,101,192,0.2)]">
+              <img src={logo} alt="Logo" className="w-full h-full object-cover" />
             </div>
             <span className="font-black text-lg md:text-xl tracking-tight transition-colors">
               Ask<span className="text-[#1565C0]">Guy</span>

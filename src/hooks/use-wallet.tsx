@@ -67,7 +67,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const isAdmin = address.toLowerCase() === OWNER_ADDRESS.toLowerCase();
   const isMember = !isMembershipEnabled || membershipExpiry > Date.now();
-  // Threshold removed as per request
   const hasGuyThreshold = true;
 
   const fetchSettings = useCallback(async () => {
@@ -167,11 +166,31 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   useEffect(() => {
     fetchSettings();
+    
+    // Set up real-time subscription for site settings
+    const channel = supabase
+      .channel('public:site_settings')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'site_settings' },
+        () => {
+          console.log('[useWallet] Site settings changed, refetching...');
+          fetchSettings();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchSettings]);
+
+  useEffect(() => {
     const accountName = session?.auth?.actor;
     if (accountName) {
       fetchAllBalances(String(accountName));
     }
-  }, [session, fetchAllBalances, fetchSettings]);
+  }, [session, fetchAllBalances]);
 
   const initWallet = useCallback(async (restore = true) => {
     try {

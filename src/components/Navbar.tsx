@@ -53,7 +53,7 @@ const Navbar = () => {
             <div className="w-11 h-11 md:w-14 md:h-14 transition-all duration-300 group-hover:scale-110 shrink-0 flex items-center justify-center">
               <img src={logo} alt="Logo" className="w-full h-full object-contain" />
             </div>
-            <span className="font-black text-xl md:text-2xl tracking-tighter transition-colors uppercase italic">
+            <span className="font-black text-xl md:text-2xl tracking-tighter transition-colors uppercase italic group-hover:text-primary">
               Ask<span className="text-[#1565C0]">Guy</span>
             </span>
           </Link>

@@ -15,7 +15,7 @@ const Footer = () => {
               <Link to="/" className="w-12 h-12 transition-transform group-hover:scale-110 shrink-0 flex items-center justify-center">
                 <img src={logo} alt="AskGuy Logo" className="w-full h-full object-contain" />
               </Link>
-              <Link to="/" className="font-black text-xl tracking-tighter transition-colors group-hover:text-[#1565C0] uppercase italic">
+              <Link to="/" className="font-black text-xl tracking-tighter transition-colors group-hover:text-primary uppercase italic">
                 Ask<span className="text-[#1565C0]">Guy</span>
               </Link>
             </div>

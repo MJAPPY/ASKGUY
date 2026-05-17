@@ -23,7 +23,8 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
-import heroAskGuy from '@/assets/heroaskguy.png';
+// Fixed: Changed heroaskguy.png to hero-guy.jpg to match the asset directory
+import heroAskGuy from '@/assets/hero-guy.jpg';
 
 type FilterType = 'all' | 'active' | 'funded' | 'my-requests';
 type SortType = 'newest' | 'oldest';

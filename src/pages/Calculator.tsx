@@ -20,10 +20,10 @@ import {
   Info,
   Zap,
   Repeat,
-  ExternalLink
+  ExternalLink,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { showSuccess } from '@/utils/toast';
 import guyLogo from '@/assets/guy-logo.jpg';
@@ -37,7 +37,7 @@ const Calculator = () => {
   const [secondaryResult, setSecondaryResult] = useState<string>('');
   const [currency, setCurrency] = useState('USD');
   const [prices, setPrices] = useState<Record<string, number>>({});
-  const [guyPriceXpr, setGuyPriceXpr] = useState<number>(0.0052); // Default estimate
+  const [guyPriceXpr, setGuyPriceXpr] = useState<number>(0.0055); // Default fallback
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
@@ -62,7 +62,7 @@ const Calculator = () => {
   const fetchPrices = useCallback(async () => {
     setLoading(true);
     try {
-      // Fetch XPR Fiat Prices
+      // 1. Fetch XPR Fiat Prices from CoinGecko
       const vsCurrencies = currencies.map(c => c.code.toLowerCase()).join(',');
       const response = await fetch(
         `https://api.coingecko.com/api/v3/simple/price?ids=proton&vs_currencies=${vsCurrencies}`
@@ -76,10 +76,17 @@ const Calculator = () => {
       });
       setPrices(newPrices);
 
-      // Fetch GUY Price in XPR
-      setGuyPriceXpr(0.0052); 
+      // 2. Fetch GUY Price in XPR from Alcor API
+      // Pair ID 20 is GUY/XPR on Proton Alcor
+      const alcorRes = await fetch('https://proton.alcor.exchange/api/v2/tickers');
+      const tickers = await alcorRes.json();
+      const guyTicker = tickers.find((t: any) => t.ticker_id === 'GUY_XPR' || (t.base_currency === 'GUY' && t.quote_currency === 'XPR'));
+      
+      if (guyTicker && guyTicker.last_price) {
+        setGuyPriceXpr(parseFloat(guyTicker.last_price));
+      }
     } catch (error) {
-      console.error('Failed to fetch prices:', error);
+      console.error('Failed to fetch live prices:', error);
     } finally {
       setLoading(false);
     }
@@ -87,6 +94,9 @@ const Calculator = () => {
 
   useEffect(() => {
     fetchPrices();
+    // Auto-refresh every 60 seconds
+    const interval = setInterval(fetchPrices, 60000);
+    return () => clearInterval(interval);
   }, [fetchPrices]);
 
   useEffect(() => {
@@ -106,13 +116,13 @@ const Calculator = () => {
       const calculated = val * rate;
       setResultValue(calculated.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
     } else if (mode === 'guy-swap') {
-      // GUY to XPR
+      // GUY to XPR calculation
       const xprValue = val * guyPriceXpr;
-      setResultValue(xprValue.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 }));
+      setResultValue(xprValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }));
       
-      // GUY to USDC (approx via XPR/USD price)
+      // GUY to USDC calculation (approx via XPR/USD price)
       const usdValue = xprValue * (prices['USD'] || 0.01);
-      setSecondaryResult(usdValue.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 }));
+      setSecondaryResult(usdValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
     }
   }, [inputValue, currency, prices, mode, guyPriceXpr]);
 
@@ -141,13 +151,13 @@ const Calculator = () => {
         <div className="max-w-2xl w-full space-y-8">
           <div className="text-center space-y-3 animate-in fade-in slide-in-from-top-4 duration-700">
             <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-black uppercase tracking-widest text-primary mb-1">
-              <Sparkles size={10} className="animate-pulse" /> Multi-Asset Tools
+              <Sparkles size={10} className="animate-pulse" /> Live Market Data
             </div>
             <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-none">
-              <span className="text-primary drop-shadow-[0_0_15px_rgba(244,201,93,0.2)]">AskGuy Calculator</span>
+              <span className="text-primary drop-shadow-[0_0_15px_rgba(244,201,93,0.2)] uppercase italic">AskGuy Calculator</span>
             </h1>
             <p className="text-muted-foreground text-base max-w-lg mx-auto leading-relaxed font-medium">
-              Calculate conversions between GUY, XPR, and global Fiat currencies.
+              Calculate instant conversions between GUY, XPR, and Global Fiat.
             </p>
           </div>
 
@@ -169,7 +179,7 @@ const Calculator = () => {
                   onClick={() => setMode('guy-swap')}
                   className={cn(
                     "rounded-xl font-black text-[9px] uppercase tracking-widest h-10 px-4 transition-all",
-                    mode === 'guy-swap' ? "bg-rose-500 text-white shadow-[0_0_20px_rgba(244,63,94,0.3)]" : "text-muted-foreground hover:text-white"
+                    mode === 'guy-swap' ? "bg-[#1565C0] text-white shadow-[0_0_20px_rgba(21,101,192,0.3)]" : "text-muted-foreground hover:text-white"
                   )}
                 >
                   GUY ⇆ Assets
@@ -248,10 +258,10 @@ const Calculator = () => {
                          </div>
                        </div>
                        <div className="relative p-6 rounded-[28px] bg-white/[0.03] border border-white/10 space-y-2">
-                         <p className="text-[9px] font-black uppercase tracking-widest text-emerald-400">Estimated USDC</p>
+                         <p className="text-[9px] font-black uppercase tracking-widest text-emerald-400">Estimated Value</p>
                          <div className="flex items-end justify-between">
-                            <span className="text-3xl font-black text-white">${secondaryResult}</span>
-                            <span className="text-[10px] font-black text-emerald-400 mb-1">USDC</span>
+                            <span className="text-3xl font-black text-white">{currentSymbol}{secondaryResult}</span>
+                            <span className="text-[10px] font-black text-emerald-400 mb-1">{currency}</span>
                          </div>
                        </div>
                     </div>
@@ -262,9 +272,9 @@ const Calculator = () => {
                   <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5">
                     <RefreshCw size={14} className={cn("text-blue-400", loading && "animate-spin")} />
                     <div className="space-y-0">
-                      <p className="text-[8px] font-black uppercase tracking-widest text-muted-foreground leading-none">Live Market Data</p>
+                      <p className="text-[8px] font-black uppercase tracking-widest text-muted-foreground leading-none">Live DEX Data</p>
                       <p className="text-[11px] font-black">
-                        {mode === 'guy-swap' ? `1 GUY ≈ ${guyPriceXpr} XPR` : `1 XPR = ${prices[currency]?.toFixed(6)} ${currency}`}
+                        {mode === 'guy-swap' ? `1 GUY ≈ ${guyPriceXpr.toFixed(4)} XPR` : `1 XPR = ${prices[currency]?.toFixed(6)} ${currency}`}
                       </p>
                     </div>
                   </div>
@@ -279,7 +289,7 @@ const Calculator = () => {
                     )}
                     <Button asChild className="h-11 bg-primary hover:bg-primary/90 text-black font-black text-[10px] uppercase tracking-wider px-8 rounded-xl shadow-[0_0_25px_rgba(244,201,93,0.3)] gold-glow gap-3 border-none group">
                       <a href="https://alcor.exchange/v/xpr/swap?input=xpr-eosio.token&output=guy-vtoken" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
-                        Swap XPR for GUY 
+                        Swap Assets
                         <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                       </a>
                     </Button>
@@ -296,18 +306,18 @@ const Calculator = () => {
                 <div className="space-y-1">
                   <h3 className="font-black text-base tracking-tight">Fair Market Estimates</h3>
                   <p className="text-[11px] font-medium text-muted-foreground leading-relaxed">
-                    Estimates are based on aggregated liquidity data from Vibrr and Alcor DEX.
+                    Estimates are pulled directly from Alcor DEX and CoinGecko to provide real-world accuracy.
                   </p>
                 </div>
               </div>
-              <div className="glass-card p-6 rounded-[28px] border-white/5 flex gap-4 hover:border-rose-500/20 transition-all">
-                <div className="w-10 h-10 rounded-2xl bg-rose-500/10 flex items-center justify-center text-rose-400 border border-rose-500/20 shrink-0">
+              <div className="glass-card p-6 rounded-[28px] border-white/5 flex gap-4 hover:border-blue-500/20 transition-all">
+                <div className="w-10 h-10 rounded-2xl bg-[#1565C0]/10 flex items-center justify-center text-[#1565C0] border border-[#1565C0]/20 shrink-0">
                   <TrendingUp size={20} />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="font-black text-base tracking-tight">Vibrr Integration</h3>
+                  <h3 className="font-black text-base tracking-tight">XPR Network Ready</h3>
                   <p className="text-[11px] font-medium text-muted-foreground leading-relaxed">
-                    Direct links to the XPR Network's premier decentralized exchange for the best rates.
+                    Direct access to the ecosystem's most reliable decentralized liquidity pools.
                   </p>
                 </div>
               </div>

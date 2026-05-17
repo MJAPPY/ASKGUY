@@ -183,9 +183,13 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const request = requests.find(r => r.id === requestId);
       if (request && token === request.token) {
         const newRaised = (request.raised || 0) + amount;
+        const isFunded = newRaised >= request.amount;
+        
         await updateRequest(requestId, { 
           raised: newRaised,
-          status: newRaised >= request.amount ? 'Funded' : 'Open'
+          status: isFunded ? 'Funded' : 'Open',
+          // Automatically clear proof from DB to save storage once goal is met
+          proofUrl: isFunded ? null : request.proofUrl 
         });
       }
 
@@ -215,7 +219,8 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           });
         }
       }
-      return await updateRequest(id, { status: 'Completed' });
+      // Clear proof image from DB when archiving to save storage
+      return await updateRequest(id, { status: 'Completed', proofUrl: null });
     } catch (err: any) {
       throw err;
     }

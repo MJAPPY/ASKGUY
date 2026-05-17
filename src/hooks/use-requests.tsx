@@ -79,25 +79,25 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const addRequest = async (req: any) => {
     try {
-      const { data, error } = await supabase
-        .from('aid_requests')
-        .insert({
-          requestor: req.requestor,
-          title: req.title,
-          category: req.category,
-          amount: req.amount,
-          token: req.token,
-          description: req.description,
-          proof_url: req.proofUrl,
-          timestamp: Date.now(),
-          status: 'Open',
-          raised: 0
-        })
-        .select();
+      // Calling the secure Edge Function instead of direct DB insert
+      const { data, error } = await supabase.functions.invoke('manage-platform', {
+        body: {
+          action: 'CREATE_REQUEST',
+          payload: {
+            requestor: req.requestor,
+            title: req.title,
+            category: req.category,
+            amount: req.amount,
+            token: req.token,
+            description: req.description,
+            proof_url: req.proofUrl
+          }
+        }
+      });
       
       if (error) throw error;
       await fetchRequests();
-      return data?.[0] || null;
+      return data;
     } catch (err: any) {
       showError(err.message);
       return null;
@@ -117,7 +117,7 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return data;
     } catch (err: any) {
       console.error('[use-requests] Update error:', err);
-      throw err; // Re-throw to allow callers to catch and show UI errors
+      throw err;
     }
   };
 
@@ -153,16 +153,21 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const contribute = async (requestId: string, contributor: string, amount: number, token: TokenSymbol, message?: string) => {
     try {
-      const { error: contribError } = await supabase.from('contributions').insert({
-        request_id: requestId,
-        user: contributor,
-        amount,
-        token,
-        message,
-        timestamp: Date.now(),
+      // Calling the secure Edge Function instead of direct DB insert
+      const { data, error } = await supabase.functions.invoke('manage-platform', {
+        body: {
+          action: 'ADD_CONTRIBUTION',
+          payload: {
+            request_id: requestId,
+            user: contributor,
+            amount,
+            token,
+            message
+          }
+        }
       });
       
-      if (contribError) throw contribError;
+      if (error) throw error;
 
       const request = requests.find(r => r.id === requestId);
       if (request && token === request.token) {
@@ -185,13 +190,18 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (thanksMessage) {
         const req = requests.find(r => r.id === id);
         if (req) {
-          await supabase.from('contributions').insert({
-            request_id: id,
-            user: req.requestor,
-            amount: 0,
-            token: req.token,
-            message: thanksMessage,
-            timestamp: Date.now(),
+          // Marking as completed also goes through the secure gateway for the thank you message
+          await supabase.functions.invoke('manage-platform', {
+            body: {
+              action: 'ADD_CONTRIBUTION',
+              payload: {
+                request_id: id,
+                user: req.requestor,
+                amount: 0,
+                token: req.token,
+                message: thanksMessage
+              }
+            }
           });
         }
       }

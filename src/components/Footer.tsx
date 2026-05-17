@@ -11,62 +11,64 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           <div className="space-y-4">
-            <Link to="/" className="flex items-center gap-3 group w-fit">
-              <div className="w-10 h-10 transition-transform group-hover:scale-110 shrink-0 rounded-full overflow-hidden border border-white/10">
-                <img src={logo} alt="AskGuy Logo" className="w-full h-full object-cover" />
-              </div>
-              <span className="font-bold text-lg group-hover:text-primary transition-colors">AskGuy</span>
-            </Link>
-            <p className="text-sm text-muted-foreground leading-relaxed">
+            <div className="flex items-center gap-4 group w-fit">
+              <Link to="/" className="w-12 h-12 transition-transform group-hover:scale-110 shrink-0 rounded-xl overflow-hidden border border-white/10 bg-black/40">
+                <img src={logo} alt="AskGuy Logo" className="w-full h-full object-contain" />
+              </Link>
+              <Link to="/" className="font-black text-xl tracking-tighter transition-colors group-hover:text-[#1565C0] uppercase italic">
+                Ask<span className="text-[#1565C0]">Guy</span>
+              </Link>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed font-medium">
               A peer-to-peer mutual help platform built for the XPR Network community. 
               Empowering users to support each other through gifting XPR and GUY tokens.
             </p>
           </div>
           
           <div>
-            <h4 className="font-bold mb-4">Resources</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
+            <h4 className="font-black text-[10px] uppercase tracking-[0.2em] mb-6 text-white">Resources</h4>
+            <ul className="space-y-3 text-[13px] text-muted-foreground font-medium">
               <li>
-                <a href="https://explorer.xprnetwork.org/" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
-                  XPR Network Explorer
+                <a href="https://explorer.xprnetwork.org/" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors flex items-center gap-2">
+                  <div className="w-1 h-1 rounded-full bg-white/20" /> XPR Network Explorer
                 </a>
               </li>
               <li>
-                <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
-                  GUY Token Info (Vibrr)
+                <a href="https://vibrr.ai/dex/token/20" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors flex items-center gap-2">
+                  <div className="w-1 h-1 rounded-full bg-white/20" /> GUY Token Info (Vibrr)
                 </a>
               </li>
               <li>
-                <a href="https://alcor.exchange/v/xpr/terminal/guy-vtoken" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
-                  Buy GUY on Alcor
+                <a href="https://alcor.exchange/v/xpr/terminal/guy-vtoken" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors flex items-center gap-2">
+                  <div className="w-1 h-1 rounded-full bg-white/20" /> Buy GUY on Alcor
                 </a>
               </li>
               <li>
-                <Link to="/guidelines" className="hover:text-primary transition-colors">
-                  Community Guidelines
+                <Link to="/guidelines" className="hover:text-primary transition-colors flex items-center gap-2">
+                  <div className="w-1 h-1 rounded-full bg-white/20" /> Community Guidelines
                 </Link>
               </li>
             </ul>
           </div>
 
           <div>
-            <h4 className="font-bold mb-4">Connect</h4>
+            <h4 className="font-black text-[10px] uppercase tracking-[0.2em] mb-6 text-white">Connect</h4>
             <div className="flex gap-4">
               <a 
                 href="https://snipverse.com/tripseven" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-primary/20 hover:text-white transition-all group"
+                className="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-[#1565C0]/20 hover:text-[#1565C0] hover:border-[#1565C0]/30 transition-all group"
                 title="Snipverse"
               >
                 <svg 
                   viewBox="0 0 24 24" 
                   fill="none" 
                   stroke="currentColor" 
-                  strokeWidth="2" 
+                  strokeWidth="2.5" 
                   strokeLinecap="round" 
                   strokeLinejoin="round" 
-                  className="w-[18px] h-[18px] transition-all group-hover:scale-110 group-hover:brightness-125"
+                  className="w-5 h-5 transition-all group-hover:scale-110"
                 >
                   <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
                 </svg>
@@ -75,13 +77,13 @@ const Footer = () => {
                 href="https://x.com/777Guyxpr" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-primary/20 hover:text-white transition-all group"
+                className="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-[#1565C0]/20 hover:text-[#1565C0] hover:border-[#1565C0]/30 transition-all group"
               >
-                <Twitter size={18} className="transition-all group-hover:scale-110 group-hover:brightness-125" />
+                <Twitter size={20} className="transition-all group-hover:scale-110" />
               </a>
             </div>
-            <p className="text-xs text-muted-foreground mt-6">
-              &copy; {new Date().getFullYear()} AskGuy XPR. Built by the community.
+            <p className="text-[10px] text-muted-foreground mt-8 font-black uppercase tracking-widest">
+              &copy; {new Date().getFullYear()} AskGuy XPR. Built for the community.
             </p>
           </div>
         </div>

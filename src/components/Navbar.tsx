@@ -50,10 +50,10 @@ const Navbar = () => {
       <div className="container mx-auto px-4 h-20 flex items-center justify-between gap-4">
         <div className="flex items-center gap-6 md:gap-10">
           <Link to="/" className="flex items-center gap-3 group shrink-0">
-            <div className="w-10 h-10 md:w-12 md:h-12 transition-all duration-300 group-hover:scale-110 shrink-0 rounded-full overflow-hidden border border-[#1565C0]/30 shadow-[0_0_15px_rgba(21,101,192,0.2)]">
-              <img src={logo} alt="Logo" className="w-full h-full object-cover" />
+            <div className="w-11 h-11 md:w-14 md:h-14 transition-all duration-300 group-hover:scale-105 shrink-0 rounded-xl overflow-hidden border-2 border-[#1565C0]/40 shadow-[0_0_20px_rgba(21,101,192,0.3)] bg-black/40">
+              <img src={logo} alt="Logo" className="w-full h-full object-contain" />
             </div>
-            <span className="font-black text-lg md:text-xl tracking-tight transition-colors">
+            <span className="font-black text-xl md:text-2xl tracking-tight transition-colors">
               Ask<span className="text-[#1565C0]">Guy</span>
             </span>
           </Link>
@@ -64,7 +64,7 @@ const Navbar = () => {
                 key={item.label}
                 variant="ghost"
                 asChild
-                className={`gap-2 text-sm font-medium h-10 px-4 transition-all duration-300 hover:scale-105 ${
+                className={`gap-2 text-sm font-black uppercase tracking-widest h-10 px-4 transition-all duration-300 hover:scale-105 ${
                   isActive(item.path) 
                     ? 'text-[#1565C0] bg-[#1565C0]/10 border border-[#1565C0]/20 shadow-[0_0_15px_rgba(21,101,192,0.1)]' 
                     : 'text-muted-foreground hover:text-white hover:bg-white/5'

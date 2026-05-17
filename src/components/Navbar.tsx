@@ -51,7 +51,7 @@ const Navbar = () => {
         <div className="flex items-center gap-6 md:gap-10">
           <Link to="/" className="flex items-center gap-3 group shrink-0">
             <div className="w-10 h-10 md:w-12 md:h-12 transition-all duration-300 group-hover:scale-110 shrink-0">
-              <img src={logo} alt="Logo" className="w-full h-full object-contain" />
+              <img src={logo} alt="AskGuy Logo" className="w-full h-full object-contain" />
             </div>
             <span className="font-black text-lg md:text-xl tracking-tight transition-colors">
               Ask<span className="text-[#1565C0]">Guy</span>

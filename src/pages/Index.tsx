@@ -23,8 +23,7 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
-// Fixed: Changed heroaskguy.png to hero-guy.jpg to match the asset directory
-import heroAskGuy from '@/assets/hero-guy.jpg';
+import heroAskGuy from '@/assets/heroaskguy.png';
 
 type FilterType = 'all' | 'active' | 'funded' | 'my-requests';
 type SortType = 'newest' | 'oldest';
@@ -73,7 +72,7 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
         <Navbar />
-        {/* Background glow effects - Updated to match new blue */}
+        {/* Background glow effects */}
         <div className="absolute top-[20%] left-[-10%] w-[50%] h-[50%] bg-[#1565C0]/10 blur-[120px] rounded-full pointer-events-none" />
         <div className="absolute bottom-[20%] right-[-10%] w-[50%] h-[50%] bg-primary/10 blur-[120px] rounded-full pointer-events-none" />
 

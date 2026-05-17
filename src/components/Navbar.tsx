@@ -54,8 +54,12 @@ const Navbar = () => {
               <img 
                 src={logo} 
                 alt="Logo" 
-                className="w-full h-full object-contain scale-[1.02] contrast-[1.05] brightness-[1.02]" 
-                style={{ imageRendering: '-webkit-optimize-contrast' }}
+                className="w-full h-full object-contain contrast-[1.08] brightness-[1.05]" 
+                style={{ 
+                  imageRendering: 'crisp-edges',
+                  transform: 'translateZ(0)',
+                  backfaceVisibility: 'hidden'
+                }} 
               />
             </div>
             <span className="font-black text-xl md:text-2xl tracking-tighter transition-colors uppercase italic group-hover:text-primary">

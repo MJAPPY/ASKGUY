@@ -12,8 +12,17 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           <div className="space-y-4">
             <div className="flex items-center gap-4 group w-fit">
-              <Link to="/" className="w-12 h-12 transition-transform group-hover:scale-110 shrink-0 flex items-center justify-center">
-                <img src={logo} alt="AskGuy Logo" className="w-full h-full object-contain" />
+              <Link to="/" className="w-12 h-12 transition-transform group-hover:scale-110 shrink-0 flex items-center justify-center overflow-hidden">
+                <img 
+                  src={logo} 
+                  alt="AskGuy Logo" 
+                  className="w-full h-full object-contain contrast-[1.08] brightness-[1.05]" 
+                  style={{ 
+                    imageRendering: 'crisp-edges',
+                    transform: 'translateZ(0)',
+                    backfaceVisibility: 'hidden'
+                  }} 
+                />
               </Link>
               <Link to="/" className="font-black text-xl tracking-tighter transition-colors group-hover:text-primary uppercase italic">
                 Ask<span className="text-[#1565C0]">Guy</span>

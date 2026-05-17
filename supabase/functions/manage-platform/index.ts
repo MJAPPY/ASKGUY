@@ -20,17 +20,22 @@ serve(async (req) => {
     )
 
     const { action, payload, callerAddress } = await req.json()
-    console.log(`[manage-platform] Action: ${action} from ${callerAddress}`);
+    
+    if (!callerAddress) throw new Error("Missing caller address for verification.");
 
-    // Helper: Verify if the caller is the admin
-    const isAdmin = callerAddress?.toLowerCase() === ADMIN_ADDRESS;
+    const normalizedCaller = callerAddress.toLowerCase().trim();
+    const isAdmin = normalizedCaller === ADMIN_ADDRESS;
 
-    // 1. CREATE REQUEST
+    console.log(`[manage-platform] Action: ${action} | Caller: ${normalizedCaller} | IsAdmin: ${isAdmin}`);
+
+    // --- 1. REQUEST MANAGEMENT ---
+    
     if (action === 'CREATE_REQUEST') {
       const { data, error } = await supabaseClient
         .from('aid_requests')
         .insert({
           ...payload,
+          requestor: normalizedCaller, // Force requestor to be the authenticated caller
           timestamp: Date.now(),
           status: 'Open',
           raised: 0
@@ -40,12 +45,40 @@ serve(async (req) => {
       return new Response(JSON.stringify(data[0]), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
-    // 2. ADD CONTRIBUTION
+    if (action === 'UPDATE_REQUEST') {
+      // Security Check: Only the owner or admin can update
+      const { data: existing } = await supabaseClient.from('aid_requests').select('requestor').eq('id', payload.id).single();
+      if (!existing || (existing.requestor.toLowerCase() !== normalizedCaller && !isAdmin)) {
+        throw new Error("Unauthorized: You do not own this request.");
+      }
+
+      const { data, error } = await supabaseClient
+        .from('aid_requests')
+        .update(payload.updates)
+        .eq('id', payload.id)
+        .select()
+      if (error) throw error
+      return new Response(JSON.stringify(data[0]), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+
+    if (action === 'DELETE_REQUEST') {
+      // Security Check: Only admin can delete others' posts
+      if (!isAdmin) throw new Error("Unauthorized: Admin privileges required to delete.");
+      
+      await supabaseClient.from('contributions').delete().eq('request_id', payload.id);
+      const { error } = await supabaseClient.from('aid_requests').delete().eq('id', payload.id);
+      if (error) throw error
+      return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+
+    // --- 2. CONTRIBUTIONS ---
+
     if (action === 'ADD_CONTRIBUTION') {
       const { data, error } = await supabaseClient
         .from('contributions')
         .insert({
           ...payload,
+          user: normalizedCaller, // Force user to be the authenticated caller
           timestamp: Date.now()
         })
         .select()
@@ -53,10 +86,12 @@ serve(async (req) => {
       return new Response(JSON.stringify(data[0]), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
-    // 3. UPDATE PROFILE (Ensure users only edit themselves)
+    // --- 3. PROFILE MANAGEMENT ---
+
     if (action === 'UPSERT_PROFILE') {
-      if (payload.address?.toLowerCase() !== callerAddress?.toLowerCase()) {
-        throw new Error("Unauthorized: You can only update your own profile.");
+      // Security Check: Users can only update their own profile
+      if (payload.address?.toLowerCase() !== normalizedCaller) {
+        throw new Error("Unauthorized: Identity mismatch.");
       }
       const { data, error } = await supabaseClient
         .from('profiles')
@@ -66,10 +101,10 @@ serve(async (req) => {
       return new Response(JSON.stringify(data[0]), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
-    // --- ADMIN ONLY ACTIONS ---
-    
+    // --- 4. ADMIN ONLY ACTIONS ---
+
     if (!isAdmin && ['UPDATE_SETTINGS', 'BAN_USER', 'UNBAN_USER'].includes(action)) {
-      throw new Error("Unauthorized: Admin privileges required.");
+      throw new Error("Unauthorized: Restricted to platform administrators.");
     }
 
     if (action === 'UPDATE_SETTINGS') {
@@ -103,7 +138,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: 'Invalid action' }), { status: 400, headers: corsHeaders })
 
   } catch (error) {
-    console.error("[manage-platform] Error:", error.message)
+    console.error("[manage-platform] Critical Error:", error.message)
     return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: corsHeaders })
   }
 })

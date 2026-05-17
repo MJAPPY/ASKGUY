@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { showError, showSuccess } from '@/utils/toast';
+import { useWallet } from './use-wallet';
 
 export interface AidRequest {
   id: string;
@@ -57,6 +58,7 @@ const mapRequestFromDB = (data: any): AidRequest => ({
 });
 
 export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { address } = useWallet();
   const [requests, setRequests] = useState<AidRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -79,12 +81,11 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const addRequest = async (req: any) => {
     try {
-      // Calling the secure Edge Function instead of direct DB insert
       const { data, error } = await supabase.functions.invoke('manage-platform', {
         body: {
           action: 'CREATE_REQUEST',
+          callerAddress: address,
           payload: {
-            requestor: req.requestor,
             title: req.title,
             category: req.category,
             amount: req.amount,
@@ -99,7 +100,7 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       await fetchRequests();
       return data;
     } catch (err: any) {
-      showError(err.message);
+      showError(err.message || "Failed to create request");
       return null;
     }
   };
@@ -111,41 +112,52 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         dbUpdates.proof_url = updates.proofUrl;
         delete dbUpdates.proofUrl;
       }
-      const { data, error } = await supabase.from('aid_requests').update(dbUpdates).eq('id', id).select();
+
+      const { data, error } = await supabase.functions.invoke('manage-platform', {
+        body: {
+          action: 'UPDATE_REQUEST',
+          callerAddress: address,
+          payload: { id, updates: dbUpdates }
+        }
+      });
+
       if (error) throw error;
       await fetchRequests();
       return data;
     } catch (err: any) {
-      console.error('[use-requests] Update error:', err);
+      showError(err.message || "Failed to update request");
       throw err;
     }
   };
 
   const deleteRequest = async (id: string) => {
     try {
-      const { error: cError } = await supabase.from('contributions').delete().eq('request_id', id);
-      if (cError) throw cError;
+      const { error } = await supabase.functions.invoke('manage-platform', {
+        body: {
+          action: 'DELETE_REQUEST',
+          callerAddress: address,
+          payload: { id }
+        }
+      });
 
-      const { error: rError } = await supabase.from('aid_requests').delete().eq('id', id);
-      if (rError) throw rError;
-
+      if (error) throw error;
       await fetchRequests();
       showSuccess("Content removed successfully.");
     } catch (err: any) {
-      showError(err.message);
+      showError(err.message || "Unauthorized delete request");
       throw err;
     }
   };
 
   const batchDeleteRequests = async (ids: string[]) => {
     try {
-      await supabase.from('contributions').delete().in('request_id', ids);
-      const { error } = await supabase.from('aid_requests').delete().in('id', ids);
-      
-      if (error) throw error;
-
+      for (const id of ids) {
+        await supabase.functions.invoke('manage-platform', {
+          body: { action: 'DELETE_REQUEST', callerAddress: address, payload: { id } }
+        });
+      }
       await fetchRequests();
-      showSuccess(`Successfully removed ${ids.length} items.`);
+      showSuccess(`Successfully processed ${ids.length} items.`);
     } catch (err: any) {
       showError(err.message);
     }
@@ -153,13 +165,12 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const contribute = async (requestId: string, contributor: string, amount: number, token: TokenSymbol, message?: string) => {
     try {
-      // Calling the secure Edge Function instead of direct DB insert
-      const { data, error } = await supabase.functions.invoke('manage-platform', {
+      const { error } = await supabase.functions.invoke('manage-platform', {
         body: {
           action: 'ADD_CONTRIBUTION',
+          callerAddress: address,
           payload: {
             request_id: requestId,
-            user: contributor,
             amount,
             token,
             message
@@ -190,13 +201,12 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (thanksMessage) {
         const req = requests.find(r => r.id === id);
         if (req) {
-          // Marking as completed also goes through the secure gateway for the thank you message
           await supabase.functions.invoke('manage-platform', {
             body: {
               action: 'ADD_CONTRIBUTION',
+              callerAddress: address,
               payload: {
                 request_id: id,
-                user: req.requestor,
                 amount: 0,
                 token: req.token,
                 message: thanksMessage
@@ -207,7 +217,6 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
       return await updateRequest(id, { status: 'Completed' });
     } catch (err: any) {
-      console.error('[use-requests] Completion error:', err);
       throw err;
     }
   };

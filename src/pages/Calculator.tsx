@@ -77,13 +77,22 @@ const Calculator = () => {
       setPrices(newPrices);
 
       // 2. Fetch GUY Price in XPR from Alcor API
-      // Pair ID 20 is GUY/XPR on Proton Alcor
+      // Specifically looking for the GUY (vtoken) / XPR (eosio.token) pair
       const alcorRes = await fetch('https://proton.alcor.exchange/api/v2/tickers');
       const tickers = await alcorRes.json();
-      const guyTicker = tickers.find((t: any) => t.ticker_id === 'GUY_XPR' || (t.base_currency === 'GUY' && t.quote_currency === 'XPR'));
+      
+      // Find the specific GUY ticker on Proton. GUY is usually on vtoken contract.
+      const guyTicker = tickers.find((t: any) => 
+        (t.base_currency === 'GUY' && t.quote_currency === 'XPR') ||
+        (t.ticker_id?.includes('GUY') && t.ticker_id?.includes('XPR'))
+      );
       
       if (guyTicker && guyTicker.last_price) {
-        setGuyPriceXpr(parseFloat(guyTicker.last_price));
+        const price = parseFloat(guyTicker.last_price);
+        // Sanity check: ensure the price isn't 0 and is reasonable
+        if (price > 0) {
+          setGuyPriceXpr(price);
+        }
       }
     } catch (error) {
       console.error('Failed to fetch live prices:', error);

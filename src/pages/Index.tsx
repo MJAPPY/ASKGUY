@@ -23,8 +23,7 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
-// Fixed the extension to .jpg to match existing assets
-import heroGuy from '@/assets/hero-guy.jpg';
+import heroAskGuy from '@/assets/heroaskguy.png';
 
 type FilterType = 'all' | 'active' | 'funded' | 'my-requests';
 type SortType = 'newest' | 'oldest';
@@ -109,7 +108,7 @@ const Index = () => {
                 <div className="relative z-10 w-full max-w-[480px] mx-auto lg:mr-auto lg:ml-0 group">
                    <div className="absolute -inset-10 bg-[#1565C0]/10 rounded-full blur-[100px] opacity-50 group-hover:opacity-80 transition-opacity duration-1000" />
                    <img 
-                    src={heroGuy} 
+                    src={heroAskGuy} 
                     alt="AskGuy Hero" 
                     className="w-full h-auto drop-shadow-[0_0_60px_rgba(21,101,192,0.2)] transition-transform duration-700 group-hover:scale-105" 
                    />

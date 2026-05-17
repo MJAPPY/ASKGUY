@@ -16,7 +16,7 @@ const Footer = () => {
                 <img src={logo} alt="AskGuy Logo" className="w-full h-full object-contain" />
               </Link>
               <Link to="/" className="font-black text-xl tracking-tighter transition-colors group-hover:text-[#1565C0] uppercase italic">
-                Ask<span className="text-[#1565C0]">Guy</span>
+                <span className="text-[#1565C0]">Ask</span>Guy
               </Link>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed font-medium">

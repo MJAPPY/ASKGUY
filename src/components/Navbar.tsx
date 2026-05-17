@@ -54,7 +54,7 @@ const Navbar = () => {
               <img src={logo} alt="Logo" className="w-full h-full object-contain" />
             </div>
             <span className="font-black text-xl md:text-2xl tracking-tighter transition-colors uppercase italic">
-              Ask<span className="text-[#1565C0]">Guy</span>
+              <span className="text-[#1565C0]">Ask</span>Guy
             </span>
           </Link>
 

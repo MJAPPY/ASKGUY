@@ -268,41 +268,41 @@ const RequestCard: React.FC<RequestCardProps> = ({
         </DialogTrigger>
 
         {/* Detailed Modal Content */}
-        <DialogContent className="glass-card border-white/10 max-w-3xl h-[90vh] overflow-hidden flex flex-col p-0 rounded-[32px] shadow-2xl">
-          <div className="p-8 border-b border-white/5 bg-white/[0.015] shrink-0 relative">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-              <div className="flex items-center gap-4">
-                <Avatar className="w-16 h-16 border-2 border-[#1565C0]/30 p-1.5 bg-black/20 rounded-[20px] shadow-lg">
+        <DialogContent className="glass-card border-white/10 w-[95vw] sm:max-w-3xl h-[92vh] sm:h-[90vh] overflow-hidden flex flex-col p-0 rounded-[28px] sm:rounded-[32px] shadow-2xl">
+          <div className="p-5 sm:p-8 border-b border-white/5 bg-white/[0.015] shrink-0 relative">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 sm:gap-6 mb-6 sm:mb-8">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <Avatar className="w-12 h-12 sm:w-16 sm:h-16 border-2 border-[#1565C0]/30 p-1 sm:p-1.5 bg-black/20 rounded-[18px] sm:rounded-[20px] shadow-lg">
                   <AvatarImage src={`https://api.dicebear.com/7.x/${avatarSet}/svg?seed=${requestor}`} />
                 </Avatar>
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-3xl font-black text-white uppercase italic tracking-tight">@{requestor}</h2>
-                    <Badge className={cn("text-[10px] font-black uppercase px-3 py-1 rounded-xl border", getCategoryColor())}>{category}</Badge>
+                <div className="space-y-0.5 sm:space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="text-xl sm:text-3xl font-black text-white uppercase italic tracking-tight">@{requestor}</h2>
+                    <Badge className={cn("text-[8px] sm:text-[10px] font-black uppercase px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl border", getCategoryColor())}>{category}</Badge>
                   </div>
-                  <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] flex items-center gap-2">
-                    <Calendar size={12} /> Posted {formatDistanceToNow(timestamp, { addSuffix: true })}
+                  <p className="text-[8px] sm:text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] flex items-center gap-1.5 sm:gap-2">
+                    <Calendar size={10} /> Posted {formatDistanceToNow(timestamp, { addSuffix: true })}
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <Button variant="ghost" size="icon" onClick={handleShare} className="h-11 w-11 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-muted-foreground">
-                  <Share2 size={18} />
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Button variant="ghost" size="icon" onClick={handleShare} className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-muted-foreground">
+                  <Share2 size={16} />
                 </Button>
                 {isAdmin && (
-                  <Button variant="ghost" size="icon" onClick={handleDelete} className="h-11 w-11 rounded-xl bg-red-500/5 border border-red-500/20 hover:bg-red-500/20 text-red-400">
-                    <Trash2 size={18} />
+                  <Button variant="ghost" size="icon" onClick={handleDelete} className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-red-500/5 border border-red-500/20 hover:bg-red-500/20 text-red-400">
+                    <Trash2 size={16} />
                   </Button>
                 )}
               </div>
             </div>
 
-            <div className="space-y-6">
-              <h1 className="text-4xl font-black tracking-tight text-white leading-tight uppercase italic">{title}</h1>
+            <div className="space-y-4 sm:space-y-6">
+              <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-white leading-tight uppercase italic">{title}</h1>
               <div className="relative">
-                <div className="absolute -left-4 top-0 bottom-0 w-1 bg-primary/20 rounded-full" />
-                <p className="text-lg text-foreground/90 leading-relaxed font-medium pl-2 italic">
+                <div className="absolute -left-3 sm:-left-4 top-0 bottom-0 w-1 bg-primary/20 rounded-full" />
+                <p className="text-base sm:text-lg text-foreground/90 leading-relaxed font-medium pl-3 sm:pl-2 italic">
                   "{description}"
                 </p>
               </div>
@@ -311,65 +311,65 @@ const RequestCard: React.FC<RequestCardProps> = ({
 
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
             <ScrollArea className="flex-1">
-              <div className="p-8 space-y-10">
+              <div className="p-5 sm:p-8 space-y-8 sm:space-y-10">
                 {proofUrl && (
-                  <div className="space-y-4">
-                    <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
-                      <ShieldCheck size={14} className="text-emerald-400" /> 
+                  <div className="space-y-3 sm:space-y-4">
+                    <h4 className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-1.5 sm:gap-2">
+                      <ShieldCheck size={12} className="text-emerald-400" /> 
                       Verification Proof
                     </h4>
-                    <div className="rounded-[32px] overflow-hidden border border-white/10 bg-black/40 shadow-2xl">
-                      <img src={proofUrl} alt="Proof" className="w-full h-auto object-contain max-h-[400px]" />
+                    <div className="rounded-[24px] sm:rounded-[32px] overflow-hidden border border-white/10 bg-black/40 shadow-2xl">
+                      <img src={proofUrl} alt="Proof" className="w-full h-auto object-contain max-h-[300px] sm:max-h-[400px]" />
                     </div>
                   </div>
                 )}
 
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
-                      <Heart size={14} className="text-rose-400" />
+                <div className="space-y-4 sm:space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <h4 className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-1.5 sm:gap-2">
+                      <Heart size={12} className="text-rose-400" />
                       Supporters List ({contributions.length})
                     </h4>
                     {guyTotal > 0 && (
-                      <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-lg">
+                      <Badge className="w-fit bg-primary/10 text-primary border-primary/20 text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-lg">
                         {guyTotal.toLocaleString()} GUY Included
                       </Badge>
                     )}
                   </div>
 
                   {sortedContributions.length > 0 ? (
-                    <div className="grid grid-cols-1 gap-4">
+                    <div className="grid grid-cols-1 gap-3 sm:gap-4">
                       {sortedContributions.map((c, i) => {
                         const isThanks = c.amount === 0;
                         return (
                           <div key={i} className={cn(
-                            "glass-card border-white/5 p-6 rounded-2xl flex items-start gap-4 transition-all group",
+                            "glass-card border-white/5 p-4 sm:p-6 rounded-2xl flex items-start gap-3 sm:gap-4 transition-all group",
                             isThanks ? "bg-blue-500/5 border-blue-500/20" : "bg-white/[0.02] hover:bg-white/[0.04]"
                           )}>
-                            <Avatar className="w-12 h-12 border border-white/10 p-1 bg-black/20 rounded-xl group-hover:scale-110 transition-transform">
+                            <Avatar className="w-10 h-10 sm:w-12 sm:h-12 border border-white/10 p-0.5 sm:p-1 bg-black/20 rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform">
                               <AvatarImage src={`https://api.dicebear.com/7.x/${avatarSet}/svg?seed=${c.user}`} />
                             </Avatar>
                             <div className="flex-1 min-w-0">
-                              <div className="flex justify-between items-center mb-1">
-                                <div className="flex items-center gap-2">
-                                  <p className="text-base font-black text-white">@{c.user}</p>
+                              <div className="flex justify-between items-center mb-0.5 sm:mb-1">
+                                <div className="flex items-center gap-1.5 sm:gap-2">
+                                  <p className="text-sm sm:text-base font-black text-white">@{c.user}</p>
                                   {isThanks && (
-                                    <Badge className="bg-blue-500/20 text-blue-400 border-none text-[9px] uppercase font-black px-2 py-0">THANK YOU</Badge>
+                                    <Badge className="bg-blue-500/20 text-blue-400 border-none text-[8px] sm:text-[9px] uppercase font-black px-1.5 sm:px-2 py-0">THANK YOU</Badge>
                                   )}
                                 </div>
                                 {!isThanks && (
-                                  <p className="text-[12px] font-black text-emerald-400">+{c.amount.toLocaleString()} {c.token}</p>
+                                  <p className="text-[11px] sm:text-[12px] font-black text-emerald-400">+{c.amount.toLocaleString()} {c.token}</p>
                                 )}
                               </div>
                               {c.message && (
                                 <p className={cn(
-                                  "text-sm italic font-medium leading-relaxed",
+                                  "text-xs sm:text-sm italic font-medium leading-relaxed",
                                   isThanks ? "text-blue-200" : "text-muted-foreground"
                                 )}>
                                   "{c.message}"
                                 </p>
                               )}
-                              <p className="text-[10px] text-muted-foreground/50 font-black uppercase tracking-widest mt-2">
+                              <p className="text-[8px] sm:text-[10px] text-muted-foreground/50 font-black uppercase tracking-widest mt-1.5 sm:mt-2">
                                 {formatDistanceToNow(c.timestamp, { addSuffix: true })}
                               </p>
                             </div>
@@ -378,55 +378,55 @@ const RequestCard: React.FC<RequestCardProps> = ({
                       })}
                     </div>
                   ) : (
-                    <div className="py-24 text-center border-2 border-dashed border-white/5 rounded-[40px] flex flex-col items-center gap-4">
-                      <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-muted-foreground/20">
-                        <Gift size={32} />
+                    <div className="py-16 sm:py-24 text-center border-2 border-dashed border-white/5 rounded-[28px] sm:rounded-[40px] flex flex-col items-center gap-3 sm:gap-4">
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-white/5 flex items-center justify-center text-muted-foreground/20">
+                        <Gift size={24} sm:size={32} />
                       </div>
-                      <p className="text-[11px] text-muted-foreground font-black uppercase tracking-[0.2em]">No contributions yet. Be the first!</p>
+                      <p className="text-[10px] sm:text-[11px] text-muted-foreground font-black uppercase tracking-[0.2em]">No contributions yet. Be the first!</p>
                     </div>
                   )}
                 </div>
               </div>
             </ScrollArea>
 
-            <div className="p-8 border-t border-white/5 bg-white/[0.01] shrink-0">
-              <div className="flex flex-col sm:flex-row gap-4">
+            <div className="p-5 sm:p-8 border-t border-white/5 bg-white/[0.01] shrink-0">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 {!isCompleted && !isOwner && (
                   <Button 
                     onClick={() => setIsHelpModalOpen(true)}
-                    className="flex-1 h-16 bg-primary hover:bg-primary/90 text-black font-black text-[12px] uppercase tracking-[0.2em] rounded-2xl gold-glow gap-3"
+                    className="flex-1 h-14 sm:h-16 bg-primary hover:bg-primary/90 text-black font-black text-[11px] sm:text-[12px] uppercase tracking-[0.2em] rounded-2xl gold-glow gap-3"
                   >
-                    <Heart size={20} className="fill-current" />
+                    <Heart size={18} sm:size={20} className="fill-current" />
                     Help This Person
                   </Button>
                 )}
                 {isOwner && !isCompleted && (
-                  <div className="flex-1 flex flex-col sm:flex-row gap-4">
+                  <div className="flex-1 flex flex-col sm:flex-row gap-3 sm:gap-4">
                     <Button 
                       onClick={() => setIsEditModalOpen(true)}
                       variant="outline" 
-                      className="flex-1 h-16 border-white/10 hover:bg-white/5 text-white font-black text-[12px] uppercase tracking-[0.2em] rounded-2xl gap-3"
+                      className="flex-1 h-14 sm:h-16 border-white/10 hover:bg-white/5 text-white font-black text-[11px] sm:text-[12px] uppercase tracking-[0.2em] rounded-2xl gap-2.5 sm:gap-3"
                     >
-                      <Edit3 size={18} /> Edit Request
+                      <Edit3 size={16} sm:size={18} /> Edit Request
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button className="flex-1 h-16 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[12px] uppercase tracking-[0.2em] rounded-2xl gap-3 shadow-[0_10px_30px_rgba(16,185,129,0.2)]">
-                          <CheckCircle2 size={22} /> Complete Request
+                        <Button className="flex-1 h-14 sm:h-16 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[11px] sm:text-[12px] uppercase tracking-[0.2em] rounded-2xl gap-2.5 sm:gap-3 shadow-[0_10px_30px_rgba(16,185,129,0.2)]">
+                          <CheckCircle2 size={18} sm:size={22} /> Complete Request
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent className="glass-card border-white/10 p-8 rounded-[32px]">
+                      <AlertDialogContent className="glass-card border-white/10 p-6 sm:p-8 rounded-[28px] sm:rounded-[32px] w-[95vw] sm:max-w-md">
                         <AlertDialogHeader>
-                          <AlertDialogTitle className="text-2xl font-black uppercase tracking-tight italic">Ready to Archive?</AlertDialogTitle>
-                          <AlertDialogDescription className="text-muted-foreground font-medium">This will mark your request as completed. Leave a final thank you message for your supporters.</AlertDialogDescription>
+                          <AlertDialogTitle className="text-xl sm:text-2xl font-black uppercase tracking-tight italic">Ready to Archive?</AlertDialogTitle>
+                          <AlertDialogDescription className="text-muted-foreground text-sm sm:text-base font-medium">This will mark your request as completed. Leave a final thank you message for your supporters.</AlertDialogDescription>
                         </AlertDialogHeader>
-                        <div className="py-6 space-y-3">
-                          <label className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">Final Thank You</label>
-                          <Textarea value={thanksMessage} onChange={(e) => setThanksMessage(e.target.value)} className="bg-white/5 border-white/10 rounded-2xl h-32 leading-relaxed" />
+                        <div className="py-4 sm:py-6 space-y-2 sm:space-y-3">
+                          <label className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">Final Thank You</label>
+                          <Textarea value={thanksMessage} onChange={(e) => setThanksMessage(e.target.value)} className="bg-white/5 border-white/10 rounded-2xl h-24 sm:h-32 leading-relaxed" />
                         </div>
-                        <AlertDialogFooter className="gap-3">
-                          <AlertDialogCancel className="bg-white/5 border-white/10 h-14 rounded-2xl font-black uppercase tracking-widest text-[11px]">Back</AlertDialogCancel>
-                          <AlertDialogAction onClick={handleComplete} className="bg-emerald-600 hover:bg-emerald-500 h-14 rounded-2xl font-black uppercase tracking-widest text-[11px]">Complete & Archive</AlertDialogAction>
+                        <AlertDialogFooter className="gap-2 sm:gap-3">
+                          <AlertDialogCancel className="bg-white/5 border-white/10 h-12 sm:h-14 rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-[11px]">Back</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleComplete} className="bg-emerald-600 hover:bg-emerald-500 h-12 sm:h-14 rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-[11px]">Complete & Archive</AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
@@ -440,21 +440,21 @@ const RequestCard: React.FC<RequestCardProps> = ({
 
       {/* Helper Modals */}
       <Dialog open={isHelpModalOpen} onOpenChange={setIsHelpModalOpen}>
-        <DialogContent className="glass-card border-white/10 max-w-md p-8 rounded-[32px] shadow-2xl">
+        <DialogContent className="glass-card border-white/10 w-[95vw] sm:max-w-md p-6 sm:p-8 rounded-[28px] sm:rounded-[32px] shadow-2xl">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-black tracking-tight uppercase italic">Send Support</DialogTitle>
-            <DialogDescription className="text-muted-foreground font-medium">Your contribution goes directly to the recipient's wallet.</DialogDescription>
+            <DialogTitle className="text-xl sm:text-2xl font-black tracking-tight uppercase italic">Send Support</DialogTitle>
+            <DialogDescription className="text-muted-foreground text-sm sm:text-base font-medium">Your contribution goes directly to the recipient's wallet.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-6 py-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">Amount</label>
-                <Input type="number" value={contributionAmount} onChange={(e) => setContributionAmount(e.target.value)} className="h-14 bg-white/5 border-white/10 font-black text-xl rounded-2xl" />
+          <div className="space-y-5 sm:space-y-6 py-4 sm:py-6">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              <div className="space-y-1.5 sm:space-y-2">
+                <label className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">Amount</label>
+                <Input type="number" value={contributionAmount} onChange={(e) => setContributionAmount(e.target.value)} className="h-12 sm:h-14 bg-white/5 border-white/10 font-black text-lg sm:text-xl rounded-xl sm:rounded-2xl" />
               </div>
-              <div className="space-y-2">
-                <label className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">Token</label>
+              <div className="space-y-1.5 sm:space-y-2">
+                <label className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">Token</label>
                 <Select value={contributionToken} onValueChange={(v: TokenSymbol) => setContributionToken(v)}>
-                  <SelectTrigger className="h-14 bg-white/5 border-white/10 font-black rounded-2xl text-base"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-12 sm:h-14 bg-white/5 border-white/10 font-black rounded-xl sm:rounded-2xl text-sm sm:text-base"><SelectValue /></SelectTrigger>
                   <SelectContent className="glass-card">
                     <SelectItem value="XPR" className="font-black">XPR</SelectItem>
                     <SelectItem value="GUY" className="font-black">GUY</SelectItem>
@@ -462,17 +462,17 @@ const RequestCard: React.FC<RequestCardProps> = ({
                 </Select>
               </div>
             </div>
-            <div className="space-y-2">
-              <label className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">Message (Optional)</label>
+            <div className="space-y-1.5 sm:space-y-2">
+              <label className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">Message (Optional)</label>
               <Textarea placeholder="Send a kind word..." value={contributionMessage} onChange={(e) => setContributionMessage(e.target.value)} className="bg-white/5 border-white/10 rounded-xl font-medium" />
             </div>
-            <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 flex justify-between items-center">
-              <span className="text-[10px] font-black uppercase text-muted-foreground">Your Balance</span>
-              <span className="text-sm font-black text-primary">{currentBalance.toLocaleString()} {contributionToken}</span>
+            <div className="p-3 sm:p-4 rounded-xl bg-primary/5 border border-primary/10 flex justify-between items-center">
+              <span className="text-[9px] sm:text-[10px] font-black uppercase text-muted-foreground">Your Balance</span>
+              <span className="text-xs sm:text-sm font-black text-primary">{currentBalance.toLocaleString()} {contributionToken}</span>
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleContribute} disabled={isProcessing} className="w-full h-14 bg-primary hover:bg-primary/90 text-black font-black rounded-xl gold-glow">
+            <Button onClick={handleContribute} disabled={isProcessing} className="w-full h-12 sm:h-14 bg-primary hover:bg-primary/90 text-black font-black rounded-xl sm:rounded-xl gold-glow">
               {isProcessing ? <Loader2 className="animate-spin" /> : "Confirm & Send"}
             </Button>
           </DialogFooter>

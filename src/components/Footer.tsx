@@ -16,7 +16,7 @@ const Footer = () => {
                 <img 
                   src={logo} 
                   alt="AskGuy Logo" 
-                  className="w-full h-full object-contain contrast-[1.08] brightness-[1.05]" 
+                  className="w-full h-full object-contain contrast-[1.15] brightness-[1.1] [image-rendering:optimizeQuality] [image-rendering:-webkit-optimize-contrast]" 
                   style={{ 
                     imageRendering: 'crisp-edges',
                     transform: 'translateZ(0)',

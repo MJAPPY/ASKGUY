@@ -33,20 +33,25 @@ const AvatarPicker = ({ onSuccess }: AvatarPickerProps) => {
   const handleSave = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .upsert({ 
-          address: address.toLowerCase().trim(), 
-          avatar_url: selectedSeed 
-        }, { onConflict: 'address' });
+      // Routing profile update through the secure Edge Function
+      const { error } = await supabase.functions.invoke('manage-platform', {
+        body: {
+          action: 'UPSERT_PROFILE',
+          callerAddress: address,
+          payload: { 
+            address: address.toLowerCase().trim(), 
+            avatar_url: selectedSeed 
+          }
+        }
+      });
 
       if (error) throw error;
       
       showSuccess("Avatar updated successfully!");
       await refreshBalances();
       onSuccess();
-    } catch (err) {
-      showError("Failed to update avatar");
+    } catch (err: any) {
+      showError(err.message || "Failed to update avatar");
     } finally {
       setLoading(false);
     }

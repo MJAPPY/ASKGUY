@@ -11,7 +11,7 @@ import {
   RefreshCw, 
   ChevronDown,
   ExternalLink,
-  Loader2,
+  Loader2, 
   Calculator,
   ShieldCheck
 } from 'lucide-react';
@@ -50,7 +50,7 @@ const Navbar = () => {
       <div className="container mx-auto px-4 h-20 flex items-center justify-between gap-4">
         <div className="flex items-center gap-6 md:gap-10">
           <Link to="/" className="flex items-center gap-3 group shrink-0">
-            <div className="w-11 h-11 md:w-14 md:h-14 transition-all duration-300 group-hover:scale-105 shrink-0 rounded-xl overflow-hidden border-2 border-[#1565C0]/40 shadow-[0_0_20px_rgba(21,101,192,0.3)] bg-black/40">
+            <div className="w-11 h-11 md:w-14 md:h-14 transition-all duration-300 group-hover:scale-110 shrink-0 flex items-center justify-center">
               <img src={logo} alt="Logo" className="w-full h-full object-contain" />
             </div>
             <span className="font-black text-xl md:text-2xl tracking-tight transition-colors">

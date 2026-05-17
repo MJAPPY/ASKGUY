@@ -23,8 +23,8 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
-// Correcting the extension from .png to .jpg to match the uploaded asset
-import heroGuy from '@/assets/hero-guy.jpg';
+// Importing the new PNG hero image
+import heroGuy from '@/assets/hero-guy.png';
 
 type FilterType = 'all' | 'active' | 'funded' | 'my-requests';
 type SortType = 'newest' | 'oldest';
@@ -137,31 +137,29 @@ const Index = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-4 space-y-6">
             <div className="space-y-6">
-              <div className="flex flex-col gap-4">
-                <Dialog open={isRequestModalOpen} onOpenChange={setIsRequestModalOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="w-full h-20 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-black rounded-[24px] shadow-[0_10px_40px_rgba(16,185,129,0.25)] flex items-center justify-start px-6 gap-5 group transition-all duration-500 border border-emerald-400/20 active:scale-[0.98] relative overflow-hidden">
-                      <div className="absolute top-0 right-0 w-32 h-full bg-white/10 skew-x-[-20deg] translate-x-16 group-hover:translate-x-[-100%] transition-transform duration-1000 ease-in-out pointer-events-none" />
-                      
-                      <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center transition-all group-hover:rotate-12 duration-500 shadow-inner shrink-0">
-                        <Plus size={24} className="text-white" strokeWidth={3} />
-                      </div>
-                      
-                      <div className="text-left flex-1 min-w-0">
-                        <p className="text-lg uppercase tracking-tight leading-none font-black mb-1.5">Post New Request</p>
-                        <p className="text-[10px] text-emerald-50/70 uppercase font-black tracking-widest opacity-80 group-hover:opacity-100 transition-opacity">Request Community Support</p>
-                      </div>
-                      
-                      <div className="w-10 h-10 rounded-full bg-black/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-1">
-                        <ArrowRight size={18} className="text-white" />
-                      </div>
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="glass-card border-white/10 max-w-xl p-8 rounded-[32px] shadow-2xl">
-                    <RequestForm onSuccess={() => setIsRequestModalOpen(false)} />
-                  </DialogContent>
-                </Dialog>
-              </div>
+              <Dialog open={isRequestModalOpen} onOpenChange={setIsRequestModalOpen}>
+                <DialogTrigger asChild>
+                  <Button className="w-full h-20 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-black rounded-[24px] shadow-[0_10px_40px_rgba(16,185,129,0.25)] flex items-center justify-start px-6 gap-5 group transition-all duration-500 border border-emerald-400/20 active:scale-[0.98] relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-full bg-white/10 skew-x-[-20deg] translate-x-16 group-hover:translate-x-[-100%] transition-transform duration-1000 ease-in-out pointer-events-none" />
+                    
+                    <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center transition-all group-hover:rotate-12 duration-500 shadow-inner shrink-0">
+                      <Plus size={24} className="text-white" strokeWidth={3} />
+                    </div>
+                    
+                    <div className="text-left flex-1 min-w-0">
+                      <p className="text-lg uppercase tracking-tight leading-none font-black mb-1.5">Post New Request</p>
+                      <p className="text-[10px] text-emerald-50/70 uppercase font-black tracking-widest opacity-80 group-hover:opacity-100 transition-opacity">Request Community Support</p>
+                    </div>
+                    
+                    <div className="w-10 h-10 rounded-full bg-black/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-1">
+                      <ArrowRight size={18} className="text-white" />
+                    </div>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="glass-card border-white/10 max-w-xl p-8 rounded-[32px] shadow-2xl">
+                  <RequestForm onSuccess={() => setIsRequestModalOpen(false)} />
+                </DialogContent>
+              </Dialog>
 
               <ActivityFeed />
               

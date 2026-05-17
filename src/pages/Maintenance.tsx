@@ -4,7 +4,7 @@ import React from 'react';
 import { useWallet } from '@/hooks/use-wallet';
 import { Button } from '@/components/ui/button';
 import { Settings, Hammer, Zap, Heart, Loader2, ShieldAlert, LogOut } from 'lucide-react';
-import logo from '@/assets/hero-guy.jpg';
+import logo from '@/assets/logo.jpg';
 
 const Maintenance = () => {
   const { maintenanceMessage, connect, disconnect, isConnecting, isConnected, address, isAdmin } = useWallet();

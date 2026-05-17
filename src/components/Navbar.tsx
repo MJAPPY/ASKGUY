@@ -82,16 +82,16 @@ const Navbar = () => {
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-white/5 bg-[#0a0a0c]/80 backdrop-blur-md">
-      <div className="container mx-auto px-4 h-20 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2 md:gap-6 lg:gap-10">
+      <div className="container mx-auto px-2 sm:px-4 h-16 sm:h-20 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1 sm:gap-4 lg:gap-10">
           {/* Mobile Menu Trigger */}
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="lg:hidden h-11 w-11 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10">
-                <Menu size={24} className="text-white" />
+              <Button variant="ghost" size="icon" className="lg:hidden h-9 w-9 sm:h-11 sm:w-11 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10">
+                <Menu size={20} className="text-white" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="glass-card border-r border-white/5 w-[300px] p-0 flex flex-col">
+            <SheetContent side="left" className="glass-card border-r border-white/5 w-[280px] sm:w-[300px] p-0 flex flex-col">
               <SheetHeader className="p-6 border-b border-white/5">
                 <SheetTitle className="text-left flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl overflow-hidden bg-black/20 p-1 border border-white/10">
@@ -153,8 +153,8 @@ const Navbar = () => {
             </SheetContent>
           </Sheet>
 
-          <Link to="/" className="flex items-center gap-3 group shrink-0">
-            <div className="w-12 h-12 md:w-16 md:h-16 transition-all duration-300 group-hover:scale-110 shrink-0 flex items-center justify-center overflow-hidden">
+          <Link to="/" className="flex items-center gap-1.5 sm:gap-3 group shrink-0">
+            <div className="w-8 h-8 sm:w-16 sm:h-16 transition-all duration-300 group-hover:scale-110 shrink-0 flex items-center justify-center overflow-hidden">
               <img 
                 src={logo} 
                 alt="Logo" 
@@ -166,7 +166,7 @@ const Navbar = () => {
                 }} 
               />
             </div>
-            <span className="font-black text-xl md:text-3xl tracking-tighter transition-colors uppercase italic group-hover:text-primary">
+            <span className="font-black text-sm sm:text-3xl tracking-tighter transition-colors uppercase italic group-hover:text-primary">
               Ask<span className="text-[#1565C0]">Guy</span>
             </span>
           </Link>
@@ -174,28 +174,28 @@ const Navbar = () => {
           <NavLinks />
         </div>
 
-        <div className="flex items-center gap-1.5 md:gap-3 ml-auto">
+        <div className="flex items-center gap-1 sm:gap-3 ml-auto">
           {isConnected ? (
             <>
-              <div className="flex items-center gap-1 md:gap-2">
-                <div className="flex items-center gap-1 md:gap-1.5 px-2.5 md:px-4 py-1.5 md:py-2 rounded-full bg-purple-500/10 border border-purple-500/30 text-[9px] md:text-[11px] font-bold hover:bg-purple-500/20 transition-all cursor-default shadow-[0_0_15px_rgba(168,85,247,0.15)]">
+              <div className="flex items-center gap-1 sm:gap-2">
+                <div className="flex items-center gap-0.5 sm:gap-1.5 px-1.5 sm:px-4 py-1 sm:py-2 rounded-full bg-purple-500/10 border border-purple-500/30 text-[8px] sm:text-[11px] font-bold hover:bg-purple-500/20 transition-all cursor-default shadow-[0_0_15px_rgba(168,85,247,0.15)]">
                   {isFetchingBalances ? (
                     <Loader2 size={10} className="animate-spin text-purple-400" />
                   ) : (
                     <>
-                      <span className="text-purple-400 font-black tracking-tight">{xprBalance.toLocaleString(undefined, { maximumFractionDigits: 1 })}</span>
-                      <span className="text-purple-400/50 font-black uppercase text-[7px] md:text-[9px]">XPR</span>
+                      <span className="text-purple-400 font-black tracking-tight">{xprBalance.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                      <span className="text-purple-400/50 font-black uppercase text-[6px] sm:text-[9px] ml-0.5">XPR</span>
                     </>
                   )}
                 </div>
 
-                <div className="flex items-center gap-1 md:gap-1.5 px-2.5 md:px-4 py-1.5 md:py-2 rounded-full bg-primary/10 border border-primary/30 text-[9px] md:text-[11px] font-bold hover:bg-primary/20 transition-all cursor-default shadow-[0_0_15px_rgba(244,201,93,0.15)]">
+                <div className="flex items-center gap-0.5 sm:gap-1.5 px-1.5 sm:px-4 py-1 sm:py-2 rounded-full bg-primary/10 border border-primary/30 text-[8px] sm:text-[11px] font-bold hover:bg-primary/20 transition-all cursor-default shadow-[0_0_15px_rgba(244,201,93,0.15)]">
                   {isFetchingBalances ? (
                     <Loader2 size={10} className="animate-spin text-primary" />
                   ) : (
                     <>
                       <span className="text-primary font-black tracking-tight">{guyBalance.toLocaleString()}</span>
-                      <span className="text-primary/60 font-black uppercase text-[7px] md:text-[9px]">GUY</span>
+                      <span className="text-primary/60 font-black uppercase text-[6px] sm:text-[9px] ml-0.5">GUY</span>
                     </>
                   )}
                 </div>
@@ -203,18 +203,18 @@ const Navbar = () => {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="h-10 md:h-12 gap-1.5 md:gap-3 px-1 md:px-2 hover:bg-white/5 rounded-xl group transition-all duration-300">
+                  <Button variant="ghost" className="h-9 sm:h-12 gap-1.5 sm:gap-3 px-1 sm:px-2 hover:bg-white/5 rounded-xl group transition-all duration-300">
                     <div className="relative">
                       <div className="absolute -inset-1 bg-gradient-to-tr from-[#1565C0]/40 to-emerald-400/40 rounded-full blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                      <Avatar className="h-7 w-7 md:h-8 md:w-8 border border-white/20 group-hover:border-[#1565C0]/50 transition-all duration-300 relative z-10 shadow-lg p-1 bg-black/20">
+                      <Avatar className="h-6 w-6 sm:h-8 sm:w-8 border border-white/20 group-hover:border-[#1565C0]/50 transition-all duration-300 relative z-10 shadow-lg p-0.5 sm:p-1 bg-black/20">
                         <AvatarImage src={`https://api.dicebear.com/7.x/${avatarSet}/svg?seed=${currentAvatarSeed}`} />
-                        <AvatarFallback className="bg-[#1565C0] text-white font-bold text-[10px]">
+                        <AvatarFallback className="bg-[#1565C0] text-white font-bold text-[8px] sm:text-[10px]">
                           {displayAddress.substring(0, 2).toUpperCase() || '??'}
                         </AvatarFallback>
                       </Avatar>
                     </div>
                     <span className="text-sm font-black hidden sm:inline-block group-hover:text-[#1565C0] transition-colors">@{displayAddress}</span>
-                    <ChevronDown size={14} className="text-muted-foreground group-data-[state=open]:rotate-180 transition-transform hidden sm:block" />
+                    <ChevronDown size={12} className="text-muted-foreground group-data-[state=open]:rotate-180 transition-transform hidden sm:block" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-64 glass-card border-white/10 p-2 mt-2 animate-in fade-in zoom-in-95 duration-200 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
@@ -285,9 +285,9 @@ const Navbar = () => {
             <Button 
               onClick={connect} 
               disabled={isConnecting}
-              className="bg-[#1565C0] hover:bg-[#1565C0]/90 text-white font-black rounded-xl px-4 md:px-6 h-10 md:h-11 shadow-[0_0_20px_rgba(21,101,192,0.3)] btn-premium text-xs md:text-sm"
+              className="bg-[#1565C0] hover:bg-[#1565C0]/90 text-white font-black rounded-xl px-4 md:px-6 h-9 sm:h-11 shadow-[0_0_20px_rgba(21,101,192,0.3)] btn-premium text-[10px] sm:text-sm"
             >
-              {isConnecting ? <Loader2 className="animate-spin" size={18} /> : "Connect Wallet"}
+              {isConnecting ? <Loader2 className="animate-spin" size={16} /> : "Connect"}
             </Button>
           )}
         </div>

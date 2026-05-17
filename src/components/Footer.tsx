@@ -24,7 +24,7 @@ const Footer = () => {
                   }} 
                 />
               </Link>
-              <Link to="/" className="font-black text-xl tracking-tighter transition-colors group-hover:text-primary uppercase italic">
+              <Link to="/" className="font-black text-2xl tracking-tighter transition-colors group-hover:text-primary uppercase italic">
                 Ask<span className="text-[#1565C0]">Guy</span>
               </Link>
             </div>

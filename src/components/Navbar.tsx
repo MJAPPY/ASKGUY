@@ -62,7 +62,7 @@ const Navbar = () => {
                 }} 
               />
             </div>
-            <span className="font-black text-xl md:text-2xl tracking-tighter transition-colors uppercase italic group-hover:text-primary">
+            <span className="font-black text-2xl md:text-3xl tracking-tighter transition-colors uppercase italic group-hover:text-primary">
               Ask<span className="text-[#1565C0]">Guy</span>
             </span>
           </Link>

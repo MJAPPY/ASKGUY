@@ -159,7 +159,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } catch (err) {
       console.error('Error fetching balances:', err);
     } finally {
-      setLoading(false); // Fix potential loading state issue
       setIsFetchingBalances(false);
     }
   }, [getTokenBalance]);

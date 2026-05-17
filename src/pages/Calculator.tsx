@@ -31,13 +31,13 @@ import guyLogo from '@/assets/guy-logo.jpg';
 type CalculationMode = 'fiat-to-xpr' | 'xpr-to-fiat' | 'guy-swap';
 
 const Calculator = () => {
-  const [mode, setMode] = useState<CalculationMode>('guy-swap'); // Default to GUY swap as it's the primary use case
+  const [mode, setMode] = useState<CalculationMode>('guy-swap'); 
   const [inputValue, setInputValue] = useState<string>('1,000,000');
   const [resultValue, setResultValue] = useState<string>('');
   const [secondaryResult, setSecondaryResult] = useState<string>('');
   const [currency, setCurrency] = useState('USD');
   const [prices, setPrices] = useState<Record<string, number>>({});
-  const [guyPriceXpr, setGuyPriceXpr] = useState<number>(0.0000305); // Updated fallback to match current Alcor/Vibrr rates
+  const [guyPriceXpr, setGuyPriceXpr] = useState<number>(0.0000305); 
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
@@ -62,7 +62,6 @@ const Calculator = () => {
   const fetchPrices = useCallback(async () => {
     setLoading(true);
     try {
-      // 1. Fetch XPR Fiat Prices from CoinGecko
       const vsCurrencies = currencies.map(c => c.code.toLowerCase()).join(',');
       const response = await fetch(
         `https://api.coingecko.com/api/v3/simple/price?ids=proton&vs_currencies=${vsCurrencies}`
@@ -76,11 +75,9 @@ const Calculator = () => {
       });
       setPrices(newPrices);
 
-      // 2. Fetch GUY Price in XPR from Alcor API
       const alcorRes = await fetch('https://proton.alcor.exchange/api/v2/tickers');
       const tickers = await alcorRes.json();
       
-      // Specifically look for GUY on vtoken contract vs XPR on eosio.token
       const guyTicker = tickers.find((t: any) => 
         (t.base_currency === 'GUY' && t.quote_currency === 'XPR') ||
         (t.ticker_id === 'GUY_XPR')
@@ -88,7 +85,7 @@ const Calculator = () => {
       
       if (guyTicker && guyTicker.last_price) {
         const price = parseFloat(guyTicker.last_price);
-        if (price > 0 && price < 0.1) { // Basic sanity check to ensure we aren't getting a weird XPR/GUY inverse
+        if (price > 0 && price < 0.1) { 
           setGuyPriceXpr(price);
         }
       }
@@ -122,11 +119,9 @@ const Calculator = () => {
       const calculated = val * rate;
       setResultValue(calculated.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
     } else if (mode === 'guy-swap') {
-      // GUY to XPR calculation
       const xprValue = val * guyPriceXpr;
       setResultValue(xprValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 }));
       
-      // GUY to FIAT calculation
       const usdRate = prices[currency] || 0.003;
       const fiatValue = xprValue * usdRate;
       setSecondaryResult(fiatValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
@@ -276,15 +271,19 @@ const Calculator = () => {
                 </div>
 
                 <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-6 border-t border-white/5">
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5">
-                    <RefreshCw size={14} className={cn("text-blue-400", loading && "animate-spin")} />
-                    <div className="space-y-0">
-                      <p className="text-[8px] font-black uppercase tracking-widest text-muted-foreground leading-none">Live DEX Data</p>
+                  <button 
+                    onClick={() => fetchPrices()}
+                    disabled={loading}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group cursor-pointer"
+                  >
+                    <RefreshCw size={14} className={cn("text-blue-400 transition-transform group-hover:rotate-180", loading && "animate-spin")} />
+                    <div className="text-left space-y-0">
+                      <p className="text-[8px] font-black uppercase tracking-widest text-muted-foreground leading-none">Live DEX Data (Auto-update)</p>
                       <p className="text-[11px] font-black">
                         {mode === 'guy-swap' ? `1 GUY ≈ ${guyPriceXpr.toFixed(6)} XPR` : `1 XPR = ${prices[currency]?.toFixed(6)} ${currency}`}
                       </p>
                     </div>
-                  </div>
+                  </button>
                   
                   <div className="flex gap-3">
                     {mode === 'guy-swap' && (
@@ -313,7 +312,7 @@ const Calculator = () => {
                 <div className="space-y-1">
                   <h3 className="font-black text-base tracking-tight">Fair Market Estimates</h3>
                   <p className="text-[11px] font-medium text-muted-foreground leading-relaxed">
-                    Estimates are pulled directly from Alcor DEX and CoinGecko to provide real-world accuracy.
+                    Estimates are pulled directly from Alcor DEX and CoinGecko every minute to provide real-world accuracy.
                   </p>
                 </div>
               </div>

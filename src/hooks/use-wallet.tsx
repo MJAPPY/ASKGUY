@@ -6,7 +6,6 @@ import { supabase } from '@/integrations/supabase/client';
 
 export const OWNER_ADDRESS = 'askguy';
 export const MEMBERSHIP_RECIPIENT = 'tripseven';
-const GUY_ACCESS_THRESHOLD = 7770; // Minimum GUY needed for community access if enforced
 
 export interface WalletState {
   address: string;
@@ -68,7 +67,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const isAdmin = address.toLowerCase() === OWNER_ADDRESS.toLowerCase();
   const isMember = !isMembershipEnabled || membershipExpiry > Date.now();
-  const hasGuyThreshold = guyBalance >= GUY_ACCESS_THRESHOLD;
+  // Threshold removed as per request
+  const hasGuyThreshold = true;
 
   const fetchSettings = useCallback(async () => {
     try {

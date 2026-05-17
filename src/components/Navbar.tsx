@@ -15,7 +15,8 @@ import {
   Calculator,
   ShieldCheck,
   Menu,
-  X
+  X,
+  Wallet
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -145,8 +146,12 @@ const Navbar = () => {
                     </Button>
                   </div>
                 ) : (
-                  <Button onClick={connect} className="w-full h-12 bg-[#1565C0] text-white font-black rounded-xl uppercase tracking-widest text-[10px] btn-premium">
-                    Connect Wallet
+                  <Button 
+                    onClick={connect} 
+                    className="w-full h-12 bg-[#1565C0] hover:bg-[#1565C0]/90 text-white font-black rounded-full uppercase tracking-wider text-[10px] gap-3 flex items-center justify-center shadow-[0_0_20px_rgba(21,101,192,0.3)] transition-all active:scale-[0.98]"
+                  >
+                    <Wallet size={18} />
+                    Connect WebAuth
                   </Button>
                 )}
               </div>
@@ -285,9 +290,16 @@ const Navbar = () => {
             <Button 
               onClick={connect} 
               disabled={isConnecting}
-              className="bg-[#1565C0] hover:bg-[#1565C0]/90 text-white font-black rounded-xl px-4 md:px-6 h-9 sm:h-11 shadow-[0_0_20px_rgba(21,101,192,0.3)] btn-premium text-[10px] sm:text-sm"
+              className="bg-[#1565C0] hover:bg-[#1565C0]/90 text-white font-black rounded-full px-4 sm:px-6 h-9 sm:h-12 shadow-[0_0_20px_rgba(21,101,192,0.3)] transition-all active:scale-[0.98] text-[10px] sm:text-xs uppercase tracking-wider flex items-center gap-2 sm:gap-3"
             >
-              {isConnecting ? <Loader2 className="animate-spin" size={16} /> : "Connect"}
+              {isConnecting ? (
+                <Loader2 className="animate-spin" size={16} />
+              ) : (
+                <>
+                  <Wallet size={16} className="sm:w-[18px] sm:h-[18px]" />
+                  <span>Connect WebAuth</span>
+                </>
+              )}
             </Button>
           )}
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useWallet } from '@/hooks/use-wallet';
 import { Button } from '@/components/ui/button';
 import { 
@@ -13,7 +13,9 @@ import {
   ExternalLink,
   Loader2, 
   Calculator,
-  ShieldCheck
+  ShieldCheck,
+  Menu,
+  X
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -23,13 +25,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import logo from '@/assets/hero-guylogo.jpg';
 import { cn } from '@/lib/utils';
 
 const Navbar = () => {
-  const { isConnected, isConnecting, isFetchingBalances, isAdmin, address, xprBalance, guyBalance, avatarUrl, disconnect, refreshBalances, connect } = useWallet();
+  const { isConnected, isConnecting, isFetchingBalances, isAdmin, address, xprBalance, guyBalance, avatarUrl, disconnect, refreshBalances, connect, avatarSet } = useWallet();
   const location = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navItems = [
     { label: 'Dashboard', icon: <LayoutGrid size={18} />, path: '/', private: true },
@@ -45,12 +55,106 @@ const Navbar = () => {
   const displayAddress = typeof address === 'string' ? address : '';
   const currentAvatarSeed = avatarUrl || displayAddress;
 
+  const NavLinks = ({ mobile = false, onClick = () => {} }) => (
+    <div className={cn("flex items-center gap-1", mobile ? "flex-col items-stretch w-full gap-2" : "hidden lg:flex")}>
+      {visibleNavItems.map((item) => (
+        <Button
+          key={item.label}
+          variant="ghost"
+          asChild
+          onClick={onClick}
+          className={cn(
+            "gap-2 text-sm font-black uppercase tracking-widest transition-all duration-300 hover:scale-105",
+            mobile ? "h-14 justify-start px-6 rounded-2xl w-full" : "h-10 px-4",
+            isActive(item.path) 
+              ? 'text-[#1565C0] bg-[#1565C0]/10 border border-[#1565C0]/20 shadow-[0_0_15px_rgba(21,101,192,0.1)]' 
+              : 'text-muted-foreground hover:text-white hover:bg-white/5'
+          )}
+        >
+          <Link to={item.path}>
+            {item.icon}
+            {item.label}
+          </Link>
+        </Button>
+      ))}
+    </div>
+  );
+
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-white/5 bg-[#0a0a0c]/80 backdrop-blur-md">
       <div className="container mx-auto px-4 h-20 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-6 md:gap-10">
+        <div className="flex items-center gap-2 md:gap-6 lg:gap-10">
+          {/* Mobile Menu Trigger */}
+          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="lg:hidden h-11 w-11 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10">
+                <Menu size={24} className="text-white" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="glass-card border-r border-white/5 w-[300px] p-0 flex flex-col">
+              <SheetHeader className="p-6 border-b border-white/5">
+                <SheetTitle className="text-left flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl overflow-hidden bg-black/20 p-1 border border-white/10">
+                    <img src={logo} alt="Logo" className="w-full h-full object-contain" />
+                  </div>
+                  <span className="font-black italic uppercase tracking-tighter text-2xl">
+                    Ask<span className="text-[#1565C0]">Guy</span>
+                  </span>
+                </SheetTitle>
+              </SheetHeader>
+              <div className="flex-1 p-6 space-y-6">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] pl-4 mb-4">Navigation</p>
+                  <NavLinks mobile onClick={() => setIsMobileMenuOpen(false)} />
+                </div>
+                
+                {isAdmin && isConnected && (
+                  <div className="space-y-1">
+                     <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] pl-4 mb-4">Management</p>
+                     <Button
+                        variant="ghost"
+                        asChild
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className={cn(
+                          "gap-2 text-sm font-black uppercase tracking-widest transition-all duration-300 h-14 justify-start px-6 rounded-2xl w-full text-primary",
+                          isActive('/admin') ? 'bg-primary/10 border border-primary/20' : 'hover:bg-white/5'
+                        )}
+                      >
+                        <Link to="/admin">
+                          <ShieldCheck size={18} />
+                          Admin Panel
+                        </Link>
+                      </Button>
+                  </div>
+                )}
+              </div>
+              <div className="p-6 border-t border-white/5 bg-white/[0.02]">
+                {isConnected ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-10 w-10 border border-white/20 p-1 bg-black/20 rounded-xl">
+                        <AvatarImage src={`https://api.dicebear.com/7.x/${avatarSet}/svg?seed=${currentAvatarSeed}`} />
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-black text-white truncate">@{displayAddress}</p>
+                        <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Active Member</p>
+                      </div>
+                    </div>
+                    <Button onClick={disconnect} variant="destructive" className="w-full h-12 rounded-xl font-black uppercase tracking-widest text-[10px] gap-2">
+                      <LogOut size={16} /> Disconnect
+                    </Button>
+                  </div>
+                ) : (
+                  <Button onClick={connect} className="w-full h-12 bg-[#1565C0] text-white font-black rounded-xl uppercase tracking-widest text-[10px] btn-premium">
+                    Connect Wallet
+                  </Button>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
+
           <Link to="/" className="flex items-center gap-3 group shrink-0">
-            <div className="w-14 h-14 md:w-16 md:h-16 transition-all duration-300 group-hover:scale-110 shrink-0 flex items-center justify-center overflow-hidden">
+            <div className="w-12 h-12 md:w-16 md:h-16 transition-all duration-300 group-hover:scale-110 shrink-0 flex items-center justify-center overflow-hidden">
               <img 
                 src={logo} 
                 alt="Logo" 
@@ -62,54 +166,36 @@ const Navbar = () => {
                 }} 
               />
             </div>
-            <span className="font-black text-2xl md:text-3xl tracking-tighter transition-colors uppercase italic group-hover:text-primary">
+            <span className="font-black text-xl md:text-3xl tracking-tighter transition-colors uppercase italic group-hover:text-primary">
               Ask<span className="text-[#1565C0]">Guy</span>
             </span>
           </Link>
 
-          <div className="hidden lg:flex items-center gap-1">
-            {visibleNavItems.map((item) => (
-              <Button
-                key={item.label}
-                variant="ghost"
-                asChild
-                className={`gap-2 text-sm font-black uppercase tracking-widest h-10 px-4 transition-all duration-300 hover:scale-105 ${
-                  isActive(item.path) 
-                    ? 'text-[#1565C0] bg-[#1565C0]/10 border border-[#1565C0]/20 shadow-[0_0_15px_rgba(21,101,192,0.1)]' 
-                    : 'text-muted-foreground hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <Link to={item.path}>
-                  {item.icon}
-                  {item.label}
-                </Link>
-              </Button>
-            ))}
-          </div>
+          <NavLinks />
         </div>
 
-        <div className="flex items-center gap-2 md:gap-3 ml-auto">
+        <div className="flex items-center gap-1.5 md:gap-3 ml-auto">
           {isConnected ? (
             <>
-              <div className="flex items-center gap-1.5 md:gap-2">
-                <div className="flex items-center gap-1.5 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-purple-500/10 border border-purple-500/30 text-[10px] md:text-[11px] font-bold hover:bg-purple-500/20 transition-all cursor-default shadow-[0_0_15px_rgba(168,85,247,0.15)]">
+              <div className="flex items-center gap-1 md:gap-2">
+                <div className="flex items-center gap-1 md:gap-1.5 px-2.5 md:px-4 py-1.5 md:py-2 rounded-full bg-purple-500/10 border border-purple-500/30 text-[9px] md:text-[11px] font-bold hover:bg-purple-500/20 transition-all cursor-default shadow-[0_0_15px_rgba(168,85,247,0.15)]">
                   {isFetchingBalances ? (
-                    <Loader2 size={12} className="animate-spin text-purple-400" />
+                    <Loader2 size={10} className="animate-spin text-purple-400" />
                   ) : (
                     <>
-                      <span className="text-purple-400 font-black tracking-tight">{xprBalance.toLocaleString(undefined, { minimumFractionDigits: 1 })}</span>
-                      <span className="text-purple-400/50 font-black uppercase text-[8px] md:text-[9px]">XPR</span>
+                      <span className="text-purple-400 font-black tracking-tight">{xprBalance.toLocaleString(undefined, { maximumFractionDigits: 1 })}</span>
+                      <span className="text-purple-400/50 font-black uppercase text-[7px] md:text-[9px]">XPR</span>
                     </>
                   )}
                 </div>
 
-                <div className="flex items-center gap-1.5 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-primary/10 border border-primary/30 text-[10px] md:text-[11px] font-bold hover:bg-primary/20 transition-all cursor-default shadow-[0_0_15px_rgba(244,201,93,0.15)]">
+                <div className="flex items-center gap-1 md:gap-1.5 px-2.5 md:px-4 py-1.5 md:py-2 rounded-full bg-primary/10 border border-primary/30 text-[9px] md:text-[11px] font-bold hover:bg-primary/20 transition-all cursor-default shadow-[0_0_15px_rgba(244,201,93,0.15)]">
                   {isFetchingBalances ? (
-                    <Loader2 size={12} className="animate-spin text-primary" />
+                    <Loader2 size={10} className="animate-spin text-primary" />
                   ) : (
                     <>
                       <span className="text-primary font-black tracking-tight">{guyBalance.toLocaleString()}</span>
-                      <span className="text-primary/60 font-black uppercase text-[8px] md:text-[9px]">GUY</span>
+                      <span className="text-primary/60 font-black uppercase text-[7px] md:text-[9px]">GUY</span>
                     </>
                   )}
                 </div>
@@ -117,11 +203,11 @@ const Navbar = () => {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="h-10 md:h-12 gap-2 md:gap-3 px-1 md:px-2 hover:bg-white/5 rounded-xl group transition-all duration-300">
+                  <Button variant="ghost" className="h-10 md:h-12 gap-1.5 md:gap-3 px-1 md:px-2 hover:bg-white/5 rounded-xl group transition-all duration-300">
                     <div className="relative">
                       <div className="absolute -inset-1 bg-gradient-to-tr from-[#1565C0]/40 to-emerald-400/40 rounded-full blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                       <Avatar className="h-7 w-7 md:h-8 md:w-8 border border-white/20 group-hover:border-[#1565C0]/50 transition-all duration-300 relative z-10 shadow-lg p-1 bg-black/20">
-                        <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${currentAvatarSeed}`} />
+                        <AvatarImage src={`https://api.dicebear.com/7.x/${avatarSet}/svg?seed=${currentAvatarSeed}`} />
                         <AvatarFallback className="bg-[#1565C0] text-white font-bold text-[10px]">
                           {displayAddress.substring(0, 2).toUpperCase() || '??'}
                         </AvatarFallback>

@@ -45,15 +45,18 @@ const RequestsContext = createContext<RequestsContextType | undefined>(undefined
 
 const mapRequestFromDB = (data: any): AidRequest => ({
   ...data,
+  amount: Number(data.amount || 0),
+  raised: Number(data.raised || 0),
+  timestamp: Number(data.timestamp || 0),
   proofUrl: data.proof_url,
   contributions: (data.contributions || []).map((c: any) => ({
     ...c,
     id: c.id,
     user: c.user,
-    amount: c.amount,
+    amount: Number(c.amount || 0),
     token: c.token,
     message: c.message,
-    timestamp: c.timestamp
+    timestamp: Number(c.timestamp || 0)
   }))
 });
 
@@ -188,7 +191,6 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         await updateRequest(requestId, { 
           raised: newRaised,
           status: isFunded ? 'Funded' : 'Open',
-          // Automatically clear proof from DB to save storage once goal is met
           proofUrl: isFunded ? null : request.proofUrl 
         });
       }
@@ -219,7 +221,6 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           });
         }
       }
-      // Clear proof image from DB when archiving to save storage
       return await updateRequest(id, { status: 'Completed', proofUrl: null });
     } catch (err: any) {
       throw err;

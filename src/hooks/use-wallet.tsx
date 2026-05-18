@@ -20,6 +20,7 @@ export interface WalletState {
   membershipExpiry: number;
   membershipFee: number;
   postingFeeGuy: number;
+  leaderboardLikes: number;
   isMembershipEnabled: boolean;
   isMaintenanceMode: boolean;
   maintenanceMessage: string;
@@ -31,6 +32,7 @@ export interface WalletState {
   disconnect: () => Promise<void>;
   refreshBalances: () => Promise<void>;
   fetchSettings: () => Promise<void>;
+  incrementLikes: () => Promise<void>;
   transferTokens: (to: string, amount: number, token: 'XPR' | 'GUY', memo?: string) => Promise<boolean>;
   requestor: string;
 }
@@ -57,6 +59,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [membershipExpiry, setMembershipExpiry] = useState(0);
   const [membershipFee, setMembershipFee] = useState(7777);
   const [postingFeeGuy, setPostingFeeGuy] = useState(25);
+  const [leaderboardLikes, setLeaderboardLikes] = useState(0);
   const [isMembershipEnabled, setIsMembershipEnabled] = useState(true);
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
   const [maintenanceMessage, setMaintenanceMessage] = useState('');
@@ -82,6 +85,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setIsMembershipEnabled(data.membership_active);
         setPostingFeeGuy(Number(data.posting_fee_guy ?? 25));
         setAvatarSet(data.avatar_set || 'pixel-art');
+        setLeaderboardLikes(Number(data.leaderboard_likes || 0));
         setIsMaintenanceMode(Boolean(data.maintenance_mode));
         setMaintenanceMessage(data.maintenance_message || 'We are currently fine-tuning the platform to better serve the community. Hang tight!');
       }
@@ -89,6 +93,27 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       console.error('Error fetching settings:', err);
     }
   }, []);
+
+  const incrementLikes = useCallback(async () => {
+    try {
+      // Optimistic update
+      setLeaderboardLikes(prev => prev + 1);
+      
+      const { data, error } = await supabase.functions.invoke('manage-platform', {
+        body: {
+          action: 'INCREMENT_LIKES',
+          callerAddress: address || 'anonymous'
+        }
+      });
+      
+      if (error) throw error;
+      if (data) setLeaderboardLikes(Number(data.leaderboard_likes));
+    } catch (err) {
+      console.error('Error incrementing likes:', err);
+      // Revert if error
+      fetchSettings();
+    }
+  }, [address, fetchSettings]);
 
   const getTokenBalance = useCallback(async (accountName: string, contract: string, symbol: string) => {
     for (const rpc of PROTON_ENDPOINTS) {
@@ -167,14 +192,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     fetchSettings();
     
-    // Set up real-time subscription for site settings
     const channel = supabase
       .channel('public:site_settings')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'site_settings' },
         () => {
-          console.log('[useWallet] Site settings changed, refetching...');
           fetchSettings();
         }
       )
@@ -291,11 +314,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     <WalletContext.Provider value={{
       address, isConnected, isConnecting, isAdmin, isFetchingBalances,
       guyBalance, xprBalance, avatarUrl, avatarSet, membershipExpiry,
-      membershipFee, postingFeeGuy, isMembershipEnabled,
+      membershipFee, postingFeeGuy, leaderboardLikes, isMembershipEnabled,
       isMaintenanceMode, maintenanceMessage,
       isMember, hasGuyThreshold, isBanned, 
       payMembership, connect, disconnect,
-      refreshBalances, fetchSettings, transferTokens, requestor: address,
+      refreshBalances, fetchSettings, incrementLikes, transferTokens, requestor: address,
     }}>
       {children}
     </WalletContext.Provider>

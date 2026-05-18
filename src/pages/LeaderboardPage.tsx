@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Leaderboard from '@/components/Leaderboard';
@@ -9,11 +9,18 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { showSuccess, showError } from '@/utils/toast';
 import { useRequests } from '@/hooks/use-requests';
+import { useWallet } from '@/hooks/use-wallet';
 
 const LeaderboardPage = () => {
   const { requests } = useRequests();
-  const [likes, setLikes] = useState(0);
+  const { leaderboardLikes, incrementLikes } = useWallet();
   const [hasLiked, setHasLiked] = useState(false);
+
+  // Check if user has liked in this session
+  useEffect(() => {
+    const localLiked = localStorage.getItem('askguy_liked_leaderboard');
+    if (localLiked) setHasLiked(true);
+  }, []);
 
   const totalXPRGiven = useMemo(() => {
     return requests.reduce((total, req) => {
@@ -24,10 +31,11 @@ const LeaderboardPage = () => {
     }, 0);
   }, [requests]);
 
-  const handleLike = () => {
+  const handleLike = async () => {
     if (!hasLiked) {
-      setLikes(prev => prev + 1);
       setHasLiked(true);
+      localStorage.setItem('askguy_liked_leaderboard', 'true');
+      await incrementLikes();
       showSuccess("Thanks for showing support!");
     }
   };
@@ -94,7 +102,7 @@ const LeaderboardPage = () => {
                       <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5">Show Support</p>
                       <div className="flex items-center gap-2">
                         <Heart size={18} className={hasLiked ? 'fill-primary' : ''} />
-                        <span className="text-lg font-black">{likes.toLocaleString()}</span>
+                        <span className="text-lg font-black">{leaderboardLikes.toLocaleString()}</span>
                       </div>
                     </div>
                   </Button>

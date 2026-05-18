@@ -21,21 +21,44 @@ serve(async (req) => {
 
     const { action, payload, callerAddress } = await req.json()
     
-    if (!callerAddress) throw new Error("Missing caller address for verification.");
-
-    const normalizedCaller = callerAddress.toLowerCase().trim();
+    // Some actions might be public, but we still like to know who is calling
+    const normalizedCaller = callerAddress ? callerAddress.toLowerCase().trim() : 'anonymous';
     const isAdmin = normalizedCaller === ADMIN_ADDRESS;
 
     console.log(`[manage-platform] Action: ${action} | Caller: ${normalizedCaller} | IsAdmin: ${isAdmin}`);
 
-    // --- 1. REQUEST MANAGEMENT ---
+    // --- PUBLIC ACTIONS (No Admin Check) ---
+
+    if (action === 'INCREMENT_LIKES') {
+      // Use a RPC or a raw increment to prevent race conditions
+      const { data: current } = await supabaseClient
+        .from('site_settings')
+        .select('leaderboard_likes')
+        .eq('id', 'global')
+        .single();
+      
+      const newCount = (current?.leaderboard_likes || 0) + 1;
+      
+      const { data, error } = await supabaseClient
+        .from('site_settings')
+        .update({ leaderboard_likes: newCount })
+        .eq('id', 'global')
+        .select()
+      
+      if (error) throw error
+      return new Response(JSON.stringify(data[0]), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+
+    if (!callerAddress) throw new Error("Missing caller address for protected actions.");
+
+    // --- PROTECTED REQUEST MANAGEMENT ---
     
     if (action === 'CREATE_REQUEST') {
       const { data, error } = await supabaseClient
         .from('aid_requests')
         .insert({
           ...payload,
-          requestor: normalizedCaller, // Force requestor to be the authenticated caller
+          requestor: normalizedCaller,
           timestamp: Date.now(),
           status: 'Open',
           raised: 0
@@ -46,7 +69,6 @@ serve(async (req) => {
     }
 
     if (action === 'UPDATE_REQUEST') {
-      // Security Check: Only the owner or admin can update
       const { data: existing } = await supabaseClient.from('aid_requests').select('requestor').eq('id', payload.id).single();
       if (!existing || (existing.requestor.toLowerCase() !== normalizedCaller && !isAdmin)) {
         throw new Error("Unauthorized: You do not own this request.");
@@ -62,23 +84,19 @@ serve(async (req) => {
     }
 
     if (action === 'DELETE_REQUEST') {
-      // Security Check: Only admin can delete others' posts
       if (!isAdmin) throw new Error("Unauthorized: Admin privileges required to delete.");
-      
       await supabaseClient.from('contributions').delete().eq('request_id', payload.id);
       const { error } = await supabaseClient.from('aid_requests').delete().eq('id', payload.id);
       if (error) throw error
       return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
-    // --- 2. CONTRIBUTIONS ---
-
     if (action === 'ADD_CONTRIBUTION') {
       const { data, error } = await supabaseClient
         .from('contributions')
         .insert({
           ...payload,
-          user: normalizedCaller, // Force user to be the authenticated caller
+          user: normalizedCaller,
           timestamp: Date.now()
         })
         .select()
@@ -86,10 +104,7 @@ serve(async (req) => {
       return new Response(JSON.stringify(data[0]), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
-    // --- 3. PROFILE MANAGEMENT ---
-
     if (action === 'UPSERT_PROFILE') {
-      // Security Check: Users can only update their own profile
       if (payload.address?.toLowerCase() !== normalizedCaller) {
         throw new Error("Unauthorized: Identity mismatch.");
       }
@@ -101,7 +116,7 @@ serve(async (req) => {
       return new Response(JSON.stringify(data[0]), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
-    // --- 4. ADMIN ONLY ACTIONS ---
+    // --- ADMIN ONLY ACTIONS ---
 
     if (!isAdmin && ['UPDATE_SETTINGS', 'BAN_USER', 'UNBAN_USER'].includes(action)) {
       throw new Error("Unauthorized: Restricted to platform administrators.");

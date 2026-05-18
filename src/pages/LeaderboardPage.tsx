@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Leaderboard from '@/components/Leaderboard';
@@ -8,10 +8,21 @@ import { Trophy, Star, ArrowLeft, Heart, Share2, Gift, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { showSuccess, showError } from '@/utils/toast';
+import { useRequests } from '@/hooks/use-requests';
 
 const LeaderboardPage = () => {
+  const { requests } = useRequests();
   const [likes, setLikes] = useState(0);
   const [hasLiked, setHasLiked] = useState(false);
+
+  const totalXPRGiven = useMemo(() => {
+    return requests.reduce((total, req) => {
+      const xprContribs = req.contributions
+        .filter(c => c.token === 'XPR')
+        .reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
+      return total + xprContribs;
+    }, 0);
+  }, [requests]);
 
   const handleLike = () => {
     if (!hasLiked) {
@@ -70,7 +81,7 @@ const LeaderboardPage = () => {
               <div className="flex flex-wrap gap-3">
                 <div className="text-center px-6 py-3 rounded-2xl bg-white/5 border border-white/10">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Total Given</p>
-                  <p className="text-xl font-black text-primary">0 XPR</p>
+                  <p className="text-xl font-black text-primary">{totalXPRGiven.toLocaleString()} XPR</p>
                 </div>
                 
                 <div className="flex gap-2">

@@ -41,10 +41,15 @@ const LeaderboardPage = () => {
   };
 
   const handleShare = async () => {
+    // Ensuring we use the production domain for the share link
+    const productionUrl = window.location.origin.includes('localhost') 
+      ? 'https://askguy.pro' // Placeholder for your production URL
+      : window.location.origin;
+
     const shareData = {
       title: 'AskGuy Hall of Fame',
       text: `Join the movement! Over ${totalXPRGiven.toLocaleString()} XPR has been gifted in the AskGuy community. Check out our Top Contributors! 💎✨`,
-      url: window.location.origin + '/leaderboard'
+      url: `${productionUrl}/leaderboard`
     };
 
     try {

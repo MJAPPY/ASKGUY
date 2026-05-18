@@ -41,9 +41,9 @@ const LeaderboardPage = () => {
   };
 
   const handleShare = async () => {
-    // Ensuring we use the production domain for the share link
+    // Using the verified production domain for the share link
     const productionUrl = window.location.origin.includes('localhost') 
-      ? 'https://askguy.pro' // Placeholder for your production URL
+      ? 'https://askguy.vercel.app'
       : window.location.origin;
 
     const shareData = {

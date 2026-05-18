@@ -43,16 +43,16 @@ const LeaderboardPage = () => {
   const handleShare = async () => {
     const shareData = {
       title: 'AskGuy Hall of Fame',
-      text: 'Check out the most generous contributors in the AskGuy XPR community! 🚀',
-      url: window.location.href
+      text: `Join the movement! Over ${totalXPRGiven.toLocaleString()} XPR has been gifted in the AskGuy community. Check out our Top Contributors! 💎✨`,
+      url: window.location.origin + '/leaderboard'
     };
 
     try {
       if (navigator.share) {
         await navigator.share(shareData);
       } else {
-        await navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`);
-        showSuccess("Link copied to clipboard!");
+        await navigator.clipboard.writeText(`${shareData.text}\n\nView here: ${shareData.url}`);
+        showSuccess("Link and impact total copied to clipboard!");
       }
     } catch (err) {
       if ((err as Error).name !== 'AbortError') {
@@ -110,10 +110,10 @@ const LeaderboardPage = () => {
                   <Button 
                     onClick={handleShare}
                     variant="outline"
-                    className="h-auto py-3 px-4 rounded-2xl border-white/10 bg-white/5 hover:bg-white/10 transition-all"
+                    className="h-auto py-3 px-4 rounded-2xl border-white/10 bg-white/5 hover:bg-white/10 transition-all group"
                     title="Share Leaderboard"
                   >
-                    <Share2 size={20} className="text-muted-foreground" />
+                    <Share2 size={20} className="text-muted-foreground group-hover:text-primary transition-colors" />
                   </Button>
                 </div>
               </div>

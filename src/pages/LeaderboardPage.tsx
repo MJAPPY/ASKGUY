@@ -46,23 +46,13 @@ const LeaderboardPage = () => {
       ? 'https://askguy.vercel.app'
       : window.location.origin;
 
-    const shareData = {
-      title: 'AskGuy Hall of Fame',
-      text: `Join the movement! Over ${totalXPRGiven.toLocaleString()} XPR has been gifted in the AskGuy community. Check out our Top Contributors! 💎✨`,
-      url: `${productionUrl}/leaderboard`
-    };
+    const shareText = `Join the movement! Over ${totalXPRGiven.toLocaleString()} XPR has been gifted in the AskGuy community. Check out our Top Contributors! 💎✨\n\nView the Hall of Fame here: ${productionUrl}/leaderboard`;
 
     try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-      } else {
-        await navigator.clipboard.writeText(`${shareData.text}\n\nView here: ${shareData.url}`);
-        showSuccess("Link and impact total copied to clipboard!");
-      }
+      await navigator.clipboard.writeText(shareText);
+      showSuccess("Leaderboard info copied to clipboard! You can now paste it to share.");
     } catch (err) {
-      if ((err as Error).name !== 'AbortError') {
-        showError("Could not share leaderboard");
-      }
+      showError("Could not copy to clipboard. Please try again.");
     }
   };
 
@@ -116,7 +106,7 @@ const LeaderboardPage = () => {
                     onClick={handleShare}
                     variant="outline"
                     className="h-auto py-3 px-4 rounded-2xl border-white/10 bg-white/5 hover:bg-white/10 transition-all group"
-                    title="Share Leaderboard"
+                    title="Copy Share Text"
                   >
                     <Share2 size={20} className="text-muted-foreground group-hover:text-primary transition-colors" />
                   </Button>

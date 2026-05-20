@@ -35,7 +35,8 @@ import {
   CheckCircle2,
   Filter,
   Users,
-  DollarSign
+  DollarSign,
+  Coins
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
@@ -105,15 +106,19 @@ const Admin = () => {
       .slice(0, 10)
       .map(([address, amount]) => ({ address, amount }));
 
+    // Estimate total fees paid based on number of requests
+    const totalGUYFees = requests.length * currentPostingFee;
+
     return { 
       totalRequests: requests.length, 
       activeRequests: requests.filter(r => r.status === 'Open').length, 
       completedRequests: requests.filter(r => r.status === 'Completed').length, 
       totalXPRGiven,
       totalGUYGiven,
+      totalGUYFees,
       top5 
     };
-  }, [requests]);
+  }, [requests, currentPostingFee]);
 
   const membershipRevenue = useMemo(() => {
     return memberCount * parseFloat(membershipFee);
@@ -282,7 +287,7 @@ const Admin = () => {
             </TabsList>
 
             <TabsContent value="analytics" className="space-y-8 animate-in fade-in duration-500">
-               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <Card className="glass-card border-white/5 p-6 rounded-[28px]">
                   <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Total XPR Gifted</p>
                   <h3 className="text-3xl font-black text-white">{stats.totalXPRGiven.toLocaleString()} <span className="text-xs text-muted-foreground">XPR</span></h3>
@@ -290,6 +295,13 @@ const Admin = () => {
                 <Card className="glass-card border-white/5 p-6 rounded-[28px]">
                   <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Total GUY Gifted</p>
                   <h3 className="text-3xl font-black text-rose-400">{stats.totalGUYGiven.toLocaleString()} <span className="text-xs text-muted-foreground">GUY</span></h3>
+                </Card>
+                <Card className="glass-card border-white/5 p-6 rounded-[28px]">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Reward Pool (GUY Fees)</p>
+                  <div className="flex items-center gap-3">
+                    <Coins className="text-purple-400" size={24} />
+                    <h3 className="text-3xl font-black text-purple-400">{stats.totalGUYFees.toLocaleString()}</h3>
+                  </div>
                 </Card>
                 <Card className="glass-card border-white/5 p-6 rounded-[28px]">
                   <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Members Joined</p>
@@ -303,6 +315,13 @@ const Admin = () => {
                   <div className="flex items-center gap-3">
                     <DollarSign className="text-emerald-400" size={24} />
                     <h3 className="text-3xl font-black text-emerald-400">{membershipRevenue.toLocaleString()} <span className="text-xs text-muted-foreground">XPR</span></h3>
+                  </div>
+                </Card>
+                <Card className="glass-card border-white/5 p-6 rounded-[28px]">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Admin Wallet Balance</p>
+                  <div className="flex items-center gap-3">
+                    <Zap className="text-primary" size={24} />
+                    <h3 className="text-3xl font-black text-white">{guyBalance.toLocaleString()} <span className="text-xs text-muted-foreground">GUY</span></h3>
                   </div>
                 </Card>
               </div>

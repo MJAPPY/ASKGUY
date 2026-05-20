@@ -33,7 +33,9 @@ import {
   Eye,
   MoreVertical,
   CheckCircle2,
-  Filter
+  Filter,
+  Users,
+  DollarSign
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
@@ -57,6 +59,7 @@ const Admin = () => {
   
   const { requests, deleteRequest, batchDeleteRequests, loading: requestsLoading } = useRequests();
   const [bannedUsers, setBannedUsers] = useState<{ address: string, created_at: string }[]>([]);
+  const [memberCount, setMemberCount] = useState(0);
   const [newBanAddress, setNewBanAddress] = useState('');
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
@@ -84,12 +87,15 @@ const Admin = () => {
   const stats = useMemo(() => {
     const contributionMap: Record<string, number> = {};
     let totalXPRGiven = 0;
+    let totalGUYGiven = 0;
     
     requests.forEach(req => {
       req.contributions.forEach(c => {
         if (c.token === 'XPR') {
           totalXPRGiven += c.amount;
           contributionMap[c.user] = (contributionMap[c.user] || 0) + c.amount;
+        } else if (c.token === 'GUY') {
+          totalGUYGiven += c.amount;
         }
       });
     });
@@ -104,9 +110,14 @@ const Admin = () => {
       activeRequests: requests.filter(r => r.status === 'Open').length, 
       completedRequests: requests.filter(r => r.status === 'Completed').length, 
       totalXPRGiven,
+      totalGUYGiven,
       top5 
     };
   }, [requests]);
+
+  const membershipRevenue = useMemo(() => {
+    return memberCount * parseFloat(membershipFee);
+  }, [memberCount, membershipFee]);
 
   const filteredRequests = useMemo(() => {
     return requests.filter(req => 
@@ -115,25 +126,26 @@ const Admin = () => {
     );
   }, [requests, modSearch]);
 
-  const fetchBannedUsers = async () => {
+  const fetchData = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('banned_users')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const [banRes, profileRes] = await Promise.all([
+        supabase.from('banned_users').select('*').order('created_at', { ascending: false }),
+        supabase.from('profiles').select('*', { count: 'exact', head: true })
+      ]);
       
-      if (error) throw error;
-      setBannedUsers(data || []);
+      if (banRes.error) throw banRes.error;
+      setBannedUsers(banRes.data || []);
+      setMemberCount(profileRes.count || 0);
     } catch (err) {
-      showError("Failed to fetch blacklist.");
+      showError("Failed to fetch system data.");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (isAdmin) fetchBannedUsers();
+    if (isAdmin) fetchData();
   }, [isAdmin]);
 
   const handleUpdateSettings = async () => {
@@ -181,7 +193,7 @@ const Admin = () => {
       if (error) throw error;
       showSuccess(`${newBanAddress} blacklisted.`);
       setNewBanAddress('');
-      fetchBannedUsers();
+      fetchData();
     } catch (err: any) {
       showError(err.message || "Failed to ban user.");
     } finally {
@@ -202,7 +214,7 @@ const Admin = () => {
       
       if (error) throw error;
       showSuccess(`${targetAddress} restored.`);
-      fetchBannedUsers();
+      fetchData();
     } catch (err: any) {
       showError(err.message || "Failed to unban user.");
     } finally {
@@ -261,7 +273,7 @@ const Admin = () => {
             </div>
           </div>
 
-          <Tabs defaultValue="moderation" className="space-y-8">
+          <Tabs defaultValue="analytics" className="space-y-8">
             <TabsList className="bg-white/5 border border-white/10 p-1.5 h-14 rounded-2xl w-full md:w-auto justify-start overflow-x-auto no-scrollbar">
               <TabsTrigger value="analytics" className="px-8 font-black text-[10px] uppercase tracking-widest h-full rounded-xl data-[state=active]:bg-primary data-[state=active]:text-black transition-all gap-2"><TrendingUp size={14} /> Analytics</TabsTrigger>
               <TabsTrigger value="moderation" className="px-8 font-black text-[10px] uppercase tracking-widest h-full rounded-xl data-[state=active]:bg-primary data-[state=active]:text-black transition-all gap-2"><Activity size={14} /> Requests</TabsTrigger>
@@ -272,20 +284,26 @@ const Admin = () => {
             <TabsContent value="analytics" className="space-y-8 animate-in fade-in duration-500">
                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <Card className="glass-card border-white/5 p-6 rounded-[28px]">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Total Impact</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Total XPR Gifted</p>
                   <h3 className="text-3xl font-black text-white">{stats.totalXPRGiven.toLocaleString()} <span className="text-xs text-muted-foreground">XPR</span></h3>
                 </Card>
                 <Card className="glass-card border-white/5 p-6 rounded-[28px]">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Active Requests</p>
-                  <h3 className="text-3xl font-black text-primary">{stats.activeRequests}</h3>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Total GUY Gifted</p>
+                  <h3 className="text-3xl font-black text-rose-400">{stats.totalGUYGiven.toLocaleString()} <span className="text-xs text-muted-foreground">GUY</span></h3>
                 </Card>
                 <Card className="glass-card border-white/5 p-6 rounded-[28px]">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Success Stories</p>
-                  <h3 className="text-3xl font-black text-emerald-400">{stats.completedRequests}</h3>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Members Joined</p>
+                  <div className="flex items-center gap-3">
+                    <Users className="text-blue-400" size={24} />
+                    <h3 className="text-3xl font-black text-white">{memberCount}</h3>
+                  </div>
                 </Card>
                 <Card className="glass-card border-white/5 p-6 rounded-[28px]">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Admin GUY Pool</p>
-                  <h3 className="text-3xl font-black text-purple-400">{guyBalance.toLocaleString()}</h3>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Membership Revenue</p>
+                  <div className="flex items-center gap-3">
+                    <DollarSign className="text-emerald-400" size={24} />
+                    <h3 className="text-3xl font-black text-emerald-400">{membershipRevenue.toLocaleString()} <span className="text-xs text-muted-foreground">XPR</span></h3>
+                  </div>
                 </Card>
               </div>
 

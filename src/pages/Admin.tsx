@@ -36,7 +36,8 @@ import {
   Filter,
   Users,
   DollarSign,
-  Coins
+  Coins,
+  RefreshCw
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
@@ -58,12 +59,13 @@ const Admin = () => {
     address 
   } = useWallet();
   
-  const { requests, deleteRequest, batchDeleteRequests, loading: requestsLoading } = useRequests();
+  const { requests, deleteRequest, batchDeleteRequests, fetchRequests, loading: requestsLoading } = useRequests();
   const [bannedUsers, setBannedUsers] = useState<{ address: string, created_at: string }[]>([]);
   const [memberCount, setMemberCount] = useState(0);
   const [newBanAddress, setNewBanAddress] = useState('');
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [modSearch, setModSearch] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   
@@ -106,7 +108,6 @@ const Admin = () => {
       .slice(0, 10)
       .map(([address, amount]) => ({ address, amount }));
 
-    // Estimate total fees paid based on number of requests
     const totalGUYFees = requests.length * currentPostingFee;
 
     return { 
@@ -131,8 +132,8 @@ const Admin = () => {
     );
   }, [requests, modSearch]);
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const [banRes, profileRes] = await Promise.all([
         supabase.from('banned_users').select('*').order('created_at', { ascending: false }),
@@ -146,6 +147,22 @@ const Admin = () => {
       showError("Failed to fetch system data.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGlobalRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([
+        fetchRequests(),
+        fetchData(true),
+        fetchSettings()
+      ]);
+      showSuccess("All stats and settings refreshed.");
+    } catch (err) {
+      showError("Refresh failed.");
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
@@ -198,7 +215,7 @@ const Admin = () => {
       if (error) throw error;
       showSuccess(`${newBanAddress} blacklisted.`);
       setNewBanAddress('');
-      fetchData();
+      fetchData(true);
     } catch (err: any) {
       showError(err.message || "Failed to ban user.");
     } finally {
@@ -219,7 +236,7 @@ const Admin = () => {
       
       if (error) throw error;
       showSuccess(`${targetAddress} restored.`);
-      fetchData();
+      fetchData(true);
     } catch (err: any) {
       showError(err.message || "Failed to unban user.");
     } finally {
@@ -276,6 +293,14 @@ const Admin = () => {
               </div>
               <p className="text-muted-foreground font-medium">Platform-wide management & security dashboard.</p>
             </div>
+            <Button 
+              onClick={handleGlobalRefresh} 
+              disabled={isRefreshing}
+              className="h-14 px-8 bg-white/5 border border-white/10 hover:bg-white/10 text-white font-black rounded-2xl gap-3 transition-all"
+            >
+              {isRefreshing ? <Loader2 size={20} className="animate-spin" /> : <RefreshCw size={20} className={cn(isRefreshing && "animate-spin")} />}
+              Refresh Data
+            </Button>
           </div>
 
           <Tabs defaultValue="analytics" className="space-y-8">
@@ -313,8 +338,10 @@ const Admin = () => {
                 <Card className="glass-card border-white/5 p-6 rounded-[28px]">
                   <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Membership Revenue</p>
                   <div className="flex items-center gap-3">
-                    <DollarSign className="text-emerald-400" size={24} />
-                    <h3 className="text-3xl font-black text-emerald-400">{membershipRevenue.toLocaleString()} <span className="text-xs text-muted-foreground">XPR</span></h3>
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                      <Zap className="text-emerald-400" size={20} />
+                    </div>
+                    <h3 className="text-3xl font-black text-emerald-400">{membershipRevenue.toLocaleString()} <span className="text-xs text-muted-foreground font-black">XPR</span></h3>
                   </div>
                 </Card>
                 <Card className="glass-card border-white/5 p-6 rounded-[28px]">

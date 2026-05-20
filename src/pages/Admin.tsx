@@ -37,7 +37,8 @@ import {
   Users,
   DollarSign,
   Coins,
-  RefreshCw
+  RefreshCw,
+  ArrowUpRight
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
@@ -62,6 +63,7 @@ const Admin = () => {
   const { requests, deleteRequest, batchDeleteRequests, fetchRequests, loading: requestsLoading } = useRequests();
   const [bannedUsers, setBannedUsers] = useState<{ address: string, created_at: string }[]>([]);
   const [memberCount, setMemberCount] = useState(0);
+  const [qtrMemberCount, setQtrMemberCount] = useState(0);
   const [newBanAddress, setNewBanAddress] = useState('');
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
@@ -135,14 +137,19 @@ const Admin = () => {
   const fetchData = async (silent = false) => {
     if (!silent) setLoading(true);
     try {
-      const [banRes, profileRes] = await Promise.all([
+      const now = new Date();
+      const qtStart = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1).toISOString();
+
+      const [banRes, profileRes, qtrProfileRes] = await Promise.all([
         supabase.from('banned_users').select('*').order('created_at', { ascending: false }),
-        supabase.from('profiles').select('*', { count: 'exact', head: true })
+        supabase.from('profiles').select('*', { count: 'exact', head: true }),
+        supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', qtStart)
       ]);
       
       if (banRes.error) throw banRes.error;
       setBannedUsers(banRes.data || []);
       setMemberCount(profileRes.count || 0);
+      setQtrMemberCount(qtrProfileRes.count || 0);
     } catch (err) {
       showError("Failed to fetch system data.");
     } finally {
@@ -181,7 +188,7 @@ const Admin = () => {
             membership_active: membershipActive,
             membership_fee: parseFloat(membershipFee),
             posting_fee_guy: parseFloat(postingFeeGuy),
-            avatar_set: avatarSet,
+            avatar_set: avatar_set,
             maintenance_mode: maintenanceMode,
             maintenance_message: maintenanceMessage 
           }
@@ -328,7 +335,11 @@ const Admin = () => {
                     <h3 className="text-3xl font-black text-purple-400">{stats.totalGUYFees.toLocaleString()}</h3>
                   </div>
                 </Card>
-                <Card className="glass-card border-white/5 p-6 rounded-[28px]">
+                <Card className="glass-card border-white/5 p-6 rounded-[28px] relative overflow-hidden">
+                  <div className="absolute top-4 right-4 flex items-center gap-1.5 text-emerald-400 font-black text-[10px] uppercase tracking-widest bg-emerald-500/10 px-2 py-1 rounded-lg border border-emerald-500/20">
+                    <ArrowUpRight size={12} />
+                    +{qtrMemberCount} This QTR
+                  </div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Members Joined</p>
                   <div className="flex items-center gap-3">
                     <Users className="text-blue-400" size={24} />

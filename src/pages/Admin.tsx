@@ -188,7 +188,7 @@ const Admin = () => {
             membership_active: membershipActive,
             membership_fee: parseFloat(membershipFee),
             posting_fee_guy: parseFloat(postingFeeGuy),
-            avatar_set: avatar_set,
+            avatar_set: avatarSet,
             maintenance_mode: maintenanceMode,
             maintenance_message: maintenanceMessage 
           }

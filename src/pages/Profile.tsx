@@ -31,7 +31,8 @@ import {
   AlertCircle,
   Camera,
   Gift,
-  CheckCircle2
+  CheckCircle2,
+  Lock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -66,7 +67,7 @@ const Profile = () => {
 
   useEffect(() => {
     const fetchTargetProfile = async () => {
-      if (!targetAddress) return;
+      if (!targetAddress || !isConnected) return;
       
       if (isOwnProfile) {
         setTargetMembershipExpiry(myExpiry);
@@ -98,13 +99,13 @@ const Profile = () => {
     };
 
     fetchTargetProfile();
-  }, [targetAddress, isOwnProfile, myExpiry, myAvatarUrl]);
+  }, [targetAddress, isOwnProfile, myExpiry, myAvatarUrl, isConnected]);
 
   const isVerified = targetMembershipExpiry ? targetMembershipExpiry > Date.now() : false;
   const currentAvatarSeed = targetAvatarUrl || targetAddress;
 
   const stats = useMemo(() => {
-    if (!targetAddress) return { given: 0, guyGiven: 0, received: 0, count: 0 };
+    if (!targetAddress || !isConnected) return { given: 0, guyGiven: 0, received: 0, count: 0 };
     
     let given = 0;
     let guyGiven = 0;
@@ -131,7 +132,7 @@ const Profile = () => {
     });
 
     return { given, guyGiven, received, count };
-  }, [requests, targetAddress]);
+  }, [requests, targetAddress, isConnected]);
 
   const profileRequests = requests.filter(req => req.requestor.toLowerCase().trim() === targetAddress?.toLowerCase().trim());
   const profileContributions = requests.filter(req => 
@@ -157,25 +158,38 @@ const Profile = () => {
 
   const hasGenerousHeart = stats.given >= 1000;
 
-  if (!targetAddress && !isConnected) {
+  // Enforce "Login" (Wallet Connection) to view any profile content
+  if (!isConnected) {
     return (
       <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
         <Navbar />
+        {/* Background glow effects */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#1565C0]/5 blur-[120px] rounded-full pointer-events-none" />
+        
         <main className="flex-1 flex items-center justify-center p-4 relative z-10">
-          <div className="max-w-md w-full glass-card rounded-[40px] p-10 text-center space-y-8 border-white/5 shadow-2xl">
+          <div className="max-w-md w-full glass-card rounded-[40px] p-10 text-center space-y-8 border-white/5 shadow-2xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+              <Lock size={80} className="text-[#1565C0]" />
+            </div>
+            
             <div className="w-24 h-24 rounded-[32px] bg-[#1565C0]/10 flex items-center justify-center mx-auto border border-[#1565C0]/20 shadow-[0_0_30px_rgba(21,101,192,0.2)]">
               <Wallet className="text-[#1565C0]" size={48} />
             </div>
-            <div className="space-y-3">
-              <h1 className="text-3xl font-black tracking-tight">Access Your Profile</h1>
+            
+            <div className="space-y-3 relative z-10">
+              <h1 className="text-3xl font-black tracking-tight uppercase italic">Member Access Only</h1>
               <p className="text-muted-foreground text-sm leading-relaxed font-medium">
-                Connect your XPR Network wallet to view your activity, manage your membership, and see your community impact.
+                To protect our community's privacy, you must connect your XPR Network wallet to view member profiles and community requests.
               </p>
             </div>
-            <Button onClick={connect} disabled={isConnecting} className="w-full h-14 bg-[#1565C0] hover:bg-[#1565C0]/90 text-white font-black rounded-2xl shadow-[0_0_40px_rgba(21,101,192,0.3)] btn-premium text-base gap-3 border-none uppercase tracking-wider">
-              {isConnecting ? <Loader2 size={20} className="animate-spin" /> : <><Wallet size={20} /> Connect Wallet</>}
+            
+            <Button onClick={connect} disabled={isConnecting} className="w-full h-14 bg-[#1565C0] hover:bg-[#1565C0]/90 text-white font-black rounded-2xl shadow-[0_0_40px_rgba(21,101,192,0.3)] btn-premium text-base gap-3 border-none uppercase tracking-wider relative z-10">
+              {isConnecting ? <Loader2 size={20} className="animate-spin" /> : <><Wallet size={20} /> Connect to View</>}
             </Button>
+            
+            <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest italic pt-2">
+              Securely authenticate via WebAuth
+            </p>
           </div>
         </main>
         <Footer />

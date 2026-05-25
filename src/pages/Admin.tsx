@@ -71,20 +71,22 @@ const Admin = () => {
   const [modSearch, setModSearch] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   
+  // Local state for form management
   const [membershipActive, setMembershipActive] = useState(currentEnabled);
   const [membershipFee, setMembershipFee] = useState(currentFee.toString());
   const [postingFeeGuy, setPostingFeeGuy] = useState(currentPostingFee.toString());
-  const [avatarSet, setAvatarSet] = useState(currentAvatarSet);
+  const [selectedAvatarSet, setSelectedAvatarSet] = useState(currentAvatarSet);
   const [maintenanceMode, setMaintenanceMode] = useState(currentMaintenance);
   const [maintenanceMessage, setMaintenanceMessage] = useState(currentMessage);
 
   const [individualRewards, setIndividualRewards] = useState<Record<string, string>>({});
 
+  // Sync local state when global state updates
   useEffect(() => {
     setMembershipActive(currentEnabled);
     setMembershipFee(currentFee.toString());
     setPostingFeeGuy(currentPostingFee.toString());
-    setAvatarSet(currentAvatarSet);
+    setSelectedAvatarSet(currentAvatarSet);
     setMaintenanceMode(currentMaintenance);
     setMaintenanceMessage(currentMessage);
   }, [currentEnabled, currentFee, currentPostingFee, currentAvatarSet, currentMaintenance, currentMessage]);
@@ -124,7 +126,7 @@ const Admin = () => {
   }, [requests, currentPostingFee]);
 
   const membershipRevenue = useMemo(() => {
-    return memberCount * parseFloat(membershipFee);
+    return memberCount * parseFloat(membershipFee || "0");
   }, [memberCount, membershipFee]);
 
   const filteredRequests = useMemo(() => {
@@ -151,7 +153,7 @@ const Admin = () => {
       setMemberCount(profileRes.count || 0);
       setQtrMemberCount(qtrProfileRes.count || 0);
     } catch (err) {
-      showError("Failed to fetch system data.");
+      console.error("[Admin] Fetch error:", err);
     } finally {
       setLoading(false);
     }
@@ -185,11 +187,11 @@ const Admin = () => {
           action: 'UPDATE_SETTINGS',
           callerAddress: address,
           payload: { 
-            membership_active: membershipActive,
-            membership_fee: parseFloat(membershipFee),
-            posting_fee_guy: parseFloat(postingFeeGuy),
-            avatar_set: avatarSet,
-            maintenance_mode: maintenanceMode,
+            membership_active: Boolean(membershipActive),
+            membership_fee: parseFloat(membershipFee || "0"),
+            posting_fee_guy: parseFloat(postingFeeGuy || "0"),
+            avatar_set: selectedAvatarSet,
+            maintenance_mode: Boolean(maintenanceMode),
             maintenance_message: maintenanceMessage 
           }
         }
@@ -598,7 +600,7 @@ const Admin = () => {
 
                   <div className="space-y-3">
                     <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Global Avatar Style</label>
-                    <Select value={avatarSet} onValueChange={setAvatarSet}>
+                    <Select value={selectedAvatarSet} onValueChange={setSelectedAvatarSet}>
                       <SelectTrigger className="h-14 bg-black/20 border-white/10 font-black rounded-xl">
                         <SelectValue placeholder="Select avatar style" />
                       </SelectTrigger>

@@ -596,6 +596,24 @@ const Admin = () => {
                     </div>
                   </div>
 
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Global Avatar Style</label>
+                    <Select value={avatarSet} onValueChange={setAvatarSet}>
+                      <SelectTrigger className="h-14 bg-black/20 border-white/10 font-black rounded-xl">
+                        <SelectValue placeholder="Select avatar style" />
+                      </SelectTrigger>
+                      <SelectContent className="glass-card">
+                        <SelectItem value="pixel-art" className="font-black">Pixel Art</SelectItem>
+                        <SelectItem value="avataaars" className="font-black">Avatars</SelectItem>
+                        <SelectItem value="bottts" className="font-black">Robots</SelectItem>
+                        <SelectItem value="micah" className="font-black">Micah</SelectItem>
+                        <SelectItem value="miniavs" className="font-black">Mini Avatars</SelectItem>
+                        <SelectItem value="open-peeps" className="font-black">Open Peeps</SelectItem>
+                        <SelectItem value="personas" className="font-black">Personas</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <Button onClick={handleUpdateSettings} disabled={processing} className="w-full h-14 bg-primary hover:bg-primary/90 text-black font-black rounded-xl uppercase tracking-widest text-[10px] gold-glow">
                     {processing ? <Loader2 className="animate-spin" /> : <><Sparkles size={14} className="mr-2" /> Deploy Global Updates</>}
                   </Button>

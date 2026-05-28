@@ -15,6 +15,8 @@ import { showSuccess, showError } from '@/utils/toast';
 import { useRequests, TokenSymbol } from '@/hooks/use-requests';
 import { useWallet } from '@/hooks/use-wallet';
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB limit
+
 interface RequestFormProps {
   onSuccess?: () => void;
 }
@@ -47,6 +49,12 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > MAX_FILE_SIZE) {
+        showError("File is too large. Please upload an image smaller than 5MB.");
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        return;
+      }
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreview(reader.result as string);
@@ -333,7 +341,7 @@ const RequestForm = ({ onSuccess }: RequestFormProps) => {
         <Button 
           form="request-form"
           type="submit" 
-          className="w-full gap-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black h-16 rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] uppercase tracking-[0.15em] text-[11px]" 
+          className="w-full gap-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black h-16 rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.25)] uppercase tracking-[0.15em] text-[11px]" 
           disabled={loading || isLimitReached || !hasEnoughGuy || !isMember}
         >
           {loading ? (

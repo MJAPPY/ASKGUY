@@ -21,6 +21,8 @@ import { Upload, X, Loader2, Save, CheckCircle2, AlertTriangle } from 'lucide-re
 import { useRequests } from '@/hooks/use-requests';
 import { showSuccess, showError } from '@/utils/toast';
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB limit
+
 interface EditRequestDialogProps {
   request: {
     id: string;
@@ -46,6 +48,12 @@ const EditRequestDialog = ({ request, onSuccess }: EditRequestDialogProps) => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > MAX_FILE_SIZE) {
+        showError("File is too large. Please upload an image smaller than 5MB.");
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        return;
+      }
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreview(reader.result as string);

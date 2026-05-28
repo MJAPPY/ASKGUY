@@ -10,7 +10,8 @@ import Calculator from "./pages/Calculator";
 import Guidelines from "./pages/Guidelines";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
-import Maintenance from "./pages/Maintenance"; // Added
+import Maintenance from "./pages/Maintenance";
+import SupabasePulse from "./components/SupabasePulse"; // Added
 import { WalletProvider, useWallet } from "./hooks/use-wallet";
 import { RequestsProvider } from "./hooks/use-requests";
 
@@ -44,6 +45,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <SupabasePulse /> {/* Keep-alive pulse */}
       <WalletProvider>
         <RequestsProvider>
           <AppContent />

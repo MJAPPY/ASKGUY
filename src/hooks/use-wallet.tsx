@@ -306,7 +306,18 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const nextExpiry = baseDate + ONE_YEAR;
       
       setMembershipExpiry(nextExpiry);
-      await supabase.from('profiles').upsert({ address, membership_expiry: nextExpiry }, { onConflict: 'address' });
+      
+      // Safe write: Route the profiles modification through the secure backend Edge Function instead of direct client-side DB call
+      await supabase.functions.invoke('manage-platform', {
+        body: {
+          action: 'UPSERT_PROFILE',
+          callerAddress: address,
+          payload: { 
+            address: address.toLowerCase().trim(), 
+            membership_expiry: nextExpiry 
+          }
+        }
+      });
     }
   }, [transferTokens, address, membershipFee, membershipExpiry]);
 

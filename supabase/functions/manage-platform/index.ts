@@ -4,10 +4,11 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-admin-secret',
 }
 
 const ADMIN_ADDRESS = 'askguy';
+const MAX_PROOF_LENGTH = 10 * 1024 * 1024; // Limit Base64 payload to ~10MB max to prevent DB bloating
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -22,9 +23,17 @@ serve(async (req) => {
 
     const { action, payload, callerAddress } = await req.json()
     
-    // Some actions might be public, but we still like to know who is calling
+    // Validate payload size for proof images
+    if (payload?.proof_url && payload.proof_url.length > MAX_PROOF_LENGTH) {
+      throw new Error("Payload too large: Image verification proof exceeds maximum size limit.");
+    }
+
     const normalizedCaller = callerAddress ? callerAddress.toLowerCase().trim() : 'anonymous';
     const isAdmin = normalizedCaller === ADMIN_ADDRESS;
+
+    // Retrieve Admin Secret from the custom header for authentication
+    const clientAdminSecret = req.headers.get('x-admin-secret');
+    const serverAdminSecret = Deno.env.get('ADMIN_SECRET');
 
     console.log(`[manage-platform] Action: ${action} | Caller: ${normalizedCaller} | IsAdmin: ${isAdmin}`);
 
@@ -70,8 +79,12 @@ serve(async (req) => {
 
     if (action === 'UPDATE_REQUEST') {
       const { data: existing } = await supabaseClient.from('aid_requests').select('requestor').eq('id', payload.id).single();
-      if (!existing || (existing.requestor.toLowerCase() !== normalizedCaller && !isAdmin)) {
-        throw new Error("Unauthorized: You do not own this request.");
+      if (!existing) throw new Error("Request not found.");
+
+      // If updating, must be owner or must present valid admin secret
+      const isAuthorizedAdmin = isAdmin && serverAdminSecret && clientAdminSecret === serverAdminSecret;
+      if (existing.requestor.toLowerCase() !== normalizedCaller && !isAuthorizedAdmin) {
+        throw new Error("Unauthorized: Identity verification failed.");
       }
 
       const { data, error } = await supabaseClient
@@ -84,7 +97,10 @@ serve(async (req) => {
     }
 
     if (action === 'DELETE_REQUEST') {
-      if (!isAdmin) throw new Error("Unauthorized: Admin privileges required to delete.");
+      // Admin secret must be configured on server and match client header
+      if (!serverAdminSecret || clientAdminSecret !== serverAdminSecret) {
+        throw new Error("Unauthorized: Invalid Admin Secret Key.");
+      }
       await supabaseClient.from('contributions').delete().eq('request_id', payload.id);
       const { error } = await supabaseClient.from('aid_requests').delete().eq('id', payload.id);
       if (error) throw error
@@ -118,12 +134,13 @@ serve(async (req) => {
 
     // --- ADMIN ONLY ACTIONS ---
 
-    if (!isAdmin && ['UPDATE_SETTINGS', 'BAN_USER', 'UNBAN_USER'].includes(action)) {
-      throw new Error("Unauthorized: Restricted to platform administrators.");
+    if (['UPDATE_SETTINGS', 'BAN_USER', 'UNBAN_USER'].includes(action)) {
+      if (!serverAdminSecret || clientAdminSecret !== serverAdminSecret) {
+        throw new Error("Unauthorized: Invalid Admin Secret Key.");
+      }
     }
 
     if (action === 'UPDATE_SETTINGS') {
-      // Destructure to be extremely explicit and avoid undefined variable references
       const { 
         membership_active, 
         membership_fee, 

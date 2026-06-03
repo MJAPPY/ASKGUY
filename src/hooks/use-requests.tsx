@@ -116,7 +116,12 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         delete dbUpdates.proofUrl;
       }
 
+      const adminSecret = sessionStorage.getItem('askguy_admin_secret') || '';
+
       const { data, error } = await supabase.functions.invoke('manage-platform', {
+        headers: {
+          'x-admin-secret': adminSecret
+        },
         body: {
           action: 'UPDATE_REQUEST',
           callerAddress: address,
@@ -135,7 +140,12 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const deleteRequest = async (id: string) => {
     try {
+      const adminSecret = sessionStorage.getItem('askguy_admin_secret') || '';
+
       const { error } = await supabase.functions.invoke('manage-platform', {
+        headers: {
+          'x-admin-secret': adminSecret
+        },
         body: {
           action: 'DELETE_REQUEST',
           callerAddress: address,
@@ -154,8 +164,12 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const batchDeleteRequests = async (ids: string[]) => {
     try {
+      const adminSecret = sessionStorage.getItem('askguy_admin_secret') || '';
       for (const id of ids) {
         await supabase.functions.invoke('manage-platform', {
+          headers: {
+            'x-admin-secret': adminSecret
+          },
           body: { action: 'DELETE_REQUEST', callerAddress: address, payload: { id } }
         });
       }

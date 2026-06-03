@@ -38,7 +38,9 @@ import {
   DollarSign,
   Coins,
   RefreshCw,
-  ArrowUpRight
+  ArrowUpRight,
+  Lock,
+  Unlock
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
@@ -70,6 +72,10 @@ const Admin = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [modSearch, setModSearch] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  
+  // Security Credentials state
+  const [adminSecret, setAdminSecret] = useState(sessionStorage.getItem('askguy_admin_secret') || '');
+  const [isSecretSaved, setIsSecretSaved] = useState(!!sessionStorage.getItem('askguy_admin_secret'));
   
   // Local state for form management
   const [membershipActive, setMembershipActive] = useState(currentEnabled);
@@ -175,14 +181,38 @@ const Admin = () => {
     }
   };
 
+  const saveAdminSecret = () => {
+    if (!adminSecret.trim()) {
+      showError("Secret cannot be empty.");
+      return;
+    }
+    sessionStorage.setItem('askguy_admin_secret', adminSecret.trim());
+    setIsSecretSaved(true);
+    showSuccess("Admin Secret successfully configured for session.");
+  };
+
+  const clearAdminSecret = () => {
+    sessionStorage.removeItem('askguy_admin_secret');
+    setAdminSecret('');
+    setIsSecretSaved(false);
+    showSuccess("Admin Secret cleared from session memory.");
+  };
+
   useEffect(() => {
     if (isAdmin) fetchData();
   }, [isAdmin]);
 
   const handleUpdateSettings = async () => {
+    if (!isSecretSaved) {
+      showError("Please enter your Admin Secret to authenticate changes.");
+      return;
+    }
     setProcessing(true);
     try {
       const { error } = await supabase.functions.invoke('manage-platform', {
+        headers: {
+          'x-admin-secret': adminSecret.trim()
+        },
         body: {
           action: 'UPDATE_SETTINGS',
           callerAddress: address,
@@ -210,10 +240,17 @@ const Admin = () => {
   const handleBan = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newBanAddress) return;
+    if (!isSecretSaved) {
+      showError("Please enter your Admin Secret to execute this command.");
+      return;
+    }
     
     setProcessing(true);
     try {
       const { error } = await supabase.functions.invoke('manage-platform', {
+        headers: {
+          'x-admin-secret': adminSecret.trim()
+        },
         body: {
           action: 'BAN_USER',
           callerAddress: address,
@@ -233,9 +270,16 @@ const Admin = () => {
   };
 
   const handleUnban = async (targetAddress: string) => {
+    if (!isSecretSaved) {
+      showError("Please enter your Admin Secret to execute this command.");
+      return;
+    }
     setProcessing(true);
     try {
       const { error } = await supabase.functions.invoke('manage-platform', {
+        headers: {
+          'x-admin-secret': adminSecret.trim()
+        },
         body: {
           action: 'UNBAN_USER',
           callerAddress: address,
@@ -292,6 +336,62 @@ const Admin = () => {
       <Navbar />
       <main className="flex-1 container mx-auto px-4 py-12">
         <div className="max-w-6xl mx-auto space-y-10">
+          
+          {/* Admin Credentials Panel */}
+          <Card className={cn(
+            "glass-card border-[3px] p-6 rounded-[28px] transition-all duration-300 relative overflow-hidden",
+            isSecretSaved ? "border-emerald-500/30 bg-emerald-500/5" : "border-amber-500/30 bg-amber-500/5 animate-pulse"
+          )}>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+              <div className="flex items-start gap-4">
+                <div className={cn(
+                  "w-12 h-12 rounded-2xl flex items-center justify-center border shrink-0",
+                  isSecretSaved ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-amber-500/10 border-amber-500/20 text-amber-400"
+                )}>
+                  {isSecretSaved ? <Unlock size={24} /> : <Lock size={24} />}
+                </div>
+                <div className="space-y-1">
+                  <h3 className="font-black text-lg tracking-tight uppercase">
+                    {isSecretSaved ? "Engine Authenticated" : "Engine Authorization Required"}
+                  </h3>
+                  <p className="text-xs text-muted-foreground font-medium max-w-xl">
+                    {isSecretSaved 
+                      ? "Admin Secret matches configured variables. You can execute all dashboard setting modifications and moderations." 
+                      : "Please configure your database ADMIN_SECRET key below to unlock writing/updating platform rules."}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 w-full md:w-auto">
+                {isSecretSaved ? (
+                  <Button 
+                    onClick={clearAdminSecret}
+                    variant="outline"
+                    className="w-full md:w-auto h-12 px-6 border-red-500/20 hover:bg-red-500/10 text-red-400 font-black rounded-xl"
+                  >
+                    Lock Console
+                  </Button>
+                ) : (
+                  <div className="flex gap-2 w-full">
+                    <Input 
+                      type="password"
+                      placeholder="Enter Admin Secret..."
+                      value={adminSecret}
+                      onChange={(e) => setAdminSecret(e.target.value)}
+                      className="bg-black/40 border-white/10 h-12 font-black rounded-xl"
+                    />
+                    <Button 
+                      onClick={saveAdminSecret}
+                      className="bg-amber-500 hover:bg-amber-400 text-black font-black h-12 px-6 rounded-xl"
+                    >
+                      Verify
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </Card>
+
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="space-y-2">
               <div className="flex items-center gap-4">

@@ -9,7 +9,9 @@ interface Coin {
   tx: number;
   ty: number;
   scale: number;
-  rot: number;
+  rotZ: number;
+  rotY: number;
+  rotX: number;
 }
 
 const CoinBurst = ({ children }: { children: React.ReactNode }) => {
@@ -31,7 +33,11 @@ const CoinBurst = ({ children }: { children: React.ReactNode }) => {
       const tx = Math.cos(angle) * distance;
       const ty = Math.sin(angle) * distance - (60 + Math.random() * 80); // Skew slightly upwards for a gravity-defying feel
       const scale = 0.5 + Math.random() * 0.6;
-      const rot = (Math.random() - 0.5) * 720; // Multiple rotation spins
+      
+      // Randomize spin speeds and directions on Z, Y, and X axes for a full 3D tumble
+      const rotZ = (Math.random() - 0.5) * 1080; // Z-axis spin (flat spin)
+      const rotY = Math.random() > 0.5 ? 720 + Math.random() * 720 : 0; // Y-axis spin (coin flip horizontal)
+      const rotX = Math.random() > 0.5 ? 720 + Math.random() * 720 : 0; // X-axis spin (coin flip vertical)
 
       newCoins.push({
         id: currentCounter++,
@@ -40,7 +46,9 @@ const CoinBurst = ({ children }: { children: React.ReactNode }) => {
         tx,
         ty,
         scale,
-        rot,
+        rotZ,
+        rotY,
+        rotX,
       });
     }
 
@@ -61,7 +69,7 @@ const CoinBurst = ({ children }: { children: React.ReactNode }) => {
       {children}
 
       {/* Render Flying Proton Coins */}
-      <div className="absolute inset-0 pointer-events-none overflow-visible z-50">
+      <div className="absolute inset-0 pointer-events-none overflow-visible z-50" style={{ perspective: '1000px' }}>
         {coins.map((coin) => (
           <div
             key={coin.id}
@@ -73,7 +81,9 @@ const CoinBurst = ({ children }: { children: React.ReactNode }) => {
               '--tx': `${coin.tx}px`,
               '--ty': `${coin.ty}px`,
               '--scale': coin.scale,
-              '--rot': `${coin.rot}deg`,
+              '--rotZ': `${coin.rotZ}deg`,
+              '--rotY': `${coin.rotY}deg`,
+              '--rotX': `${coin.rotX}deg`,
             } as React.CSSProperties}
           >
             <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_20px_rgba(251,212,81,0.6)]">
@@ -128,7 +138,7 @@ const CoinBurst = ({ children }: { children: React.ReactNode }) => {
       <style>{`
         @keyframes coinFly {
           0% {
-            transform: translate(0, 0) scale(0.1) rotate(0deg);
+            transform: translate(0, 0) scale(0.1) rotateX(0deg) rotateY(0deg) rotateZ(0deg);
             opacity: 0;
           }
           15% {
@@ -138,12 +148,13 @@ const CoinBurst = ({ children }: { children: React.ReactNode }) => {
             opacity: 1;
           }
           100% {
-            transform: translate(var(--tx), var(--ty)) scale(var(--scale)) rotate(var(--rot));
+            transform: translate(var(--tx), var(--ty)) scale(var(--scale)) rotateX(var(--rotX)) rotateY(var(--rotY)) rotateZ(var(--rotZ));
             opacity: 0;
           }
         }
         .animate-coin-fly {
-          animation: coinFly 1.2s cubic-bezier(0.12, 0.89, 0.32, 0.98) forwards;
+          animation: coinFly 1.3s cubic-bezier(0.12, 0.89, 0.32, 0.98) forwards;
+          transform-style: preserve-3d;
           transform-origin: center;
           will-change: transform, opacity;
         }

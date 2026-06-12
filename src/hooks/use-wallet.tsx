@@ -21,7 +21,7 @@ export interface WalletState {
   membershipFee: number;
   postingFeeGuy: number;
   leaderboardLikes: number;
-  distributedRewards: number;
+  distributedRewards: number; // Added
   isMembershipEnabled: boolean;
   isMaintenanceMode: boolean;
   maintenanceMessage: string;
@@ -61,7 +61,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [membershipFee, setMembershipFee] = useState(7777);
   const [postingFeeGuy, setPostingFeeGuy] = useState(25);
   const [leaderboardLikes, setLeaderboardLikes] = useState(0);
-  const [distributedRewards, setDistributedRewards] = useState(0);
+  const [distributedRewards, setDistributedRewards] = useState(0); // Added
   const [isMembershipEnabled, setIsMembershipEnabled] = useState(true);
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
   const [maintenanceMessage, setMaintenanceMessage] = useState('');
@@ -88,7 +88,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setPostingFeeGuy(Number(data.posting_fee_guy ?? 25));
         setAvatarSet(data.avatar_set || 'pixel-art');
         setLeaderboardLikes(Number(data.leaderboard_likes || 0));
-        setDistributedRewards(Number(data.distributed_rewards || 0));
+        setDistributedRewards(Number(data.distributed_rewards || 0)); // Added
         setIsMaintenanceMode(Boolean(data.maintenance_mode));
         setMaintenanceMessage(data.maintenance_message || 'We are currently fine-tuning the platform to better serve the community. Hang tight!');
       }
@@ -99,6 +99,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const incrementLikes = useCallback(async () => {
     try {
+      // Optimistic update
       setLeaderboardLikes(prev => prev + 1);
       
       const { data: current } = await supabase
@@ -259,28 +260,15 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const connect = useCallback(async () => {
     setIsConnecting(true);
-    try { 
-      await initWallet(false); 
-    } finally { 
-      setIsConnecting(false); 
-    }
+    try { await initWallet(false); } finally { setIsConnecting(false); }
   }, [initWallet]);
 
   const disconnect = useCallback(async () => {
     if (session && linkRef.current) {
-      try { 
-        await linkRef.current.removeSession(APP_NAME, session.auth); 
-      } catch (err) {
-        console.error('Failed to remove session:', err);
-      }
+      try { await linkRef.current.removeSession(APP_NAME, session.auth); } catch {}
     }
-    setAddress(''); 
-    setSession(null); 
-    setIsConnected(false);
-    setGuyBalance(0); 
-    setXprBalance(0); 
-    setIsBanned(false); 
-    setAvatarUrl('');
+    setAddress(''); setSession(null); setIsConnected(false);
+    setGuyBalance(0); setXprBalance(0); setIsBanned(false); setAvatarUrl('');
   }, [session]);
 
   const refreshBalances = useCallback(async () => {

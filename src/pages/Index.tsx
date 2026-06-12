@@ -14,6 +14,7 @@ import CTASection from '@/components/CTASection';
 import LiveTicker from '@/components/LiveTicker';
 import BannedOverlay from '@/components/BannedOverlay';
 import Footer from '@/components/Footer';
+import CoinBurst from '@/components/CoinBurst';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
@@ -106,14 +107,16 @@ const Index = () => {
                 </div>
               </div>
               <div className="relative animate-in fade-in slide-in-from-right-8 duration-1000 lg:-translate-y-6 lg:-translate-x-12">
-                <div className="relative z-10 w-full max-w-[480px] mx-auto lg:mr-auto lg:ml-0 group">
-                   <div className="absolute -inset-10 bg-[#1565C0]/10 rounded-full blur-[100px] opacity-50 group-hover:opacity-80 transition-opacity duration-1000" />
-                   <img 
-                    src={heroAskGuy} 
-                    alt="AskGuy Hero" 
-                    className="w-full h-auto drop-shadow-[0_0_60px_rgba(21,101,192,0.2)] transition-transform duration-700 group-hover:scale-105" 
-                   />
-                </div>
+                <CoinBurst>
+                  <div className="relative z-10 w-full max-w-[480px] mx-auto lg:mr-auto lg:ml-0 group">
+                    <div className="absolute -inset-10 bg-[#1565C0]/10 rounded-full blur-[100px] opacity-50 group-hover:opacity-80 transition-opacity duration-1000" />
+                    <img 
+                      src={heroAskGuy} 
+                      alt="AskGuy Hero" 
+                      className="w-full h-auto drop-shadow-[0_0_60px_rgba(21,101,192,0.2)] transition-transform duration-700 group-hover:scale-105" 
+                    />
+                  </div>
+                </CoinBurst>
               </div>
             </div>
           </div>

@@ -59,6 +59,7 @@ const Admin = () => {
     avatarSet: currentAvatarSet, 
     isMaintenanceMode: currentMaintenance,
     maintenanceMessage: currentMessage,
+    distributedRewards: currentDistributedRewards, // Added
     fetchSettings, 
     address 
   } = useWallet();
@@ -116,7 +117,9 @@ const Admin = () => {
       .slice(0, 10)
       .map(([address, amount]) => ({ address, amount }));
 
-    const totalGUYFees = requests.length * currentPostingFee;
+    // Subtracting distributed rewards from total accrued posting fees
+    const rawGUYFees = requests.length * currentPostingFee;
+    const totalGUYFees = Math.max(0, rawGUYFees - currentDistributedRewards);
 
     return { 
       totalRequests: requests.length, 
@@ -127,7 +130,7 @@ const Admin = () => {
       totalGUYFees,
       top5 
     };
-  }, [requests, currentPostingFee]);
+  }, [requests, currentPostingFee, currentDistributedRewards]);
 
   // Set default pool size once stats load
   useEffect(() => {
@@ -263,7 +266,19 @@ const Admin = () => {
     try {
       const success = await transferTokens(target, amount, 'GUY', 'Platform Reward for Generosity');
       if (success) {
+        // Track the payout by incrementing distributed_rewards
+        const nextDistributed = currentDistributedRewards + amount;
+        await supabase.functions.invoke('manage-platform', {
+          body: {
+            action: 'UPDATE_SETTINGS',
+            callerAddress: address,
+            payload: { 
+              distributed_rewards: nextDistributed
+            }
+          }
+        });
         showSuccess(`Rewarded ${amount} GUY to @${target}`);
+        await fetchSettings();
       }
     } catch (err) {
       showError("Reward failed.");
@@ -315,12 +330,15 @@ const Admin = () => {
     }
 
     setProcessing(true);
+    let successfullyPaid = 0;
     for (let i = 0; i < payouts.length; i++) {
       const p = payouts[i];
       try {
         showSuccess(`Initiating reward to @${p.address} (${i + 1}/${payouts.length})`);
         const success = await transferTokens(p.address, p.amount, 'GUY', 'Platform Reward for Generosity');
-        if (!success) {
+        if (success) {
+          successfullyPaid += p.amount;
+        } else {
           showError(`Failed to reward @${p.address}. Distribution stopped.`);
           break;
         }
@@ -329,6 +347,22 @@ const Admin = () => {
         break;
       }
     }
+
+    // Track total successfully distributed rewards in the batch
+    if (successfullyPaid > 0) {
+      const nextDistributed = currentDistributedRewards + successfullyPaid;
+      await supabase.functions.invoke('manage-platform', {
+        body: {
+          action: 'UPDATE_SETTINGS',
+          callerAddress: address,
+          payload: { 
+            distributed_rewards: nextDistributed
+          }
+        }
+      });
+      await fetchSettings();
+    }
+
     setProcessing(false);
     setIndividualRewards({});
     handleGlobalRefresh();

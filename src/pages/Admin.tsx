@@ -40,7 +40,8 @@ import {
   RefreshCw,
   ArrowUpRight,
   Lock,
-  Unlock
+  Unlock,
+  Wallet
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
@@ -75,7 +76,9 @@ const Admin = () => {
   
   // Security Credentials state
   const [adminSecret, setAdminSecret] = useState(sessionStorage.getItem('askguy_admin_secret') || '');
-  const [isSecretSaved, setIsSecretSaved] = useState(!!sessionStorage.getItem('askguy_admin_secret'));
+  const [isSecretSaved, setIsSecretSaved] = useState(
+    !!sessionStorage.getItem('askguy_admin_secret') || (address?.toLowerCase() === 'askguy')
+  );
   
   // Local state for form management
   const [membershipActive, setMembershipActive] = useState(currentEnabled);
@@ -194,7 +197,7 @@ const Admin = () => {
   const clearAdminSecret = () => {
     sessionStorage.removeItem('askguy_admin_secret');
     setAdminSecret('');
-    setIsSecretSaved(false);
+    setIsSecretSaved(address?.toLowerCase() === 'askguy'); // Remain unlocked if logged in as the master wallet
     showSuccess("Admin Secret cleared from session memory.");
   };
 
@@ -203,10 +206,6 @@ const Admin = () => {
   }, [isAdmin]);
 
   const handleUpdateSettings = async () => {
-    if (!isSecretSaved) {
-      showError("Please enter your Admin Secret to authenticate changes.");
-      return;
-    }
     setProcessing(true);
     try {
       const { error } = await supabase.functions.invoke('manage-platform', {
@@ -229,7 +228,7 @@ const Admin = () => {
 
       if (error) throw error;
       await fetchSettings();
-      showSuccess("Global settings updated.");
+      showSuccess("Global settings updated successfully!");
     } catch (err: any) {
       showError(err.message || "Failed to update settings.");
     } finally {
@@ -240,10 +239,6 @@ const Admin = () => {
   const handleBan = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newBanAddress) return;
-    if (!isSecretSaved) {
-      showError("Please enter your Admin Secret to execute this command.");
-      return;
-    }
     
     setProcessing(true);
     try {
@@ -270,10 +265,6 @@ const Admin = () => {
   };
 
   const handleUnban = async (targetAddress: string) => {
-    if (!isSecretSaved) {
-      showError("Please enter your Admin Secret to execute this command.");
-      return;
-    }
     setProcessing(true);
     try {
       const { error } = await supabase.functions.invoke('manage-platform', {
@@ -340,7 +331,7 @@ const Admin = () => {
           {/* Admin Credentials Panel */}
           <Card className={cn(
             "glass-card border-[3px] p-6 rounded-[28px] transition-all duration-300 relative overflow-hidden",
-            isSecretSaved ? "border-emerald-500/30 bg-emerald-500/5" : "border-amber-500/30 bg-amber-500/5 animate-pulse"
+            isSecretSaved ? "border-emerald-500/30 bg-emerald-500/5" : "border-amber-500/30 bg-amber-500/5"
           )}>
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
               <div className="flex items-start gap-4">
@@ -352,18 +343,24 @@ const Admin = () => {
                 </div>
                 <div className="space-y-1">
                   <h3 className="font-black text-lg tracking-tight uppercase">
-                    {isSecretSaved ? "Engine Authenticated" : "Engine Authorization Required"}
+                    {isSecretSaved ? "Console Unlocked" : "Engine Security Settings"}
                   </h3>
                   <p className="text-xs text-muted-foreground font-medium max-w-xl">
-                    {isSecretSaved 
-                      ? "Admin Secret matches configured variables. You can execute all dashboard setting modifications and moderations." 
-                      : "Please configure your database ADMIN_SECRET key below to unlock writing/updating platform rules."}
+                    {address?.toLowerCase() === 'askguy' 
+                      ? "Console unlocked directly via on-chain Wallet Authentication (@askguy). No password required."
+                      : isSecretSaved 
+                        ? "Admin Secret matches configured variables. You can execute all settings modifications and moderations." 
+                        : "Configure your ADMIN_SECRET key below to unlock writing/updating platform rules."}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-3 w-full md:w-auto">
-                {isSecretSaved ? (
+                {address?.toLowerCase() === 'askguy' ? (
+                  <div className="flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider">
+                    <Wallet size={16} /> Wallet Verified
+                  </div>
+                ) : isSecretSaved ? (
                   <Button 
                     onClick={clearAdminSecret}
                     variant="outline"

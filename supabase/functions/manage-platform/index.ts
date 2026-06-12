@@ -85,7 +85,7 @@ serve(async (req) => {
       if (!existing) throw new Error("Request not found.");
 
       // If updating, must be owner or must present valid admin secret
-      const isAuthorizedAdmin = isAdmin && serverAdminSecret && clientAdminSecret === serverAdminSecret;
+      const isAuthorizedAdmin = isAdmin && (!serverAdminSecret || clientAdminSecret === serverAdminSecret);
       if (existing.requestor.toLowerCase() !== normalizedCaller && !isAuthorizedAdmin) {
         throw new Error("Unauthorized: Identity verification failed.");
       }
@@ -100,11 +100,12 @@ serve(async (req) => {
     }
 
     if (action === 'DELETE_REQUEST') {
-      if (!serverAdminSecret) {
-        throw new Error("ADMIN_SECRET is not configured on your Supabase Edge Functions. Go to Supabase -> Edge Functions -> Manage Secrets and set ADMIN_SECRET.");
-      }
-      if (clientAdminSecret !== serverAdminSecret) {
+      // If server secret is defined, client secret must match it. If not defined, fallback to verified wallet signature.
+      if (serverAdminSecret && clientAdminSecret !== serverAdminSecret) {
         throw new Error("Unauthorized: Invalid Admin Secret Key.");
+      }
+      if (!isAdmin) {
+        throw new Error("Unauthorized: Admin permissions required.");
       }
       await supabaseClient.from('contributions').delete().eq('request_id', payload.id);
       const { error } = await supabaseClient.from('aid_requests').delete().eq('id', payload.id);
@@ -140,11 +141,11 @@ serve(async (req) => {
     // --- ADMIN ONLY ACTIONS ---
 
     if (['UPDATE_SETTINGS', 'BAN_USER', 'UNBAN_USER'].includes(action)) {
-      if (!serverAdminSecret) {
-        throw new Error("ADMIN_SECRET is not configured on your Supabase Edge Functions. Please go to Supabase -> Edge Functions -> Manage Secrets and add the secret 'ADMIN_SECRET'.");
-      }
-      if (clientAdminSecret !== serverAdminSecret) {
+      if (serverAdminSecret && clientAdminSecret !== serverAdminSecret) {
         throw new Error("Unauthorized: Invalid Admin Secret Key.");
+      }
+      if (!isAdmin) {
+        throw new Error("Unauthorized: Admin permissions required.");
       }
     }
 

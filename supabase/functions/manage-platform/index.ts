@@ -44,7 +44,7 @@ serve(async (req) => {
         .from('site_settings')
         .select('leaderboard_likes')
         .eq('id', 'global')
-        .single();
+        .maybeSingle();
       
       const newCount = (current?.leaderboard_likes || 0) + 1;
       
@@ -55,6 +55,9 @@ serve(async (req) => {
         .select()
       
       if (error) throw error
+      if (!data || data.length === 0) {
+        throw new Error("No settings record found with ID 'global'.");
+      }
       return new Response(JSON.stringify(data[0]), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
@@ -97,8 +100,10 @@ serve(async (req) => {
     }
 
     if (action === 'DELETE_REQUEST') {
-      // Admin secret must be configured on server and match client header
-      if (!serverAdminSecret || clientAdminSecret !== serverAdminSecret) {
+      if (!serverAdminSecret) {
+        throw new Error("ADMIN_SECRET is not configured on your Supabase Edge Functions. Go to Supabase -> Edge Functions -> Manage Secrets and set ADMIN_SECRET.");
+      }
+      if (clientAdminSecret !== serverAdminSecret) {
         throw new Error("Unauthorized: Invalid Admin Secret Key.");
       }
       await supabaseClient.from('contributions').delete().eq('request_id', payload.id);
@@ -135,7 +140,10 @@ serve(async (req) => {
     // --- ADMIN ONLY ACTIONS ---
 
     if (['UPDATE_SETTINGS', 'BAN_USER', 'UNBAN_USER'].includes(action)) {
-      if (!serverAdminSecret || clientAdminSecret !== serverAdminSecret) {
+      if (!serverAdminSecret) {
+        throw new Error("ADMIN_SECRET is not configured on your Supabase Edge Functions. Please go to Supabase -> Edge Functions -> Manage Secrets and add the secret 'ADMIN_SECRET'.");
+      }
+      if (clientAdminSecret !== serverAdminSecret) {
         throw new Error("Unauthorized: Invalid Admin Secret Key.");
       }
     }
@@ -164,6 +172,11 @@ serve(async (req) => {
         .select()
       
       if (error) throw error
+      
+      if (!data || data.length === 0) {
+        throw new Error("No settings record found with ID 'global' in site_settings table.");
+      }
+      
       return new Response(JSON.stringify(data[0]), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 

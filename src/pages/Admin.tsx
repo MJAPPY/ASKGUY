@@ -17,7 +17,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   ShieldAlert, 
   UserX, 
-  UserCheck, 
   Loader2, 
   ShieldCheck, 
   TrendingUp, 
@@ -26,22 +25,14 @@ import {
   Search,
   Trash2,
   Trophy,
-  Hammer,
   Gift,
   Zap,
   Sparkles,
-  Eye,
-  MoreVertical,
-  CheckCircle2,
-  Filter,
-  Users,
-  DollarSign,
   Coins,
   RefreshCw,
   ArrowUpRight,
-  Wallet,
   Percent,
-  Sparkle
+  Users
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
@@ -59,12 +50,12 @@ const Admin = () => {
     avatarSet: currentAvatarSet, 
     isMaintenanceMode: currentMaintenance,
     maintenanceMessage: currentMessage,
-    distributedRewards: currentDistributedRewards, // Added
+    distributedRewards: currentDistributedRewards,
     fetchSettings, 
     address 
   } = useWallet();
   
-  const { requests, deleteRequest, batchDeleteRequests, fetchRequests, loading: requestsLoading } = useRequests();
+  const { requests, deleteRequest, batchDeleteRequests, fetchRequests } = useRequests();
   const [bannedUsers, setBannedUsers] = useState<{ address: string, created_at: string }[]>([]);
   const [memberCount, setMemberCount] = useState(0);
   const [qtrMemberCount, setQtrMemberCount] = useState(0);
@@ -82,6 +73,7 @@ const Admin = () => {
   const [selectedAvatarSet, setSelectedAvatarSet] = useState(currentAvatarSet);
   const [maintenanceMode, setMaintenanceMode] = useState(currentMaintenance);
   const [maintenanceMessage, setMaintenanceMessage] = useState(currentMessage);
+  const [distributedRewards, setDistributedRewards] = useState(currentDistributedRewards.toString());
 
   const [individualRewards, setIndividualRewards] = useState<Record<string, string>>({});
   const [poolSize, setPoolSize] = useState('');
@@ -94,7 +86,8 @@ const Admin = () => {
     setSelectedAvatarSet(currentAvatarSet);
     setMaintenanceMode(currentMaintenance);
     setMaintenanceMessage(currentMessage);
-  }, [currentEnabled, currentFee, currentPostingFee, currentAvatarSet, currentMaintenance, currentMessage]);
+    setDistributedRewards(currentDistributedRewards.toString());
+  }, [currentEnabled, currentFee, currentPostingFee, currentAvatarSet, currentMaintenance, currentMessage, currentDistributedRewards]);
 
   const stats = useMemo(() => {
     const contributionMap: Record<string, number> = {};
@@ -206,7 +199,8 @@ const Admin = () => {
             posting_fee_guy: parseFloat(postingFeeGuy || "0"),
             avatar_set: selectedAvatarSet,
             maintenance_mode: Boolean(maintenanceMode),
-            maintenance_message: maintenanceMessage 
+            maintenance_message: maintenanceMessage,
+            distributed_rewards: parseFloat(distributedRewards || "0")
           }
         }
       });
@@ -408,7 +402,7 @@ const Admin = () => {
               disabled={isRefreshing}
               className="h-14 px-8 bg-white/5 border border-white/10 hover:bg-white/10 text-white font-black rounded-2xl gap-3 transition-all"
             >
-              {isRefreshing ? <Loader2 size={20} className="animate-spin" /> : <RefreshCw size={20} className={cn(isRefreshing && "animate-spin")} />}
+              {isRefreshing ? <Loader2 size={20} className="animate-spin" /> : <RefreshCw size={20} />}
               Refresh Data
             </Button>
           </div>
@@ -729,6 +723,13 @@ const Admin = () => {
                     <div className="space-y-3">
                       <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Post Fee (GUY)</label>
                       <Input type="number" value={postingFeeGuy} onChange={(e) => setPostingFeeGuy(e.target.value)} className="bg-black/20 border-white/10 h-14 font-black rounded-xl text-lg" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-6">
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Manual Distributed Rewards Override (GUY)</label>
+                      <Input type="number" value={distributedRewards} onChange={(e) => setDistributedRewards(e.target.value)} className="bg-black/20 border-white/10 h-14 font-black rounded-xl text-lg" />
                     </div>
                   </div>
 

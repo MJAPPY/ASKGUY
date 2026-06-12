@@ -84,10 +84,16 @@ serve(async (req) => {
       const { data: existing } = await supabaseClient.from('aid_requests').select('requestor').eq('id', payload.id).single();
       if (!existing) throw new Error("Request not found.");
 
-      // If updating, must be owner or must present valid admin secret
-      const isAuthorizedAdmin = isAdmin && (!serverAdminSecret || clientAdminSecret === serverAdminSecret);
-      if (existing.requestor.toLowerCase() !== normalizedCaller && !isAuthorizedAdmin) {
-        throw new Error("Unauthorized: Identity verification failed.");
+      const isOwner = existing.requestor.toLowerCase() === normalizedCaller;
+      
+      // If updating someone else's request, must be verified admin with server secret configured
+      if (!isOwner) {
+        if (!serverAdminSecret) {
+          throw new Error("Security Lock: Admin overwrite requires ADMIN_SECRET to be configured on the server.");
+        }
+        if (!isAdmin || clientAdminSecret !== serverAdminSecret) {
+          throw new Error("Unauthorized: Invalid Admin Secret Key.");
+        }
       }
 
       const { data, error } = await supabaseClient
@@ -100,12 +106,11 @@ serve(async (req) => {
     }
 
     if (action === 'DELETE_REQUEST') {
-      // If server secret is defined, client secret must match it. If not defined, fallback to verified wallet signature.
-      if (serverAdminSecret && clientAdminSecret !== serverAdminSecret) {
-        throw new Error("Unauthorized: Invalid Admin Secret Key.");
+      if (!serverAdminSecret) {
+        throw new Error("Security Lock: Deletion requires ADMIN_SECRET to be configured on the server.");
       }
-      if (!isAdmin) {
-        throw new Error("Unauthorized: Admin permissions required.");
+      if (!isAdmin || clientAdminSecret !== serverAdminSecret) {
+        throw new Error("Unauthorized: Invalid Admin Secret Key.");
       }
       await supabaseClient.from('contributions').delete().eq('request_id', payload.id);
       const { error } = await supabaseClient.from('aid_requests').delete().eq('id', payload.id);
@@ -141,11 +146,11 @@ serve(async (req) => {
     // --- ADMIN ONLY ACTIONS ---
 
     if (['UPDATE_SETTINGS', 'BAN_USER', 'UNBAN_USER'].includes(action)) {
-      if (serverAdminSecret && clientAdminSecret !== serverAdminSecret) {
-        throw new Error("Unauthorized: Invalid Admin Secret Key.");
+      if (!serverAdminSecret) {
+        throw new Error("Security Lock: Administrative actions require 'ADMIN_SECRET' to be configured on your Supabase Edge Functions. Please go to Supabase Dashboard -> Edge Functions -> Manage Secrets and define 'ADMIN_SECRET'.");
       }
-      if (!isAdmin) {
-        throw new Error("Unauthorized: Admin permissions required.");
+      if (!isAdmin || clientAdminSecret !== serverAdminSecret) {
+        throw new Error("Unauthorized: Invalid Admin Secret Key.");
       }
     }
 

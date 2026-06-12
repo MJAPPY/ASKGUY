@@ -46,6 +46,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
 import { cn } from '@/lib/utils';
+import { hashPassword } from '@/utils/crypto';
 
 const Admin = () => {
   const { 
@@ -148,12 +149,12 @@ const Admin = () => {
 
   const checkPasswordConfigured = async () => {
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('admin_secrets')
-        .select('id')
+        .select('id, password_hash')
         .eq('id', 'global')
         .maybeSingle();
-      setIsPasswordSet(!!data);
+      setIsPasswordSet(!!data && !!data.password_hash);
     } catch {
       setIsPasswordSet(false);
     }
@@ -199,14 +200,37 @@ const Admin = () => {
     }
   };
 
-  const saveAdminSecret = () => {
+  const saveAdminSecret = async () => {
     if (!adminSecret.trim()) {
       showError("Secret cannot be empty.");
       return;
     }
-    sessionStorage.setItem('askguy_admin_secret', adminSecret.trim());
-    setIsSecretSaved(true);
-    showSuccess("Admin Secret successfully configured for session.");
+
+    setProcessing(true);
+    try {
+      const { data, error } = await supabase
+        .from('admin_secrets')
+        .select('password_hash')
+        .eq('id', 'global')
+        .maybeSingle();
+
+      if (error || !data) {
+        throw new Error("Secret table unconfigured. Please configure your database table first.");
+      }
+
+      const hash = await hashPassword(adminSecret.trim());
+      if (hash === data.password_hash) {
+        sessionStorage.setItem('askguy_admin_secret', adminSecret.trim());
+        setIsSecretSaved(true);
+        showSuccess("Admin Secret successfully configured for session.");
+      } else {
+        showError("Invalid Admin Secret password.");
+      }
+    } catch (err: any) {
+      showError(err.message || "Failed to verify credentials.");
+    } finally {
+      setProcessing(false);
+    }
   };
 
   const initializePassword = async () => {
@@ -216,13 +240,10 @@ const Admin = () => {
     }
     setProcessing(true);
     try {
-      const { error } = await supabase.functions.invoke('manage-platform', {
-        body: {
-          action: 'INITIALIZE_ADMIN_PASSWORD',
-          callerAddress: address,
-          payload: { password: adminSecret.trim() }
-        }
-      });
+      const hashed = await hashPassword(adminSecret.trim());
+      const { error } = await supabase
+        .from('admin_secrets')
+        .upsert({ id: 'global', password_hash: hashed }, { onConflict: 'id' });
 
       if (error) throw error;
       sessionStorage.setItem('askguy_admin_secret', adminSecret.trim());
@@ -254,23 +275,17 @@ const Admin = () => {
     }
     setProcessing(true);
     try {
-      const { error } = await supabase.functions.invoke('manage-platform', {
-        headers: {
-          'x-admin-secret': adminSecret.trim()
-        },
-        body: {
-          action: 'UPDATE_SETTINGS',
-          callerAddress: address,
-          payload: { 
-            membership_active: Boolean(membershipActive),
-            membership_fee: parseFloat(membershipFee || "0"),
-            posting_fee_guy: parseFloat(postingFeeGuy || "0"),
-            avatar_set: selectedAvatarSet,
-            maintenance_mode: Boolean(maintenanceMode),
-            maintenance_message: maintenanceMessage 
-          }
-        }
-      });
+      const { error } = await supabase
+        .from('site_settings')
+        .update({ 
+          membership_active: Boolean(membershipActive),
+          membership_fee: parseFloat(membershipFee || "0"),
+          posting_fee_guy: parseFloat(postingFeeGuy || "0"),
+          avatar_set: selectedAvatarSet,
+          maintenance_mode: Boolean(maintenanceMode),
+          maintenance_message: maintenanceMessage 
+        })
+        .eq('id', 'global');
 
       if (error) throw error;
       await fetchSettings();
@@ -292,16 +307,9 @@ const Admin = () => {
     
     setProcessing(true);
     try {
-      const { error } = await supabase.functions.invoke('manage-platform', {
-        headers: {
-          'x-admin-secret': adminSecret.trim()
-        },
-        body: {
-          action: 'BAN_USER',
-          callerAddress: address,
-          payload: { address: newBanAddress }
-        }
-      });
+      const { error } = await supabase
+        .from('banned_users')
+        .insert({ address: newBanAddress.toLowerCase().trim() });
       
       if (error) throw error;
       showSuccess(`${newBanAddress} blacklisted.`);
@@ -321,16 +329,10 @@ const Admin = () => {
     }
     setProcessing(true);
     try {
-      const { error } = await supabase.functions.invoke('manage-platform', {
-        headers: {
-          'x-admin-secret': adminSecret.trim()
-        },
-        body: {
-          action: 'UNBAN_USER',
-          callerAddress: address,
-          payload: { address: targetAddress }
-        }
-      });
+      const { error } = await supabase
+        .from('banned_users')
+        .delete()
+        .eq('address', targetAddress.toLowerCase().trim());
       
       if (error) throw error;
       showSuccess(`${targetAddress} restored.`);

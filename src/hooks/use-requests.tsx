@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { supabase } from '@/integrations/supabase/client';
 import { showError, showSuccess } from '@/utils/toast';
 import { useWallet } from './use-wallet';
+import { hashPassword } from '@/utils/crypto';
 
 export interface AidRequest {
   id: string;
@@ -82,22 +83,48 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, []);
 
+  // Securely verify admin password hash client-side
+  const verifyAdminAuth = async () => {
+    const adminSecret = sessionStorage.getItem('askguy_admin_secret');
+    if (!adminSecret) {
+      throw new Error("Unauthorized: Admin secret required. Please unlock the Admin panel.");
+    }
+    
+    const { data, error } = await supabase
+      .from('admin_secrets')
+      .select('password_hash')
+      .eq('id', 'global')
+      .maybeSingle();
+      
+    if (error || !data) {
+      throw new Error("Security Lock: No Admin password configured in the database.");
+    }
+
+    const currentHash = await hashPassword(adminSecret);
+    if (currentHash !== data.password_hash) {
+      throw new Error("Unauthorized: Invalid Admin Secret key.");
+    }
+    return true;
+  };
+
   const addRequest = async (req: any) => {
     try {
-      const { data, error } = await supabase.functions.invoke('manage-platform', {
-        body: {
-          action: 'CREATE_REQUEST',
-          callerAddress: address,
-          payload: {
-            title: req.title,
-            category: req.category,
-            amount: req.amount,
-            token: req.token,
-            description: req.description,
-            proof_url: req.proofUrl
-          }
-        }
-      });
+      const { data, error } = await supabase
+        .from('aid_requests')
+        .insert({
+          title: req.title,
+          category: req.category,
+          amount: req.amount,
+          token: req.token,
+          description: req.description,
+          proof_url: req.proofUrl,
+          requestor: address.toLowerCase().trim(),
+          timestamp: Date.now(),
+          status: 'Open',
+          raised: 0
+        })
+        .select()
+        .single();
       
       if (error) throw error;
       await fetchRequests();
@@ -116,18 +143,20 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         delete dbUpdates.proofUrl;
       }
 
-      const adminSecret = sessionStorage.getItem('askguy_admin_secret') || '';
+      // If action is initiated by someone other than owner, we must verify admin secret
+      const requestToUpdate = requests.find(r => r.id === id);
+      const isOwner = requestToUpdate?.requestor.toLowerCase() === address.toLowerCase();
 
-      const { data, error } = await supabase.functions.invoke('manage-platform', {
-        headers: {
-          'x-admin-secret': adminSecret
-        },
-        body: {
-          action: 'UPDATE_REQUEST',
-          callerAddress: address,
-          payload: { id, updates: dbUpdates }
-        }
-      });
+      if (!isOwner) {
+        await verifyAdminAuth();
+      }
+
+      const { data, error } = await supabase
+        .from('aid_requests')
+        .update(dbUpdates)
+        .eq('id', id)
+        .select()
+        .single();
 
       if (error) throw error;
       await fetchRequests();
@@ -140,18 +169,15 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const deleteRequest = async (id: string) => {
     try {
-      const adminSecret = sessionStorage.getItem('askguy_admin_secret') || '';
+      await verifyAdminAuth();
 
-      const { error } = await supabase.functions.invoke('manage-platform', {
-        headers: {
-          'x-admin-secret': adminSecret
-        },
-        body: {
-          action: 'DELETE_REQUEST',
-          callerAddress: address,
-          payload: { id }
-        }
-      });
+      // Delete child contributions first (referential integrity)
+      await supabase.from('contributions').delete().eq('request_id', id);
+      
+      const { error } = await supabase
+        .from('aid_requests')
+        .delete()
+        .eq('id', id);
 
       if (error) throw error;
       await fetchRequests();
@@ -164,15 +190,13 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const batchDeleteRequests = async (ids: string[]) => {
     try {
-      const adminSecret = sessionStorage.getItem('askguy_admin_secret') || '';
+      await verifyAdminAuth();
+      
       for (const id of ids) {
-        await supabase.functions.invoke('manage-platform', {
-          headers: {
-            'x-admin-secret': adminSecret
-          },
-          body: { action: 'DELETE_REQUEST', callerAddress: address, payload: { id } }
-        });
+        await supabase.from('contributions').delete().eq('request_id', id);
+        await supabase.from('aid_requests').delete().eq('id', id);
       }
+      
       await fetchRequests();
       showSuccess(`Successfully processed ${ids.length} items.`);
     } catch (err: any) {
@@ -182,18 +206,16 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const contribute = async (requestId: string, contributor: string, amount: number, token: TokenSymbol, message?: string) => {
     try {
-      const { error } = await supabase.functions.invoke('manage-platform', {
-        body: {
-          action: 'ADD_CONTRIBUTION',
-          callerAddress: address,
-          payload: {
-            request_id: requestId,
-            amount,
-            token,
-            message
-          }
-        }
-      });
+      const { error } = await supabase
+        .from('contributions')
+        .insert({
+          request_id: requestId,
+          user: contributor.toLowerCase().trim(),
+          amount,
+          token,
+          message,
+          timestamp: Date.now()
+        });
       
       if (error) throw error;
 
@@ -221,18 +243,16 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (thanksMessage) {
         const req = requests.find(r => r.id === id);
         if (req) {
-          await supabase.functions.invoke('manage-platform', {
-            body: {
-              action: 'ADD_CONTRIBUTION',
-              callerAddress: address,
-              payload: {
-                request_id: id,
-                amount: 0,
-                token: req.token,
-                message: thanksMessage
-              }
-            }
-          });
+          await supabase
+            .from('contributions')
+            .insert({
+              request_id: id,
+              user: address.toLowerCase().trim(),
+              amount: 0,
+              token: req.token,
+              message: thanksMessage,
+              timestamp: Date.now()
+            });
         }
       }
       return await updateRequest(id, { status: 'Completed', proofUrl: null });

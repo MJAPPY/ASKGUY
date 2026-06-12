@@ -99,21 +99,28 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Optimistic update
       setLeaderboardLikes(prev => prev + 1);
       
-      const { data, error } = await supabase.functions.invoke('manage-platform', {
-        body: {
-          action: 'INCREMENT_LIKES',
-          callerAddress: address || 'anonymous'
-        }
-      });
+      const { data: current } = await supabase
+        .from('site_settings')
+        .select('leaderboard_likes')
+        .eq('id', 'global')
+        .maybeSingle();
+      
+      const newCount = (current?.leaderboard_likes || 0) + 1;
+      
+      const { data, error } = await supabase
+        .from('site_settings')
+        .update({ leaderboard_likes: newCount })
+        .eq('id', 'global')
+        .select()
+        .single();
       
       if (error) throw error;
       if (data) setLeaderboardLikes(Number(data.leaderboard_likes));
     } catch (err) {
       console.error('Error incrementing likes:', err);
-      // Revert if error
       fetchSettings();
     }
-  }, [address, fetchSettings]);
+  }, [fetchSettings]);
 
   const getTokenBalance = useCallback(async (accountName: string, contract: string, symbol: string) => {
     for (const rpc of PROTON_ENDPOINTS) {
@@ -307,17 +314,13 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       
       setMembershipExpiry(nextExpiry);
       
-      // Safe write: Route the profiles modification through the secure backend Edge Function instead of direct client-side DB call
-      await supabase.functions.invoke('manage-platform', {
-        body: {
-          action: 'UPSERT_PROFILE',
-          callerAddress: address,
-          payload: { 
-            address: address.toLowerCase().trim(), 
-            membership_expiry: nextExpiry 
-          }
-        }
-      });
+      const cleanAddress = address.toLowerCase().trim();
+      await supabase
+        .from('profiles')
+        .upsert({
+          address: cleanAddress,
+          membership_expiry: nextExpiry
+        }, { onConflict: 'address' });
     }
   }, [transferTokens, address, membershipFee, membershipExpiry]);
 

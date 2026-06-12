@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { useWallet } from '@/hooks/use-wallet';
+import { useWallet, OWNER_ADDRESS } from '@/hooks/use-wallet';
 import { useRequests } from '@/hooks/use-requests';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -39,7 +39,9 @@ import {
   Coins,
   RefreshCw,
   ArrowUpRight,
-  Wallet
+  Wallet,
+  Percent,
+  Sparkle
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
@@ -81,6 +83,7 @@ const Admin = () => {
   const [maintenanceMessage, setMaintenanceMessage] = useState(currentMessage);
 
   const [individualRewards, setIndividualRewards] = useState<Record<string, string>>({});
+  const [poolSize, setPoolSize] = useState('');
 
   // Sync local state when global state updates
   useEffect(() => {
@@ -125,6 +128,13 @@ const Admin = () => {
       top5 
     };
   }, [requests, currentPostingFee]);
+
+  // Set default pool size once stats load
+  useEffect(() => {
+    if (stats.totalGUYFees > 0 && !poolSize) {
+      setPoolSize(stats.totalGUYFees.toString());
+    }
+  }, [stats.totalGUYFees, poolSize]);
 
   const membershipRevenue = useMemo(() => {
     return memberCount * parseFloat(membershipFee || "0");
@@ -183,7 +193,6 @@ const Admin = () => {
   const handleUpdateSettings = async () => {
     setProcessing(true);
     try {
-      // Routing settings update through our secure Edge Function
       const { error } = await supabase.functions.invoke('manage-platform', {
         body: {
           action: 'UPDATE_SETTINGS',
@@ -261,6 +270,68 @@ const Admin = () => {
     } finally {
       setProcessing(false);
     }
+  };
+
+  const handleAutoBalance = () => {
+    const pool = parseFloat(poolSize || "0");
+    if (isNaN(pool) || pool <= 0) {
+      showError("Please enter a valid Pool Size");
+      return;
+    }
+
+    // Filter out the platform admin address from rewards
+    const validContributors = stats.top5.filter(u => u.address.toLowerCase() !== OWNER_ADDRESS.toLowerCase());
+    const totalXPR = validContributors.reduce((sum, u) => sum + u.amount, 0);
+
+    if (totalXPR === 0) {
+      showError("No valid contributions to split among");
+      return;
+    }
+
+    const newRewards: Record<string, string> = {};
+    validContributors.forEach(user => {
+      const share = (user.amount / totalXPR) * pool;
+      // Round to whole numbers for neatness
+      newRewards[user.address] = Math.round(share).toString();
+    });
+
+    setIndividualRewards(newRewards);
+    showSuccess("Calculated proportional shares!");
+  };
+
+  const handleDistributeAll = async () => {
+    const payouts = Object.entries(individualRewards)
+      .map(([addr, amtStr]) => ({ address: addr, amount: parseFloat(amtStr) }))
+      .filter(p => p.amount > 0);
+
+    if (payouts.length === 0) {
+      showError("No rewards calculated to distribute.");
+      return;
+    }
+
+    const totalToDistribute = payouts.reduce((sum, p) => sum + p.amount, 0);
+    if (!confirm(`Are you sure you want to distribute a total of ${totalToDistribute.toLocaleString()} GUY to ${payouts.length} members?`)) {
+      return;
+    }
+
+    setProcessing(true);
+    for (let i = 0; i < payouts.length; i++) {
+      const p = payouts[i];
+      try {
+        showSuccess(`Initiating reward to @${p.address} (${i + 1}/${payouts.length})`);
+        const success = await transferTokens(p.address, p.amount, 'GUY', 'Platform Reward for Generosity');
+        if (!success) {
+          showError(`Failed to reward @${p.address}. Distribution stopped.`);
+          break;
+        }
+      } catch (err) {
+        showError(`Error rewarding @${p.address}`);
+        break;
+      }
+    }
+    setProcessing(false);
+    setIndividualRewards({});
+    handleGlobalRefresh();
   };
 
   const toggleSelection = (id: string) => {
@@ -363,12 +434,45 @@ const Admin = () => {
               </div>
 
               <Card className="glass-card border-white/10 p-8 rounded-[32px]">
-                <CardHeader className="px-0 pt-0 flex flex-row items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Trophy className="text-primary" size={24} />
-                    <CardTitle className="text-xl font-black uppercase tracking-tight">Top Contributors Hall of Fame</CardTitle>
+                <CardHeader className="px-0 pt-0 flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/5 pb-6">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-3">
+                      <Trophy className="text-primary" size={24} />
+                      <CardTitle className="text-xl font-black uppercase tracking-tight">Top Contributors Hall of Fame</CardTitle>
+                    </div>
+                    <p className="text-xs text-muted-foreground font-medium">Accrued posting fees split proportionally.</p>
                   </div>
-                  <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Top 10 Legends</div>
+                  
+                  {/* Proportional Balancing Controls */}
+                  <div className="flex flex-wrap items-center gap-4 bg-white/[0.02] border border-white/5 p-3 rounded-2xl">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Split Pool:</span>
+                      <Input 
+                        type="number" 
+                        value={poolSize} 
+                        onChange={(e) => setPoolSize(e.target.value)} 
+                        placeholder="GUY Pool" 
+                        className="w-24 h-10 bg-black/40 border-white/10 font-black text-sm text-center" 
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        size="sm" 
+                        onClick={handleAutoBalance}
+                        className="bg-primary hover:bg-primary/90 text-black h-10 rounded-xl font-black text-[10px] uppercase tracking-widest gap-1.5"
+                      >
+                        <Percent size={14} /> Calculate Splits
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        onClick={handleDistributeAll}
+                        disabled={processing}
+                        className="bg-purple-600 hover:bg-purple-500 text-white h-10 rounded-xl font-black text-[10px] uppercase tracking-widest gap-1.5"
+                      >
+                        {processing ? <Loader2 className="animate-spin" size={14} /> : <Gift size={14} />} Distribute All
+                      </Button>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent className="px-0 pt-6">
                   <div className="divide-y divide-white/5">
@@ -390,7 +494,7 @@ const Admin = () => {
                            <Input 
                             type="number" 
                             placeholder="Amt" 
-                            className="w-24 h-9 bg-black/20 border-white/10 font-black text-xs" 
+                            className="w-24 h-9 bg-black/20 border-white/10 font-black text-xs text-right pr-3" 
                             value={individualRewards[user.address] || ''}
                             onChange={(e) => setIndividualRewards(prev => ({ ...prev, [user.address]: e.target.value }))}
                           />

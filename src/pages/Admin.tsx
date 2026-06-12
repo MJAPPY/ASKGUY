@@ -75,9 +75,10 @@ const Admin = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   
   // Security Credentials state
+  const [isPasswordSet, setIsPasswordSet] = useState(false);
   const [adminSecret, setAdminSecret] = useState(sessionStorage.getItem('askguy_admin_secret') || '');
   const [isSecretSaved, setIsSecretSaved] = useState(
-    !!sessionStorage.getItem('askguy_admin_secret') || (address?.toLowerCase() === 'askguy')
+    !!sessionStorage.getItem('askguy_admin_secret')
   );
   
   // Local state for form management
@@ -145,6 +146,19 @@ const Admin = () => {
     );
   }, [requests, modSearch]);
 
+  const checkPasswordConfigured = async () => {
+    try {
+      const { data } = await supabase
+        .from('admin_secrets')
+        .select('id')
+        .eq('id', 'global')
+        .maybeSingle();
+      setIsPasswordSet(!!data);
+    } catch {
+      setIsPasswordSet(false);
+    }
+  };
+
   const fetchData = async (silent = false) => {
     if (!silent) setLoading(true);
     try {
@@ -161,6 +175,7 @@ const Admin = () => {
       setBannedUsers(banRes.data || []);
       setMemberCount(profileRes.count || 0);
       setQtrMemberCount(qtrProfileRes.count || 0);
+      await checkPasswordConfigured();
     } catch (err) {
       console.error("[Admin] Fetch error:", err);
     } finally {
@@ -194,10 +209,37 @@ const Admin = () => {
     showSuccess("Admin Secret successfully configured for session.");
   };
 
+  const initializePassword = async () => {
+    if (!adminSecret.trim() || adminSecret.trim().length < 6) {
+      showError("Password must be at least 6 characters.");
+      return;
+    }
+    setProcessing(true);
+    try {
+      const { error } = await supabase.functions.invoke('manage-platform', {
+        body: {
+          action: 'INITIALIZE_ADMIN_PASSWORD',
+          callerAddress: address,
+          payload: { password: adminSecret.trim() }
+        }
+      });
+
+      if (error) throw error;
+      sessionStorage.setItem('askguy_admin_secret', adminSecret.trim());
+      setIsSecretSaved(true);
+      setIsPasswordSet(true);
+      showSuccess("Master Admin Password initialized and saved securely!");
+    } catch (err: any) {
+      showError(err.message || "Initialization failed.");
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   const clearAdminSecret = () => {
     sessionStorage.removeItem('askguy_admin_secret');
     setAdminSecret('');
-    setIsSecretSaved(address?.toLowerCase() === 'askguy'); // Remain unlocked if logged in as the master wallet
+    setIsSecretSaved(false);
     showSuccess("Admin Secret cleared from session memory.");
   };
 
@@ -206,6 +248,10 @@ const Admin = () => {
   }, [isAdmin]);
 
   const handleUpdateSettings = async () => {
+    if (!isSecretSaved) {
+      showError("Please authenticate with your Admin Secret above first.");
+      return;
+    }
     setProcessing(true);
     try {
       const { error } = await supabase.functions.invoke('manage-platform', {
@@ -239,6 +285,10 @@ const Admin = () => {
   const handleBan = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newBanAddress) return;
+    if (!isSecretSaved) {
+      showError("Please authenticate with your Admin Secret above first.");
+      return;
+    }
     
     setProcessing(true);
     try {
@@ -265,6 +315,10 @@ const Admin = () => {
   };
 
   const handleUnban = async (targetAddress: string) => {
+    if (!isSecretSaved) {
+      showError("Please authenticate with your Admin Secret above first.");
+      return;
+    }
     setProcessing(true);
     try {
       const { error } = await supabase.functions.invoke('manage-platform', {
@@ -343,22 +397,35 @@ const Admin = () => {
                 </div>
                 <div className="space-y-1">
                   <h3 className="font-black text-lg tracking-tight uppercase">
-                    {isSecretSaved ? "Console Unlocked" : "Engine Security Settings"}
+                    {!isPasswordSet ? "Set Master Password" : isSecretSaved ? "Console Unlocked" : "Engine Security Settings"}
                   </h3>
                   <p className="text-xs text-muted-foreground font-medium max-w-xl">
-                    {address?.toLowerCase() === 'askguy' 
-                      ? "Console unlocked directly via on-chain Wallet Authentication (@askguy). No password required."
+                    {!isPasswordSet 
+                      ? "Welcome master administrator! Since no password hash exists in your secure database, please initialize a master password below."
                       : isSecretSaved 
                         ? "Admin Secret matches configured variables. You can execute all settings modifications and moderations." 
-                        : "Configure your ADMIN_SECRET key below to unlock writing/updating platform rules."}
+                        : "Configure your ADMIN_SECRET key below to unlock writing/updating platform rules securely."}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-3 w-full md:w-auto">
-                {address?.toLowerCase() === 'askguy' ? (
-                  <div className="flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider">
-                    <Wallet size={16} /> Wallet Verified
+                {!isPasswordSet ? (
+                  <div className="flex gap-2 w-full">
+                    <Input 
+                      type="password"
+                      placeholder="Define Admin Password..."
+                      value={adminSecret}
+                      onChange={(e) => setAdminSecret(e.target.value)}
+                      className="bg-black/40 border-primary/20 h-12 font-black rounded-xl"
+                    />
+                    <Button 
+                      onClick={initializePassword}
+                      disabled={processing}
+                      className="bg-primary text-black font-black h-12 px-6 rounded-xl animate-pulse"
+                    >
+                      Initialize Password
+                    </Button>
                   </div>
                 ) : isSecretSaved ? (
                   <Button 

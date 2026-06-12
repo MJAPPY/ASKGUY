@@ -10,6 +10,16 @@ const corsHeaders = {
 const ADMIN_ADDRESS = 'askguy';
 const MAX_PROOF_LENGTH = 10 * 1024 * 1024; // Limit Base64 payload to ~10MB max to prevent DB bloating
 
+// Cryptographically hash strings using SHA-256
+async function hashPassword(password: string): Promise<string> {
+  const hashBuffer = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(password)
+  );
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -31,9 +41,8 @@ serve(async (req) => {
     const normalizedCaller = callerAddress ? callerAddress.toLowerCase().trim() : 'anonymous';
     const isAdmin = normalizedCaller === ADMIN_ADDRESS;
 
-    // Retrieve Admin Secret from the custom header for authentication
+    // Retrieve Admin Secret from custom header
     const clientAdminSecret = req.headers.get('x-admin-secret');
-    const serverAdminSecret = Deno.env.get('ADMIN_SECRET');
 
     console.log(`[manage-platform] Action: ${action} | Caller: ${normalizedCaller} | IsAdmin: ${isAdmin}`);
 
@@ -80,42 +89,16 @@ serve(async (req) => {
       return new Response(JSON.stringify(data[0]), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
-    if (action === 'UPDATE_REQUEST') {
-      const { data: existing } = await supabaseClient.from('aid_requests').select('requestor').eq('id', payload.id).single();
-      if (!existing) throw new Error("Request not found.");
-
-      const isOwner = existing.requestor.toLowerCase() === normalizedCaller;
-      
-      // If updating someone else's request, must be verified admin with server secret configured
-      if (!isOwner) {
-        if (!serverAdminSecret) {
-          throw new Error("Security Lock: Admin overwrite requires ADMIN_SECRET to be configured on the server.");
-        }
-        if (!isAdmin || clientAdminSecret !== serverAdminSecret) {
-          throw new Error("Unauthorized: Invalid Admin Secret Key.");
-        }
+    if (action === 'UPSERT_PROFILE') {
+      if (payload.address?.toLowerCase() !== normalizedCaller) {
+        throw new Error("Unauthorized: Identity mismatch.");
       }
-
       const { data, error } = await supabaseClient
-        .from('aid_requests')
-        .update(payload.updates)
-        .eq('id', payload.id)
+        .from('profiles')
+        .upsert(payload, { onConflict: 'address' })
         .select()
       if (error) throw error
       return new Response(JSON.stringify(data[0]), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-    }
-
-    if (action === 'DELETE_REQUEST') {
-      if (!serverAdminSecret) {
-        throw new Error("Security Lock: Deletion requires ADMIN_SECRET to be configured on the server.");
-      }
-      if (!isAdmin || clientAdminSecret !== serverAdminSecret) {
-        throw new Error("Unauthorized: Invalid Admin Secret Key.");
-      }
-      await supabaseClient.from('contributions').delete().eq('request_id', payload.id);
-      const { error } = await supabaseClient.from('aid_requests').delete().eq('id', payload.id);
-      if (error) throw error
-      return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
     if (action === 'ADD_CONTRIBUTION') {
@@ -131,27 +114,70 @@ serve(async (req) => {
       return new Response(JSON.stringify(data[0]), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
-    if (action === 'UPSERT_PROFILE') {
-      if (payload.address?.toLowerCase() !== normalizedCaller) {
-        throw new Error("Unauthorized: Identity mismatch.");
-      }
+    // --- ADMINISTRATIVE AUTHENTICATION BOILERPLATE ---
+
+    // Fetch master password hash
+    const { data: secretData } = await supabaseClient
+      .from('admin_secrets')
+      .select('password_hash')
+      .eq('id', 'global')
+      .maybeSingle();
+
+    const isPasswordConfigured = !!secretData?.password_hash;
+
+    // First use configuration action
+    if (action === 'INITIALIZE_ADMIN_PASSWORD') {
+      if (!isAdmin) throw new Error("Unauthorized: First password initialization must come from @askguy wallet.");
+      if (isPasswordConfigured) throw new Error("Admin Password has already been initialized.");
+      if (!payload.password || payload.password.length < 6) throw new Error("Password must be at least 6 characters.");
+
+      const hashed = await hashPassword(payload.password);
       const { data, error } = await supabaseClient
-        .from('profiles')
-        .upsert(payload, { onConflict: 'address' })
+        .from('admin_secrets')
+        .insert({ id: 'global', password_hash: hashed })
+        .select();
+
+      if (error) throw error;
+      return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // Protect all other admin actions
+    if (['UPDATE_SETTINGS', 'BAN_USER', 'UNBAN_USER', 'DELETE_REQUEST', 'UPDATE_REQUEST_ADMIN'].includes(action) || (action === 'UPDATE_REQUEST' && normalizedCaller !== ADMIN_ADDRESS)) {
+      if (!isAdmin) {
+        throw new Error("Unauthorized: Admin permissions required.");
+      }
+      if (!isPasswordConfigured) {
+        throw new Error("Security Lock: Admin Password has not been initialized yet. Set a password first.");
+      }
+      if (!clientAdminSecret) {
+        throw new Error("Unauthorized: Please enter your Admin Secret to authenticate.");
+      }
+
+      // Verify Password Hash
+      const clientHash = await hashPassword(clientAdminSecret);
+      if (clientHash !== secretData.password_hash) {
+        throw new Error("Unauthorized: Invalid Admin Secret key.");
+      }
+    }
+
+    if (action === 'UPDATE_REQUEST') {
+      const { data: existing } = await supabaseClient.from('aid_requests').select('requestor').eq('id', payload.id).single();
+      if (!existing) throw new Error("Request not found.");
+
+      const { data, error } = await supabaseClient
+        .from('aid_requests')
+        .update(payload.updates)
+        .eq('id', payload.id)
         .select()
       if (error) throw error
       return new Response(JSON.stringify(data[0]), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
-    // --- ADMIN ONLY ACTIONS ---
-
-    if (['UPDATE_SETTINGS', 'BAN_USER', 'UNBAN_USER'].includes(action)) {
-      if (!serverAdminSecret) {
-        throw new Error("Security Lock: Administrative actions require 'ADMIN_SECRET' to be configured on your Supabase Edge Functions. Please go to Supabase Dashboard -> Edge Functions -> Manage Secrets and define 'ADMIN_SECRET'.");
-      }
-      if (!isAdmin || clientAdminSecret !== serverAdminSecret) {
-        throw new Error("Unauthorized: Invalid Admin Secret Key.");
-      }
+    if (action === 'DELETE_REQUEST') {
+      await supabaseClient.from('contributions').delete().eq('request_id', payload.id);
+      const { error } = await supabaseClient.from('aid_requests').delete().eq('id', payload.id);
+      if (error) throw error
+      return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
     if (action === 'UPDATE_SETTINGS') {

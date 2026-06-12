@@ -72,6 +72,7 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
         <Navbar />
+        <LiveTicker />
         {/* Background glow effects */}
         <div className="absolute top-[20%] left-[-10%] w-[50%] h-[50%] bg-[#1565C0]/10 blur-[120px] rounded-full pointer-events-none" />
         <div className="absolute bottom-[20%] right-[-10%] w-[50%] h-[50%] bg-primary/10 blur-[120px] rounded-full pointer-events-none" />

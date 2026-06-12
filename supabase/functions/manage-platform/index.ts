@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
 
@@ -8,9 +7,8 @@ const corsHeaders = {
 }
 
 const ADMIN_ADDRESS = 'askguy';
-const MAX_PROOF_LENGTH = 10 * 1024 * 1024; // Limit Base64 payload to ~10MB max to prevent DB bloating
+const MAX_PROOF_LENGTH = 10 * 1024 * 1024; // 10MB limit
 
-// Cryptographically hash strings using SHA-256
 async function hashPassword(password: string): Promise<string> {
   const hashBuffer = await crypto.subtle.digest(
     "SHA-256",
@@ -26,54 +24,50 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
-
-    const { action, payload, callerAddress } = await req.json()
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
     
-    // Validate payload size for proof images
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error("Missing Supabase configuration environment variables.");
+    }
+
+    const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
+    const { action, payload, callerAddress } = await req.json();
+    
     if (payload?.proof_url && payload.proof_url.length > MAX_PROOF_LENGTH) {
       throw new Error("Payload too large: Image verification proof exceeds maximum size limit.");
     }
 
     const normalizedCaller = callerAddress ? callerAddress.toLowerCase().trim() : 'anonymous';
     const isAdmin = normalizedCaller === ADMIN_ADDRESS;
+    const clientAdminSecret = req.headers.get('x-admin-secret') || '';
 
-    // Retrieve Admin Secret from custom header
-    const clientAdminSecret = req.headers.get('x-admin-secret');
-
-    console.log(`[manage-platform] Action: ${action} | Caller: ${normalizedCaller} | IsAdmin: ${isAdmin}`);
-
-    // --- PUBLIC ACTIONS (No Admin Check) ---
-
+    // --- PUBLIC ACTIONS ---
     if (action === 'INCREMENT_LIKES') {
-      const { data: current } = await supabaseClient
+      const { data: current, error: fetchErr } = await supabaseClient
         .from('site_settings')
         .select('leaderboard_likes')
         .eq('id', 'global')
         .maybeSingle();
       
-      const newCount = (current?.leaderboard_likes || 0) + 1;
+      if (fetchErr) throw fetchErr;
       
-      const { data, error } = await supabaseClient
+      const newCount = (current?.leaderboard_likes || 0) + 1;
+      const { data, error: updateErr } = await supabaseClient
         .from('site_settings')
         .update({ leaderboard_likes: newCount })
         .eq('id', 'global')
-        .select()
+        .select();
       
-      if (error) throw error
-      if (!data || data.length === 0) {
-        throw new Error("No settings record found with ID 'global'.");
-      }
-      return new Response(JSON.stringify(data[0]), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      if (updateErr) throw updateErr;
+      return new Response(JSON.stringify(data[0]), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    if (!callerAddress) throw new Error("Missing caller address for protected actions.");
+    if (!callerAddress) {
+      throw new Error("Missing caller address for protected actions.");
+    }
 
-    // --- PROTECTED REQUEST MANAGEMENT ---
-    
+    // --- PROTECTED ACTIONS ---
     if (action === 'CREATE_REQUEST') {
       const { data, error } = await supabaseClient
         .from('aid_requests')
@@ -84,9 +78,9 @@ serve(async (req) => {
           status: 'Open',
           raised: 0
         })
-        .select()
-      if (error) throw error
-      return new Response(JSON.stringify(data[0]), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        .select();
+      if (error) throw error;
+      return new Response(JSON.stringify(data[0]), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     if (action === 'UPSERT_PROFILE') {
@@ -96,9 +90,9 @@ serve(async (req) => {
       const { data, error } = await supabaseClient
         .from('profiles')
         .upsert(payload, { onConflict: 'address' })
-        .select()
-      if (error) throw error
-      return new Response(JSON.stringify(data[0]), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        .select();
+      if (error) throw error;
+      return new Response(JSON.stringify(data[0]), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     if (action === 'ADD_CONTRIBUTION') {
@@ -109,27 +103,31 @@ serve(async (req) => {
           user: normalizedCaller,
           timestamp: Date.now()
         })
-        .select()
-      if (error) throw error
-      return new Response(JSON.stringify(data[0]), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        .select();
+      if (error) throw error;
+      return new Response(JSON.stringify(data[0]), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // --- ADMINISTRATIVE AUTHENTICATION BOILERPLATE ---
-
-    // Fetch master password hash
-    const { data: secretData } = await supabaseClient
+    // --- SECURED ADMIN CONFIGURATION & AUTH ---
+    const { data: secretData, error: secretErr } = await supabaseClient
       .from('admin_secrets')
       .select('password_hash')
       .eq('id', 'global')
       .maybeSingle();
 
+    if (secretErr) throw secretErr;
     const isPasswordConfigured = !!secretData?.password_hash;
 
-    // First use configuration action
     if (action === 'INITIALIZE_ADMIN_PASSWORD') {
-      if (!isAdmin) throw new Error("Unauthorized: First password initialization must come from @askguy wallet.");
-      if (isPasswordConfigured) throw new Error("Admin Password has already been initialized.");
-      if (!payload.password || payload.password.length < 6) throw new Error("Password must be at least 6 characters.");
+      if (!isAdmin) {
+        throw new Error("Unauthorized: Password initialization must come from @askguy wallet.");
+      }
+      if (isPasswordConfigured) {
+        throw new Error("Admin Password has already been initialized.");
+      }
+      if (!payload.password || payload.password.length < 6) {
+        throw new Error("Password must be at least 6 characters.");
+      }
 
       const hashed = await hashPassword(payload.password);
       const { data, error } = await supabaseClient
@@ -141,19 +139,18 @@ serve(async (req) => {
       return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Protect all other admin actions
+    // Strict authentication check for other actions
     if (['UPDATE_SETTINGS', 'BAN_USER', 'UNBAN_USER', 'DELETE_REQUEST', 'UPDATE_REQUEST_ADMIN'].includes(action) || (action === 'UPDATE_REQUEST' && normalizedCaller !== ADMIN_ADDRESS)) {
       if (!isAdmin) {
         throw new Error("Unauthorized: Admin permissions required.");
       }
       if (!isPasswordConfigured) {
-        throw new Error("Security Lock: Admin Password has not been initialized yet. Set a password first.");
+        throw new Error("Security Lock: Admin Password has not been initialized yet.");
       }
       if (!clientAdminSecret) {
-        throw new Error("Unauthorized: Please enter your Admin Secret to authenticate.");
+        throw new Error("Unauthorized: Please provide your Admin Secret to execute this action.");
       }
 
-      // Verify Password Hash
       const clientHash = await hashPassword(clientAdminSecret);
       if (clientHash !== secretData.password_hash) {
         throw new Error("Unauthorized: Invalid Admin Secret key.");
@@ -161,79 +158,62 @@ serve(async (req) => {
     }
 
     if (action === 'UPDATE_REQUEST') {
-      const { data: existing } = await supabaseClient.from('aid_requests').select('requestor').eq('id', payload.id).single();
-      if (!existing) throw new Error("Request not found.");
-
       const { data, error } = await supabaseClient
         .from('aid_requests')
         .update(payload.updates)
         .eq('id', payload.id)
-        .select()
-      if (error) throw error
-      return new Response(JSON.stringify(data[0]), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        .select();
+      if (error) throw error;
+      return new Response(JSON.stringify(data[0]), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     if (action === 'DELETE_REQUEST') {
       await supabaseClient.from('contributions').delete().eq('request_id', payload.id);
       const { error } = await supabaseClient.from('aid_requests').delete().eq('id', payload.id);
-      if (error) throw error
-      return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      if (error) throw error;
+      return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     if (action === 'UPDATE_SETTINGS') {
-      const { 
-        membership_active, 
-        membership_fee, 
-        posting_fee_guy, 
-        avatar_set, 
-        maintenance_mode, 
-        maintenance_message 
-      } = payload;
-
       const { data, error } = await supabaseClient
         .from('site_settings')
         .update({
-          membership_active,
-          membership_fee,
-          posting_fee_guy,
-          avatar_set,
-          maintenance_mode,
-          maintenance_message
+          membership_active: payload.membership_active,
+          membership_fee: payload.membership_fee,
+          posting_fee_guy: payload.posting_fee_guy,
+          avatar_set: payload.avatar_set,
+          maintenance_mode: payload.maintenance_mode,
+          maintenance_message: payload.maintenance_message
         })
         .eq('id', 'global')
-        .select()
+        .select();
       
-      if (error) throw error
-      
-      if (!data || data.length === 0) {
-        throw new Error("No settings record found with ID 'global' in site_settings table.");
-      }
-      
-      return new Response(JSON.stringify(data[0]), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      if (error) throw error;
+      return new Response(JSON.stringify(data[0]), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     if (action === 'BAN_USER') {
       const { data, error } = await supabaseClient
         .from('banned_users')
         .insert({ address: payload.address.toLowerCase().trim() })
-        .select()
-      if (error) throw error
-      return new Response(JSON.stringify(data[0]), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        .select();
+      if (error) throw error;
+      return new Response(JSON.stringify(data[0]), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     if (action === 'UNBAN_USER') {
       const { error } = await supabaseClient
         .from('banned_users')
         .delete()
-        .eq('address', payload.address.toLowerCase().trim())
-      if (error) throw error
-      return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        .eq('address', payload.address.toLowerCase().trim());
+      if (error) throw error;
+      return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    return new Response(JSON.stringify({ error: 'Invalid action' }), { status: 400, headers: corsHeaders })
+    return new Response(JSON.stringify({ error: 'Invalid action' }), { status: 400, headers: corsHeaders });
 
   } catch (error) {
-    console.error("[manage-platform] Critical Error:", error.message)
-    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: corsHeaders })
+    console.error("[manage-platform] Error:", error.message);
+    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: corsHeaders });
   }
 })

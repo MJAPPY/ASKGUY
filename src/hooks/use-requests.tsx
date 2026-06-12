@@ -3,8 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { showError, showSuccess } from '@/utils/toast';
-import { useWallet } from './use-wallet';
-import { hashPassword } from '@/utils/crypto';
+import { useWallet, OWNER_ADDRESS } from './use-wallet';
 
 export interface AidRequest {
   id: string;
@@ -83,26 +82,9 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, []);
 
-  // Securely verify admin password hash client-side
-  const verifyAdminAuth = async () => {
-    const adminSecret = sessionStorage.getItem('askguy_admin_secret');
-    if (!adminSecret) {
-      throw new Error("Unauthorized: Admin secret required. Please unlock the Admin panel.");
-    }
-    
-    const { data, error } = await supabase
-      .from('admin_secrets')
-      .select('password_hash')
-      .eq('id', 'global')
-      .maybeSingle();
-      
-    if (error || !data) {
-      throw new Error("Security Lock: No Admin password configured in the database.");
-    }
-
-    const currentHash = await hashPassword(adminSecret);
-    if (currentHash !== data.password_hash) {
-      throw new Error("Unauthorized: Invalid Admin Secret key.");
+  const verifyAdminAuth = () => {
+    if (!address || address.toLowerCase().trim() !== OWNER_ADDRESS.toLowerCase().trim()) {
+      throw new Error("Unauthorized: Only the platform administrator @askguy can perform this action.");
     }
     return true;
   };
@@ -143,12 +125,11 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         delete dbUpdates.proofUrl;
       }
 
-      // If action is initiated by someone other than owner, we must verify admin secret
       const requestToUpdate = requests.find(r => r.id === id);
       const isOwner = requestToUpdate?.requestor.toLowerCase() === address.toLowerCase();
 
       if (!isOwner) {
-        await verifyAdminAuth();
+        verifyAdminAuth();
       }
 
       const { data, error } = await supabase
@@ -169,7 +150,7 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const deleteRequest = async (id: string) => {
     try {
-      await verifyAdminAuth();
+      verifyAdminAuth();
 
       // Delete child contributions first (referential integrity)
       await supabase.from('contributions').delete().eq('request_id', id);
@@ -190,7 +171,7 @@ export const RequestsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const batchDeleteRequests = async (ids: string[]) => {
     try {
-      await verifyAdminAuth();
+      verifyAdminAuth();
       
       for (const id of ids) {
         await supabase.from('contributions').delete().eq('request_id', id);

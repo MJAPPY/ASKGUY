@@ -39,14 +39,11 @@ import {
   Coins,
   RefreshCw,
   ArrowUpRight,
-  Lock,
-  Unlock,
   Wallet
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
 import { cn } from '@/lib/utils';
-import { hashPassword } from '@/utils/crypto';
 
 const Admin = () => {
   const { 
@@ -74,13 +71,6 @@ const Admin = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [modSearch, setModSearch] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  
-  // Security Credentials state
-  const [isPasswordSet, setIsPasswordSet] = useState(false);
-  const [adminSecret, setAdminSecret] = useState(sessionStorage.getItem('askguy_admin_secret') || '');
-  const [isSecretSaved, setIsSecretSaved] = useState(
-    !!sessionStorage.getItem('askguy_admin_secret')
-  );
   
   // Local state for form management
   const [membershipActive, setMembershipActive] = useState(currentEnabled);
@@ -147,19 +137,6 @@ const Admin = () => {
     );
   }, [requests, modSearch]);
 
-  const checkPasswordConfigured = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('admin_secrets')
-        .select('id, password_hash')
-        .eq('id', 'global')
-        .maybeSingle();
-      setIsPasswordSet(!!data && !!data.password_hash);
-    } catch {
-      setIsPasswordSet(false);
-    }
-  };
-
   const fetchData = async (silent = false) => {
     if (!silent) setLoading(true);
     try {
@@ -176,7 +153,6 @@ const Admin = () => {
       setBannedUsers(banRes.data || []);
       setMemberCount(profileRes.count || 0);
       setQtrMemberCount(qtrProfileRes.count || 0);
-      await checkPasswordConfigured();
     } catch (err) {
       console.error("[Admin] Fetch error:", err);
     } finally {
@@ -200,79 +176,11 @@ const Admin = () => {
     }
   };
 
-  const saveAdminSecret = async () => {
-    if (!adminSecret.trim()) {
-      showError("Secret cannot be empty.");
-      return;
-    }
-
-    setProcessing(true);
-    try {
-      const { data, error } = await supabase
-        .from('admin_secrets')
-        .select('password_hash')
-        .eq('id', 'global')
-        .maybeSingle();
-
-      if (error || !data) {
-        throw new Error("Secret table unconfigured. Please configure your database table first.");
-      }
-
-      const hash = await hashPassword(adminSecret.trim());
-      if (hash === data.password_hash) {
-        sessionStorage.setItem('askguy_admin_secret', adminSecret.trim());
-        setIsSecretSaved(true);
-        showSuccess("Admin Secret successfully configured for session.");
-      } else {
-        showError("Invalid Admin Secret password.");
-      }
-    } catch (err: any) {
-      showError(err.message || "Failed to verify credentials.");
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  const initializePassword = async () => {
-    if (!adminSecret.trim() || adminSecret.trim().length < 6) {
-      showError("Password must be at least 6 characters.");
-      return;
-    }
-    setProcessing(true);
-    try {
-      const hashed = await hashPassword(adminSecret.trim());
-      const { error } = await supabase
-        .from('admin_secrets')
-        .upsert({ id: 'global', password_hash: hashed }, { onConflict: 'id' });
-
-      if (error) throw error;
-      sessionStorage.setItem('askguy_admin_secret', adminSecret.trim());
-      setIsSecretSaved(true);
-      setIsPasswordSet(true);
-      showSuccess("Master Admin Password initialized and saved securely!");
-    } catch (err: any) {
-      showError(err.message || "Initialization failed.");
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  const clearAdminSecret = () => {
-    sessionStorage.removeItem('askguy_admin_secret');
-    setAdminSecret('');
-    setIsSecretSaved(false);
-    showSuccess("Admin Secret cleared from session memory.");
-  };
-
   useEffect(() => {
     if (isAdmin) fetchData();
   }, [isAdmin]);
 
   const handleUpdateSettings = async () => {
-    if (!isSecretSaved) {
-      showError("Please authenticate with your Admin Secret above first.");
-      return;
-    }
     setProcessing(true);
     try {
       const { error } = await supabase
@@ -300,10 +208,6 @@ const Admin = () => {
   const handleBan = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newBanAddress) return;
-    if (!isSecretSaved) {
-      showError("Please authenticate with your Admin Secret above first.");
-      return;
-    }
     
     setProcessing(true);
     try {
@@ -323,10 +227,6 @@ const Admin = () => {
   };
 
   const handleUnban = async (targetAddress: string) => {
-    if (!isSecretSaved) {
-      showError("Please authenticate with your Admin Secret above first.");
-      return;
-    }
     setProcessing(true);
     try {
       const { error } = await supabase
@@ -383,80 +283,6 @@ const Admin = () => {
       <Navbar />
       <main className="flex-1 container mx-auto px-4 py-12">
         <div className="max-w-6xl mx-auto space-y-10">
-          
-          {/* Admin Credentials Panel */}
-          <Card className={cn(
-            "glass-card border-[3px] p-6 rounded-[28px] transition-all duration-300 relative overflow-hidden",
-            isSecretSaved ? "border-emerald-500/30 bg-emerald-500/5" : "border-amber-500/30 bg-amber-500/5"
-          )}>
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-              <div className="flex items-start gap-4">
-                <div className={cn(
-                  "w-12 h-12 rounded-2xl flex items-center justify-center border shrink-0",
-                  isSecretSaved ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-amber-500/10 border-amber-500/20 text-amber-400"
-                )}>
-                  {isSecretSaved ? <Unlock size={24} /> : <Lock size={24} />}
-                </div>
-                <div className="space-y-1">
-                  <h3 className="font-black text-lg tracking-tight uppercase">
-                    {!isPasswordSet ? "Set Master Password" : isSecretSaved ? "Console Unlocked" : "Engine Security Settings"}
-                  </h3>
-                  <p className="text-xs text-muted-foreground font-medium max-w-xl">
-                    {!isPasswordSet 
-                      ? "Welcome master administrator! Since no password hash exists in your secure database, please initialize a master password below."
-                      : isSecretSaved 
-                        ? "Admin Secret matches configured variables. You can execute all settings modifications and moderations." 
-                        : "Configure your ADMIN_SECRET key below to unlock writing/updating platform rules securely."}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 w-full md:w-auto">
-                {!isPasswordSet ? (
-                  <div className="flex gap-2 w-full">
-                    <Input 
-                      type="password"
-                      placeholder="Define Admin Password..."
-                      value={adminSecret}
-                      onChange={(e) => setAdminSecret(e.target.value)}
-                      className="bg-black/40 border-primary/20 h-12 font-black rounded-xl"
-                    />
-                    <Button 
-                      onClick={initializePassword}
-                      disabled={processing}
-                      className="bg-primary text-black font-black h-12 px-6 rounded-xl animate-pulse"
-                    >
-                      Initialize Password
-                    </Button>
-                  </div>
-                ) : isSecretSaved ? (
-                  <Button 
-                    onClick={clearAdminSecret}
-                    variant="outline"
-                    className="w-full md:w-auto h-12 px-6 border-red-500/20 hover:bg-red-500/10 text-red-400 font-black rounded-xl"
-                  >
-                    Lock Console
-                  </Button>
-                ) : (
-                  <div className="flex gap-2 w-full">
-                    <Input 
-                      type="password"
-                      placeholder="Enter Admin Secret..."
-                      value={adminSecret}
-                      onChange={(e) => setAdminSecret(e.target.value)}
-                      className="bg-black/40 border-white/10 h-12 font-black rounded-xl"
-                    />
-                    <Button 
-                      onClick={saveAdminSecret}
-                      className="bg-amber-500 hover:bg-amber-400 text-black font-black h-12 px-6 rounded-xl"
-                    >
-                      Verify
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </Card>
 
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="space-y-2">

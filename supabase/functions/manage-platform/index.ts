@@ -1,0 +1,80 @@
+// @ts-nocheck
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders })
+  }
+
+  try {
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
+    const { action, callerAddress, payload } = await req.json()
+
+    if (!callerAddress) {
+      return new Response(JSON.stringify({ error: 'Caller address required' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    const cleanCaller = callerAddress.toLowerCase().trim()
+
+    // Handle profile updates (for avatar picker)
+    if (action === 'UPSERT_PROFILE') {
+      const { error } = await supabaseClient
+        .from('profiles')
+        .upsert({
+          address: payload.address,
+          avatar_url: payload.avatar_url
+        }, { onConflict: 'address' })
+
+      if (error) throw error
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    // Handle system settings updates (admin only)
+    if (action === 'UPDATE_SETTINGS') {
+      if (cleanCaller !== 'askguy') {
+        return new Response(JSON.stringify({ error: 'Unauthorized: Admin action restricted' }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
+
+      const { error } = await supabaseClient
+        .from('site_settings')
+        .update(payload)
+        .eq('id', 'global')
+
+      if (error) throw error
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    return new Response(JSON.stringify({ error: 'Invalid action requested' }), {
+      status: 400,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    })
+
+  } catch (err: any) {
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    })
+  }
+})

@@ -183,17 +183,21 @@ const Admin = () => {
   const handleUpdateSettings = async () => {
     setProcessing(true);
     try {
-      const { error } = await supabase
-        .from('site_settings')
-        .update({ 
-          membership_active: Boolean(membershipActive),
-          membership_fee: parseFloat(membershipFee || "0"),
-          posting_fee_guy: parseFloat(postingFeeGuy || "0"),
-          avatar_set: selectedAvatarSet,
-          maintenance_mode: Boolean(maintenanceMode),
-          maintenance_message: maintenanceMessage 
-        })
-        .eq('id', 'global');
+      // Routing settings update through our secure Edge Function
+      const { error } = await supabase.functions.invoke('manage-platform', {
+        body: {
+          action: 'UPDATE_SETTINGS',
+          callerAddress: address,
+          payload: { 
+            membership_active: Boolean(membershipActive),
+            membership_fee: parseFloat(membershipFee || "0"),
+            posting_fee_guy: parseFloat(postingFeeGuy || "0"),
+            avatar_set: selectedAvatarSet,
+            maintenance_mode: Boolean(maintenanceMode),
+            maintenance_message: maintenanceMessage 
+          }
+        }
+      });
 
       if (error) throw error;
       await fetchSettings();

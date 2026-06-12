@@ -11,7 +11,7 @@ import Guidelines from "./pages/Guidelines";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import Maintenance from "./pages/Maintenance";
-import SupabasePulse from "./components/SupabasePulse"; // Added
+import SupabasePulse from "./components/SupabasePulse";
 import { WalletProvider, useWallet } from "./hooks/use-wallet";
 import { RequestsProvider } from "./hooks/use-requests";
 
@@ -45,7 +45,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <SupabasePulse /> {/* Keep-alive pulse */}
+      <SupabasePulse /> {/* Active keep-alive pulse (Vercel Build Trigger) */}
       <WalletProvider>
         <RequestsProvider>
           <AppContent />
